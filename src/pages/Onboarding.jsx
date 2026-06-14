@@ -7,8 +7,8 @@ import { ArrowLeft, ArrowRight, Heart } from "lucide-react";
 import StepBasicInfo from "@/components/onboarding/StepBasicInfo";
 import StepGoals from "@/components/onboarding/StepGoals";
 import StepActivityLevel from "@/components/onboarding/StepActivityLevel";
-import StepDisabilities from "@/components/onboarding/StepDisabilities";
-import StepBodyLimitations from "@/components/onboarding/StepBodyLimitations";
+import StepBodyMap from "@/components/onboarding/StepBodyMap";
+import StepZoneConditions from "@/components/onboarding/StepZoneConditions";
 import StepPainAssessment from "@/components/onboarding/StepPainAssessment";
 import StepAbilities from "@/components/onboarding/StepAbilities";
 import StepRiskFactors from "@/components/onboarding/StepRiskFactors";
@@ -19,8 +19,8 @@ const STEPS = [
   { key: "basic", label: "About You", component: StepBasicInfo },
   { key: "goals", label: "Goals", component: StepGoals },
   { key: "activity", label: "Activity", component: StepActivityLevel },
-  { key: "disabilities", label: "Conditions", component: StepDisabilities },
-  { key: "limitations", label: "Limitations", component: StepBodyLimitations },
+  { key: "disabilities", label: "Body Map", component: StepBodyMap },
+  { key: "limitations", label: "Conditions", component: StepZoneConditions },
   { key: "pain", label: "Pain", component: StepPainAssessment },
   { key: "abilities", label: "Abilities", component: StepAbilities },
   { key: "risk", label: "Risk Factors", component: StepRiskFactors },
