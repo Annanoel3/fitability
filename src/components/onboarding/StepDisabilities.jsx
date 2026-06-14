@@ -1,21 +1,10 @@
 import React, { useState } from "react";
-import { DISABILITIES_DB } from "@/lib/constants";
+import { BODY_CONDITIONS } from "@/lib/constants";
 import { Check, ChevronDown, ChevronUp, Shield } from "lucide-react";
-
-const CATEGORY_META = {
-  "Mobility":        { icon: "🦽", desc: "Wheelchair, amputee, paralysis, joint replacements" },
-  "Pain Conditions": { icon: "🩹", desc: "Arthritis, chronic pain, fibromyalgia, back/neck pain" },
-  "Neurological":    { icon: "🧠", desc: "Parkinson's, stroke, vertigo, tremors" },
-  "Respiratory":     { icon: "🫁", desc: "COPD, asthma, breathing limitations" },
-  "Cardiovascular":  { icon: "❤️", desc: "Heart disease, high blood pressure, post-cardiac surgery" },
-  "Mental Health":   { icon: "🌿", desc: "PTSD, anxiety, depression, cognitive conditions" },
-  "Veterans":        { icon: "🎖️", desc: "Combat injuries, service-connected disabilities" },
-  "Other":           { icon: "📋", desc: "Diabetes, osteoporosis, cancer recovery, other conditions" },
-};
 
 export default function StepDisabilities({ data, onChange }) {
   const selected = data.disabilities || [];
-  const [openCategory, setOpenCategory] = useState(null);
+  const [openArea, setOpenArea] = useState(null);
 
   const toggle = (item) => {
     const next = selected.includes(item)
@@ -24,18 +13,14 @@ export default function StepDisabilities({ data, onChange }) {
     onChange({ disabilities: next });
   };
 
-  const toggleCategory = (cat) => {
-    setOpenCategory(prev => prev === cat ? null : cat);
-  };
-
-  const countInCategory = (cat) =>
-    (DISABILITIES_DB[cat] || []).filter(item => selected.includes(item)).length;
+  const countInArea = (area) =>
+    area.conditions.filter(c => selected.includes(c)).length;
 
   return (
     <div className="space-y-5">
       <div className="text-center mb-2">
-        <h2 className="text-2xl font-heading font-bold text-foreground">Conditions & Disabilities</h2>
-        <p className="text-muted-foreground mt-2">Tap a category, then select what applies to you.</p>
+        <h2 className="text-2xl font-heading font-bold text-foreground">Any pain or conditions?</h2>
+        <p className="text-muted-foreground mt-2">Tap a body area, then select what applies. Skip anything that doesn't.</p>
       </div>
 
       <div className="bg-secondary/50 rounded-xl p-4 flex items-start gap-3">
@@ -60,58 +45,59 @@ export default function StepDisabilities({ data, onChange }) {
         </div>
       )}
 
-      {/* Category cards */}
-      <div className="space-y-3">
-        {Object.entries(DISABILITIES_DB).map(([category, items]) => {
-          const meta = CATEGORY_META[category] || { icon: "📌", desc: "" };
-          const count = countInCategory(category);
-          const isOpen = openCategory === category;
+      {/* Body area cards */}
+      <div className="space-y-2">
+        {BODY_CONDITIONS.map(group => {
+          const count = countInArea(group);
+          const isOpen = openArea === group.area;
 
           return (
             <div
-              key={category}
-              className={`rounded-xl border transition-all overflow-hidden ${
-                isOpen ? "border-primary/50 shadow-sm" : "border-border"
+              key={group.area}
+              className={`rounded-xl border overflow-hidden transition-all ${
+                isOpen ? "border-primary/50 shadow-sm" : count > 0 ? "border-primary/30" : "border-border"
               }`}
             >
-              {/* Category header */}
               <button
-                onClick={() => toggleCategory(category)}
-                className={`w-full flex items-center gap-4 p-4 text-left transition-colors ${
+                onClick={() => setOpenArea(prev => prev === group.area ? null : group.area)}
+                className={`w-full flex items-center gap-4 px-4 py-3.5 text-left transition-colors ${
                   isOpen ? "bg-secondary/60" : "bg-card hover:bg-muted/40"
                 }`}
               >
-                <span className="text-2xl flex-shrink-0">{meta.icon}</span>
-                <div className="flex-1 min-w-0">
+                <span className="text-xl flex-shrink-0">{group.icon}</span>
+                <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-foreground">{category}</span>
+                    <span className="font-semibold text-sm text-foreground">{group.area}</span>
                     {count > 0 && (
                       <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
                         {count}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{meta.desc}</p>
+                  {!isOpen && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {group.conditions.slice(0, 3).join(", ")}…
+                    </p>
+                  )}
                 </div>
                 {isOpen
-                  ? <ChevronUp className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                  : <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 }
               </button>
 
-              {/* Expanded conditions */}
               {isOpen && (
-                <div className="px-4 pb-4 pt-2 bg-card grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {items.map(item => {
-                    const active = selected.includes(item);
+                <div className="grid grid-cols-1 gap-1.5 px-4 py-3 bg-muted/20 border-t border-border">
+                  {group.conditions.map(condition => {
+                    const active = selected.includes(condition);
                     return (
                       <button
-                        key={item}
-                        onClick={() => toggle(item)}
-                        className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all text-sm ${
+                        key={condition}
+                        onClick={() => toggle(condition)}
+                        className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
                           active
                             ? "border-primary bg-secondary"
-                            : "border-border bg-card hover:border-primary/30 hover:bg-muted/30"
+                            : "border-border bg-card hover:border-primary/30"
                         }`}
                       >
                         <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${
@@ -119,7 +105,7 @@ export default function StepDisabilities({ data, onChange }) {
                         }`}>
                           {active && <Check className="w-3 h-3" />}
                         </div>
-                        <span className="font-medium">{item}</span>
+                        <span className="text-sm font-medium">{condition}</span>
                       </button>
                     );
                   })}
@@ -132,7 +118,7 @@ export default function StepDisabilities({ data, onChange }) {
 
       {selected.length === 0 && (
         <p className="text-center text-sm text-muted-foreground pt-2">
-          Nothing to select? That's fine — tap Continue to skip.
+          Nothing applies? Tap Continue to skip.
         </p>
       )}
     </div>

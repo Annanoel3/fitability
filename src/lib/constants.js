@@ -15,6 +15,156 @@ export const ACTIVITY_LEVELS = [
   { value: "Active", label: "Active", description: "Consistently active" }
 ];
 
+// Body-area grouped conditions — used by the new StepDisabilities
+export const BODY_CONDITIONS = [
+  {
+    area: "Right Knee",
+    icon: "🦵",
+    conditions: [
+      "Right knee pain", "Right knee arthritis", "Right knee replacement",
+      "Torn ACL / meniscus (right)", "Right knee surgery (recent)",
+      "Cannot fully bend right knee", "Cannot kneel on right knee"
+    ]
+  },
+  {
+    area: "Left Knee",
+    icon: "🦵",
+    conditions: [
+      "Left knee pain", "Left knee arthritis", "Left knee replacement",
+      "Torn ACL / meniscus (left)", "Left knee surgery (recent)",
+      "Cannot fully bend left knee", "Cannot kneel on left knee"
+    ]
+  },
+  {
+    area: "Right Shoulder",
+    icon: "💪",
+    conditions: [
+      "Right shoulder pain", "Torn rotator cuff (right)", "Right shoulder replacement",
+      "Right shoulder surgery (recent)", "Cannot raise right arm overhead",
+      "Limited right shoulder range of motion"
+    ]
+  },
+  {
+    area: "Left Shoulder",
+    icon: "💪",
+    conditions: [
+      "Left shoulder pain", "Torn rotator cuff (left)", "Left shoulder replacement",
+      "Left shoulder surgery (recent)", "Cannot raise left arm overhead",
+      "Limited left shoulder range of motion"
+    ]
+  },
+  {
+    area: "Back",
+    icon: "🔙",
+    conditions: [
+      "Lower back pain", "Upper back pain", "Herniated disc",
+      "Spinal stenosis", "Scoliosis", "Spinal fusion surgery",
+      "Sciatica", "Cannot bend at waist", "Cannot twist torso",
+      "Cannot lie flat on back"
+    ]
+  },
+  {
+    area: "Neck",
+    icon: "🫀",
+    conditions: [
+      "Neck pain", "Cervical herniated disc", "Whiplash injury",
+      "Neck surgery (recent)", "Limited neck rotation", "Cannot turn head fully"
+    ]
+  },
+  {
+    area: "Hips",
+    icon: "🦴",
+    conditions: [
+      "Right hip pain", "Left hip pain", "Hip replacement (right)",
+      "Hip replacement (left)", "Hip arthritis", "Hip labral tear",
+      "Hip surgery (recent)", "Limited hip range of motion",
+      "Cannot bear weight on right leg", "Cannot bear weight on left leg"
+    ]
+  },
+  {
+    area: "Ankles & Feet",
+    icon: "🦶",
+    conditions: [
+      "Right ankle pain / sprain", "Left ankle pain / sprain",
+      "Plantar fasciitis (right)", "Plantar fasciitis (left)",
+      "Foot surgery (recent)", "Limited ankle mobility",
+      "Uses prosthetic (lower limb)", "Cannot walk farther than 50 feet"
+    ]
+  },
+  {
+    area: "Wrists & Hands",
+    icon: "🤚",
+    conditions: [
+      "Right wrist pain", "Left wrist pain", "Carpal tunnel (right)",
+      "Carpal tunnel (left)", "Cannot grip with right hand", "Cannot grip with left hand",
+      "Arthritis in hands", "Wrist fracture / surgery"
+    ]
+  },
+  {
+    area: "Mobility & Movement",
+    icon: "🦽",
+    conditions: [
+      "Wheelchair user", "Uses walker", "Uses cane",
+      "Cannot stand at all", "Cannot stand longer than 5 minutes",
+      "Cannot get up from floor", "Amputee (upper limb)", "Amputee (lower limb)",
+      "Paralysis", "Partial paralysis", "Balance issues"
+    ]
+  },
+  {
+    area: "Neurological",
+    icon: "🧠",
+    conditions: [
+      "Parkinson's disease", "Stroke recovery", "Traumatic brain injury",
+      "Vertigo / dizziness", "Essential tremor", "Multiple sclerosis",
+      "Peripheral neuropathy", "Epilepsy / seizure disorder",
+      "Cerebral palsy", "Balance disorders"
+    ]
+  },
+  {
+    area: "Heart & Lungs",
+    icon: "❤️",
+    conditions: [
+      "Heart disease", "High blood pressure", "Heart failure",
+      "Post-cardiac surgery", "COPD", "Asthma",
+      "Pulmonary fibrosis", "Oxygen dependent", "Exercise-induced chest pain"
+    ]
+  },
+  {
+    area: "Chronic Conditions",
+    icon: "🩹",
+    conditions: [
+      "Fibromyalgia", "Chronic pain (general)", "Rheumatoid arthritis",
+      "Arthritis (general)", "Neuropathy", "Diabetes",
+      "Osteoporosis", "Lupus", "Ehlers-Danlos syndrome",
+      "Chronic fatigue syndrome", "Muscular dystrophy"
+    ]
+  },
+  {
+    area: "Mental Health",
+    icon: "🌿",
+    conditions: [
+      "PTSD", "Anxiety", "Depression", "Cognitive impairment"
+    ]
+  },
+  {
+    area: "Post-Surgery / Recovery",
+    icon: "🏥",
+    conditions: [
+      "Post-abdominal surgery", "Cancer recovery", "Post-surgical recovery (other)",
+      "Recent hospitalization", "Hernia", "Ostomy / colostomy present",
+      "Spinal cord injury"
+    ]
+  },
+  {
+    area: "Veterans",
+    icon: "🎖️",
+    conditions: [
+      "Combat injury", "Service-connected disability",
+      "Blast injury", "Military sexual trauma"
+    ]
+  }
+];
+
 export const DISABILITIES_DB = {
   "Mobility": [
     "Wheelchair user", "Amputee (upper)", "Amputee (lower)", "Paralysis",
