@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Shield, Check, ChevronDown, ChevronUp } from "lucide-react";
 
 const VETERAN_ORGS = [
@@ -18,6 +18,7 @@ export default function StepVeteran({ data, onChange }) {
   const details = data.veteran_details || {};
   const selectedOrgs = details.organizations || [];
   const [showOrgs, setShowOrgs] = useState(false);
+  const orgsRef = useRef(null);
 
   const toggleOrg = (id) => {
     const next = selectedOrgs.includes(id)
@@ -68,7 +69,12 @@ export default function StepVeteran({ data, onChange }) {
 
           {/* Organizations — optional */}
           <button
-            onClick={() => setShowOrgs(v => !v)}
+            onClick={() => {
+              setShowOrgs(v => {
+                if (!v) setTimeout(() => orgsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+                return !v;
+              });
+            }}
             className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors text-sm font-medium"
           >
             <span>
@@ -84,7 +90,7 @@ export default function StepVeteran({ data, onChange }) {
           </button>
 
           {showOrgs && (
-            <div className="grid grid-cols-1 gap-2">
+            <div ref={orgsRef} className="grid grid-cols-1 gap-2">
               {VETERAN_ORGS.map(org => {
                 const active = selectedOrgs.includes(org.id);
                 return (
