@@ -23,7 +23,8 @@ export const BODY_CONDITIONS = [
     conditions: [
       "Right knee pain", "Right knee arthritis", "Right knee replacement",
       "Torn ACL / meniscus (right)", "Right knee surgery (recent)",
-      "Cannot fully bend right knee", "Cannot kneel on right knee"
+      "Cannot fully bend right knee", "Cannot kneel on right knee",
+      "Blast injury (right leg)"
     ]
   },
   {
@@ -32,7 +33,8 @@ export const BODY_CONDITIONS = [
     conditions: [
       "Left knee pain", "Left knee arthritis", "Left knee replacement",
       "Torn ACL / meniscus (left)", "Left knee surgery (recent)",
-      "Cannot fully bend left knee", "Cannot kneel on left knee"
+      "Cannot fully bend left knee", "Cannot kneel on left knee",
+      "Blast injury (left leg)"
     ]
   },
   {
@@ -152,15 +154,7 @@ export const BODY_CONDITIONS = [
     conditions: [
       "Post-abdominal surgery", "Cancer recovery", "Post-surgical recovery (other)",
       "Recent hospitalization", "Hernia", "Ostomy / colostomy present",
-      "Spinal cord injury"
-    ]
-  },
-  {
-    area: "Veterans",
-    icon: "🎖️",
-    conditions: [
-      "Combat injury", "Service-connected disability",
-      "Blast injury", "Military sexual trauma"
+      "Spinal cord injury", "Combat injury", "Service-connected disability"
     ]
   }
 ];
