@@ -1,0 +1,62 @@
+{
+  "name": "PainLog",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "pain_areas": {
+      "type": "object",
+      "description": "Body area to pain level (0-10)"
+    },
+    "overall_pain": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "fatigue_level": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "stiffness_level": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "balance_issues": {
+      "type": "boolean",
+      "default": false
+    },
+    "breathing_difficulty": {
+      "type": "boolean",
+      "default": false
+    },
+    "mood": {
+      "type": "string",
+      "enum": [
+        "Great",
+        "Good",
+        "Fair",
+        "Bad",
+        "Severe pain"
+      ]
+    },
+    "energy": {
+      "type": "string",
+      "enum": [
+        "High",
+        "Medium",
+        "Low",
+        "Exhausted"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "date"
+  ]
+}

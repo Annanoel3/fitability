@@ -1,0 +1,103 @@
+{
+  "name": "WorkoutPlan",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "plan_type": {
+      "type": "string",
+      "enum": [
+        "Daily",
+        "Weekly",
+        "Monthly"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "week_number": {
+      "type": "number"
+    },
+    "exercises": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "JSON stringified exercise list with details"
+    },
+    "warmup": {
+      "type": "string",
+      "description": "JSON warmup details"
+    },
+    "cooldown": {
+      "type": "string",
+      "description": "JSON cooldown details"
+    },
+    "total_duration_minutes": {
+      "type": "number"
+    },
+    "difficulty_level": {
+      "type": "string",
+      "enum": [
+        "Gentle",
+        "Easy",
+        "Moderate",
+        "Challenging"
+      ]
+    },
+    "safety_validated": {
+      "type": "boolean",
+      "default": false
+    },
+    "safety_notes": {
+      "type": "string"
+    },
+    "pre_checkin_mood": {
+      "type": "string",
+      "enum": [
+        "Great",
+        "Good",
+        "Fair",
+        "Bad",
+        "Severe pain"
+      ]
+    },
+    "pre_checkin_energy": {
+      "type": "string",
+      "enum": [
+        "High",
+        "Medium",
+        "Low",
+        "Exhausted"
+      ]
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "exercises_completed": {
+      "type": "number",
+      "default": 0
+    },
+    "exercises_total": {
+      "type": "number"
+    },
+    "workout_data": {
+      "type": "string",
+      "description": "Full JSON workout data"
+    }
+  },
+  "required": [
+    "title",
+    "date"
+  ]
+}

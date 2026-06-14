@@ -1,0 +1,34 @@
+{
+  "name": "SymptomLog",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "symptoms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "severity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "flare_up": {
+      "type": "boolean",
+      "default": false
+    },
+    "flare_type": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "date"
+  ]
+}

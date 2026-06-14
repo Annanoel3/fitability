@@ -1,0 +1,48 @@
+{
+  "name": "ProgressLog",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "weight_lbs": {
+      "type": "number"
+    },
+    "steps": {
+      "type": "number"
+    },
+    "workouts_completed": {
+      "type": "number"
+    },
+    "total_exercise_minutes": {
+      "type": "number"
+    },
+    "mobility_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "strength_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "balance_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "flexibility_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "date"
+  ]
+}

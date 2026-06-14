@@ -1,0 +1,105 @@
+{
+  "name": "Exercise",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "instructions": {
+      "type": "string",
+      "description": "Step-by-step written instructions"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Warmup",
+        "Strength",
+        "Cardio",
+        "Balance",
+        "Flexibility",
+        "Cooldown",
+        "Breathing",
+        "Recovery"
+      ]
+    },
+    "position": {
+      "type": "string",
+      "enum": [
+        "Seated",
+        "Standing",
+        "Wheelchair",
+        "Lying down",
+        "Any"
+      ]
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "Beginner",
+        "Easy",
+        "Moderate",
+        "Advanced"
+      ]
+    },
+    "muscles_used": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "equipment_needed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "restrictions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Conditions where this exercise should NOT be used"
+    },
+    "modifications": {
+      "type": "string",
+      "description": "Available modifications"
+    },
+    "diagram_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "video_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "default_sets": {
+      "type": "number"
+    },
+    "default_reps": {
+      "type": "number"
+    },
+    "default_duration_seconds": {
+      "type": "number"
+    },
+    "safety_rating": {
+      "type": "string",
+      "enum": [
+        "Safe",
+        "Caution",
+        "Avoid"
+      ]
+    },
+    "is_custom": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "position"
+  ]
+}

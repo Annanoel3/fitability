@@ -1,0 +1,111 @@
+{
+  "name": "UserProfile",
+  "type": "object",
+  "properties": {
+    "display_name": {
+      "type": "string",
+      "description": "User's display name"
+    },
+    "age": {
+      "type": "number"
+    },
+    "sex": {
+      "type": "string",
+      "enum": [
+        "Male",
+        "Female",
+        "Non-binary",
+        "Prefer not to say"
+      ]
+    },
+    "height_inches": {
+      "type": "number",
+      "description": "Height in inches"
+    },
+    "weight_lbs": {
+      "type": "number",
+      "description": "Weight in pounds"
+    },
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Selected fitness goals"
+    },
+    "activity_level": {
+      "type": "string",
+      "enum": [
+        "Bedridden",
+        "Mostly seated",
+        "Wheelchair user",
+        "Limited walking",
+        "Light activity",
+        "Moderate activity",
+        "Active"
+      ]
+    },
+    "disabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of disabilities/conditions"
+    },
+    "body_limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Specific body limitations"
+    },
+    "pain_areas": {
+      "type": "object",
+      "description": "Body area pain ratings 0-10"
+    },
+    "current_abilities": {
+      "type": "object",
+      "description": "Map of ability checks (true/false)"
+    },
+    "risk_factors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Risk factors like fall history, surgery, etc."
+    },
+    "is_veteran": {
+      "type": "boolean",
+      "default": false
+    },
+    "veteran_details": {
+      "type": "object",
+      "description": "Combat injury details, service-connected disability info"
+    },
+    "fitness_mode": {
+      "type": "string",
+      "enum": [
+        "Standard",
+        "Wheelchair",
+        "Chair",
+        "Recovery"
+      ],
+      "default": "Standard"
+    },
+    "accessibility_preferences": {
+      "type": "object",
+      "description": "Large text, high contrast, simplified mode preferences"
+    },
+    "onboarding_completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "onboarding_step": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "display_name"
+  ]
+}

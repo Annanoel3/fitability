@@ -1,0 +1,40 @@
+{
+  "name": "CaregiverLink",
+  "type": "object",
+  "properties": {
+    "patient_user_id": {
+      "type": "string",
+      "description": "The user being cared for"
+    },
+    "caregiver_user_id": {
+      "type": "string",
+      "description": "The caregiver user"
+    },
+    "relationship": {
+      "type": "string",
+      "enum": [
+        "Spouse",
+        "Adult child",
+        "Parent",
+        "Caregiver",
+        "Other"
+      ]
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "view_progress, assist_workouts, receive_reminders"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "patient_user_id",
+    "caregiver_user_id",
+    "relationship"
+  ]
+}
