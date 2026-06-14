@@ -53,23 +53,105 @@ export const DISABILITIES_DB = {
   ]
 };
 
-export const BODY_LIMITATIONS = [
-  "Cannot kneel", "Cannot squat", "Cannot raise arms overhead",
-  "Cannot bear weight on left wrist", "Cannot bear weight on right wrist",
-  "Cannot stand longer than 5 minutes", "Cannot stand longer than 10 minutes",
-  "Cannot stand longer than 15 minutes", "Cannot stand at all",
-  "Cannot walk farther than 50 feet", "Cannot walk farther than 100 feet",
-  "Cannot walk farther than 500 feet", "Cannot walk at all",
-  "Uses cane", "Uses walker", "Uses wheelchair", "Uses prosthetic",
-  "Cannot grip with left hand", "Cannot grip with right hand",
-  "Cannot bend at waist", "Cannot twist torso",
-  "Cannot bear weight on left leg", "Cannot bear weight on right leg",
-  "Limited neck rotation", "Cannot lie flat on back",
-  "Cannot lie on stomach", "Cannot get up from floor",
-  "Cannot cross legs", "Limited shoulder range left",
-  "Limited shoulder range right", "Cannot lift more than 5 lbs",
-  "Cannot lift more than 10 lbs"
+export const BODY_LIMITATION_GROUPS = [
+  {
+    area: "Knees",
+    icon: "🦵",
+    options: [
+      "Knee replacement (left)", "Knee replacement (right)",
+      "Knee replacement (both)", "Torn ACL/meniscus",
+      "Knee arthritis", "Knee surgery (recent)",
+      "Cannot kneel", "Cannot fully bend knees",
+      "Cannot squat", "General knee pain"
+    ]
+  },
+  {
+    area: "Back",
+    icon: "🔙",
+    options: [
+      "Lower back pain", "Upper back pain",
+      "Herniated disc", "Spinal stenosis",
+      "Scoliosis", "Spinal fusion surgery",
+      "Cannot bend at waist", "Cannot twist torso",
+      "Cannot lie flat on back", "Sciatica"
+    ]
+  },
+  {
+    area: "Hips",
+    icon: "🦴",
+    options: [
+      "Hip replacement (left)", "Hip replacement (right)",
+      "Hip replacement (both)", "Hip arthritis",
+      "Hip labral tear", "Hip surgery (recent)",
+      "Cannot bear weight on left leg", "Cannot bear weight on right leg",
+      "General hip pain", "Limited hip range of motion"
+    ]
+  },
+  {
+    area: "Shoulders & Arms",
+    icon: "💪",
+    options: [
+      "Rotator cuff injury (left)", "Rotator cuff injury (right)",
+      "Shoulder replacement (left)", "Shoulder replacement (right)",
+      "Limited shoulder range (left)", "Limited shoulder range (right)",
+      "Cannot raise arms overhead", "Elbow injury/pain",
+      "General shoulder pain", "Post-shoulder surgery"
+    ]
+  },
+  {
+    area: "Wrists & Hands",
+    icon: "🤚",
+    options: [
+      "Cannot grip with left hand", "Cannot grip with right hand",
+      "Cannot bear weight on left wrist", "Cannot bear weight on right wrist",
+      "Carpal tunnel (left)", "Carpal tunnel (right)",
+      "Wrist fracture/surgery", "Arthritis in hands",
+      "Limited finger dexterity"
+    ]
+  },
+  {
+    area: "Ankles & Feet",
+    icon: "🦶",
+    options: [
+      "Ankle injury/sprain (left)", "Ankle injury/sprain (right)",
+      "Plantar fasciitis (left)", "Plantar fasciitis (right)",
+      "Foot surgery (recent)", "Cannot walk farther than 50 feet",
+      "Cannot walk farther than 100 feet", "Cannot walk at all",
+      "Limited ankle mobility", "Uses prosthetic (lower)"
+    ]
+  },
+  {
+    area: "Neck",
+    icon: "🫀",
+    options: [
+      "Neck pain (chronic)", "Cervical herniated disc",
+      "Limited neck rotation", "Neck surgery (recent)",
+      "Whiplash injury", "Cannot turn head fully"
+    ]
+  },
+  {
+    area: "Standing & Walking",
+    icon: "🚶",
+    options: [
+      "Cannot stand at all", "Cannot stand longer than 5 minutes",
+      "Cannot stand longer than 10 minutes", "Cannot stand longer than 15 minutes",
+      "Uses cane", "Uses walker", "Uses wheelchair",
+      "Cannot get up from floor", "Balance issues"
+    ]
+  },
+  {
+    area: "Core & Abdomen",
+    icon: "🫁",
+    options: [
+      "Post-abdominal surgery", "Hernia",
+      "Cannot do sit-ups/crunches", "Weak core",
+      "Diastasis recti", "Ostomy/colostomy present"
+    ]
+  }
 ];
+
+// Flat list for backward compatibility
+export const BODY_LIMITATIONS = BODY_LIMITATION_GROUPS.flatMap(g => g.options);
 
 export const BODY_AREAS = [
   "Head/Neck", "Left Shoulder", "Right Shoulder",

@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { BODY_LIMITATIONS } from "@/lib/constants";
-import { Check, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { BODY_LIMITATION_GROUPS } from "@/lib/constants";
+import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function StepBodyLimitations({ data, onChange }) {
-  const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState(null);
   const selected = data.body_limitations || [];
 
   const toggle = (item) => {
@@ -14,25 +13,18 @@ export default function StepBodyLimitations({ data, onChange }) {
     onChange({ body_limitations: next });
   };
 
-  const filtered = search
-    ? BODY_LIMITATIONS.filter(l => l.toLowerCase().includes(search.toLowerCase()))
-    : BODY_LIMITATIONS;
+  const toggleArea = (area) => {
+    setExpanded(prev => prev === area ? null : area);
+  };
+
+  const countSelected = (group) =>
+    group.options.filter(o => selected.includes(o)).length;
 
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-heading font-bold text-foreground">Body Limitations</h2>
-        <p className="text-muted-foreground mt-2">Tell us what movements are difficult or impossible for you.</p>
-      </div>
-
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search limitations..."
-          className="pl-10 h-12 text-lg"
-        />
+        <h2 className="text-2xl font-heading font-bold text-foreground">Physical Limitations</h2>
+        <p className="text-muted-foreground mt-2">Select a body area to expand and choose specific limitations.</p>
       </div>
 
       {selected.length > 0 && (
@@ -43,32 +35,68 @@ export default function StepBodyLimitations({ data, onChange }) {
               onClick={() => toggle(s)}
               className="px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium flex items-center gap-1.5"
             >
-              {s} <span className="text-primary-foreground/70">×</span>
+              {s} <span className="opacity-70">×</span>
             </button>
           ))}
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto pr-2">
-        {filtered.map(item => {
-          const active = selected.includes(item);
+      <div className="space-y-2">
+        {BODY_LIMITATION_GROUPS.map(group => {
+          const count = countSelected(group);
+          const isOpen = expanded === group.area;
+
           return (
-            <button
-              key={item}
-              onClick={() => toggle(item)}
-              className={`flex items-center gap-3 p-3.5 rounded-lg border text-left transition-all ${
-                active
-                  ? "border-primary bg-secondary"
-                  : "border-border bg-card hover:border-primary/30"
-              }`}
-            >
-              <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${
-                active ? "bg-primary text-primary-foreground" : "border border-muted-foreground/30"
-              }`}>
-                {active && <Check className="w-3 h-3" />}
-              </div>
-              <span className="font-medium text-sm">{item}</span>
-            </button>
+            <div key={group.area} className="border border-border rounded-xl overflow-hidden">
+              {/* Group header */}
+              <button
+                onClick={() => toggleArea(group.area)}
+                className={`w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors ${
+                  isOpen ? "bg-secondary" : "bg-card hover:bg-muted/50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{group.icon}</span>
+                  <span className="font-semibold text-sm text-foreground">{group.area}</span>
+                  {count > 0 && (
+                    <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
+                      {count}
+                    </span>
+                  )}
+                </div>
+                {isOpen
+                  ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  : <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                }
+              </button>
+
+              {/* Sub-options */}
+              {isOpen && (
+                <div className="grid grid-cols-1 gap-1.5 px-4 py-3 bg-muted/20 border-t border-border">
+                  {group.options.map(option => {
+                    const active = selected.includes(option);
+                    return (
+                      <button
+                        key={option}
+                        onClick={() => toggle(option)}
+                        className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                          active
+                            ? "border-primary bg-secondary"
+                            : "border-border bg-card hover:border-primary/30"
+                        }`}
+                      >
+                        <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${
+                          active ? "bg-primary text-primary-foreground" : "border border-muted-foreground/30"
+                        }`}>
+                          {active && <Check className="w-3 h-3" />}
+                        </div>
+                        <span className="text-sm font-medium">{option}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
