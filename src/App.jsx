@@ -24,6 +24,7 @@ import MedicalDisclaimer from '@/pages/MedicalDisclaimer';
 import DataPolicy from '@/pages/DataPolicy';
 import DeleteData from '@/pages/DeleteData';
 import DeleteAccount from '@/pages/DeleteAccount';
+import CoachChat from '@/pages/CoachChat';
 import AppLayout from '@/components/layout/AppLayout';
 
 const AuthenticatedApp = () => {
@@ -61,6 +62,7 @@ const AuthenticatedApp = () => {
           <Route path="/workout" element={<Workout />} />
           <Route path="/exercises" element={<ExerciseLibrary />} />
           <Route path="/progress" element={<ProgressPage />} />
+          <Route path="/coach" element={<CoachChat />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsConditions />} />

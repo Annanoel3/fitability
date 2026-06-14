@@ -3,12 +3,13 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import {
   Heart, Home, Dumbbell, BookOpen, TrendingUp,
-  Settings, Menu, X, LogOut, User
+  Settings, Menu, X, LogOut, Bot
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { path: "/", label: "Home", icon: Home },
   { path: "/workout", label: "Workout", icon: Dumbbell },
+  { path: "/coach", label: "Coach", icon: Bot },
   { path: "/exercises", label: "Library", icon: BookOpen },
   { path: "/progress", label: "Progress", icon: TrendingUp },
   { path: "/settings", label: "Settings", icon: Settings }
