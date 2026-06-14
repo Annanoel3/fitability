@@ -59,54 +59,67 @@ export default function Dashboard() {
       return;
     }
 
-    const promptData = {
-      profile: {
-        age: profile.age,
-        sex: profile.sex,
-        goals: profile.goals,
-        activity_level: profile.activity_level,
-        disabilities: profile.disabilities,
-        body_limitations: profile.body_limitations,
-        pain_areas: profile.pain_areas,
-        current_abilities: profile.current_abilities,
-        risk_factors: profile.risk_factors,
-        fitness_mode: profile.fitness_mode,
-        is_veteran: profile.is_veteran
-      },
-      checkin: checkin || todayCheckin,
-      date: today
-    };
+    const p = profile;
+    const heightFt = p.height_inches ? Math.floor(p.height_inches / 12) : null;
+    const heightIn = p.height_inches ? p.height_inches % 12 : null;
+    const heightStr = heightFt ? `${heightFt}'${heightIn}"` : "Not provided";
+    const bmi = (p.weight_lbs && p.height_inches)
+      ? ((p.weight_lbs / (p.height_inches * p.height_inches)) * 703).toFixed(1)
+      : null;
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a physical therapist assistant AI for people with disabilities, chronic pain, injuries, and mobility limitations.
+      prompt: `You are an expert adaptive fitness coach and physical therapist AI. Generate a highly personalized workout for this specific individual.
 
-CRITICAL SAFETY RULES:
-1. User limitations are HARD CONSTRAINTS, not suggestions
-2. If an exercise conflicts with ANY disability, injury, limitation, or pain area, it MUST NOT appear
-3. Only include exercises rated as "Safe" for this specific user
-4. Adapt intensity based on current pain/energy levels
+═══ CRITICAL SAFETY RULES (NON-NEGOTIABLE) ═══
+- Every listed body limitation, disability, and pain area is a HARD CONSTRAINT. Violating any = unsafe workout.
+- If ANY exercise could aggravate a listed condition, pain area, or limitation → REMOVE IT.
+- Wheelchair users: ALL exercises must be performable in a wheelchair.
+- Cannot stand: ZERO standing exercises.
+- Always validate each exercise against the full list before including it.
 
-USER PROFILE:
-${JSON.stringify(promptData.profile, null, 2)}
+═══ FULL USER PROFILE ═══
+Name context: ${p.display_name || "User"}
+Age: ${p.age || "Unknown"}
+Sex/Gender: ${p.sex || "Not provided"}
+Height: ${heightStr}
+Weight: ${p.weight_lbs ? p.weight_lbs + " lbs" : "Not provided"}
+BMI (estimated): ${bmi || "Unknown"}
+Activity Level: ${p.activity_level || "Unknown"}
+Fitness Mode: ${p.fitness_mode || "Standard"}
+Veteran: ${p.is_veteran ? "Yes — may have combat/service injuries" : "No"}
 
-TODAY'S CHECK-IN:
-Mood: ${promptData.checkin?.mood || "Not checked in"}
-Energy: ${promptData.checkin?.energy || "Not checked in"}
+Goals: ${(p.goals || []).join(", ") || "None specified"}
+
+Diagnosed Conditions & Disabilities:
+${(p.disabilities || []).length > 0 ? (p.disabilities || []).map(d => `  • ${d}`).join("\n") : "  None listed"}
+
+Body Limitations (HARD CONSTRAINTS — no exceptions):
+${(p.body_limitations || []).length > 0 ? (p.body_limitations || []).map(l => `  ❌ ${l}`).join("\n") : "  None listed"}
+
+Pain Areas (with severity 0–10):
+${Object.entries(p.pain_areas || {}).length > 0 ? Object.entries(p.pain_areas).map(([area, level]) => `  • ${area}: ${level}/10`).join("\n") : "  None reported"}
+
+Current Abilities:
+${Object.entries(p.current_abilities || {}).map(([k, v]) => `  • ${k.replace(/_/g, " ")}: ${v ? "✅ Can do" : "❌ Cannot do"}`).join("\n") || "  Not assessed"}
+
+Risk Factors:
+${(p.risk_factors || []).length > 0 ? (p.risk_factors || []).map(r => `  ⚠️ ${r}`).join("\n") : "  None"}
+
+═══ TODAY'S CHECK-IN ═══
+Mood: ${(checkin || todayCheckin)?.mood || "Not checked in"}
+Energy: ${(checkin || todayCheckin)?.energy || "Not checked in"}
+
+═══ PERSONALIZATION GUIDELINES ═══
+- Age ${p.age || "unknown"}: ${p.age > 65 ? "Prioritize balance, fall prevention, and joint-safe movements. Lower intensity." : p.age > 50 ? "Focus on mobility, flexibility, and moderate strength. Joint-friendly." : p.age > 35 ? "Balanced approach — strength, cardio, flexibility." : "Can handle slightly higher intensity if abilities allow."}
+- Sex ${p.sex}: ${p.sex === "Female" ? "Include pelvic floor awareness, bone density exercises if relevant." : p.sex === "Male" ? "Balance upper/lower body. Watch for ego-driven overexertion." : "Balanced, inclusive exercise selection."}
+- Weight ${p.weight_lbs ? p.weight_lbs + " lbs" : "unknown"}: ${p.weight_lbs > 250 ? "Choose low-impact, joint-supportive exercises. Avoid high-impact jumps." : p.weight_lbs > 180 ? "Standard adaptive approach with weight awareness." : "Standard approach."}
+- If mood is "Bad" or energy is "Low"/"Exhausted": Reduce to 2–3 gentle exercises, shorter duration, no challenge.
+- If energy is "High" and mood is "Great"/"Good": Can include up to 6 exercises at full appropriate intensity.
 
 INSTRUCTIONS:
-Generate a personalized daily workout plan. Include:
-- Warmup (2-5 min)
-- 4-6 main exercises appropriate for their abilities
-- Cooldown/stretching (2-5 min)
-
-For each exercise, provide:
-- name, description, sets, reps (or duration_seconds), instructions (step by step), position (Seated/Standing/Wheelchair/Lying down), muscles_used, safety_notes
-
-If mood is "Bad" or energy is "Low"/"Exhausted", reduce intensity significantly (fewer sets, easier exercises, shorter duration).
-If the user is a wheelchair user, ALL exercises must be wheelchair-safe.
-If the user cannot stand, NO standing exercises.
-
-VALIDATE: Go through each exercise and confirm it does not conflict with ANY listed disability, limitation, or pain area.`,
+Generate a complete daily workout including warmup, 3–6 main exercises, and cooldown.
+Each exercise must include: name, description, sets, reps or duration_seconds, step-by-step instructions, position, muscles_used, safety_notes.
+Title and description should feel personal — reference their actual goals and situation.`,
       response_json_schema: {
         type: "object",
         properties: {

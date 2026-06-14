@@ -83,28 +83,33 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Heart className="w-6 h-6 text-primary" />
-            <span className="font-heading font-bold text-lg">FitAbility</span>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Fixed Header */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Heart className="w-6 h-6 text-primary" />
+              <span className="font-heading font-bold text-lg">FitAbility</span>
+            </div>
+            <span className="text-sm text-muted-foreground">
+              Step {step + 1} of {STEPS.length}
+            </span>
           </div>
-          <span className="text-sm text-muted-foreground">
-            Step {step + 1} of {STEPS.length}
-          </span>
+          <Progress value={progress} className="h-2" />
         </div>
+      </div>
 
-        <Progress value={progress} className="mb-8 h-2" />
-
-        {/* Step Content */}
-        <div className="min-h-[500px]">
+      {/* Scrollable Step Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
           <StepComponent data={data} onChange={handleChange} />
         </div>
+      </div>
 
-        {/* Navigation */}
-        <div className="flex justify-between items-center mt-8 pb-8">
+      {/* Fixed Footer Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-10 bg-background/95 backdrop-blur-sm border-t border-border px-4 py-4">
+        <div className="max-w-2xl mx-auto flex justify-between items-center">
           <Button
             variant="ghost"
             onClick={() => setStep(s => s - 1)}
