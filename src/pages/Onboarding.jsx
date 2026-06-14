@@ -15,6 +15,7 @@ import StepRiskFactors from "@/components/onboarding/StepRiskFactors";
 import StepVeteran from "@/components/onboarding/StepVeteran";
 
 const STEPS = [
+  { key: "veteran", label: "Veteran", component: StepVeteran },
   { key: "basic", label: "About You", component: StepBasicInfo },
   { key: "goals", label: "Goals", component: StepGoals },
   { key: "activity", label: "Activity", component: StepActivityLevel },
@@ -23,7 +24,6 @@ const STEPS = [
   { key: "pain", label: "Pain", component: StepPainAssessment },
   { key: "abilities", label: "Abilities", component: StepAbilities },
   { key: "risk", label: "Risk Factors", component: StepRiskFactors },
-  { key: "veteran", label: "Veteran", component: StepVeteran }
 ];
 
 export default function Onboarding() {
@@ -40,9 +40,10 @@ export default function Onboarding() {
   };
 
   const canProceed = () => {
-    if (step === 0) return data.display_name && data.age;
-    if (step === 1) return (data.goals || []).length > 0;
-    if (step === 2) return !!data.activity_level;
+    if (step === 0) return data.is_veteran !== undefined; // veteran step requires a yes/no answer
+    if (step === 1) return data.display_name && data.age;
+    if (step === 2) return (data.goals || []).length > 0;
+    if (step === 3) return !!data.activity_level;
     return true;
   };
 
