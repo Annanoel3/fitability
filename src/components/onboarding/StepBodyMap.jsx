@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Shield } from "lucide-react";
 
 const FRONT_SVG = "https://media.base44.com/images/public/6a2e01da2bef77611a127149/e4407373c_bodyfront.svg";
@@ -204,6 +204,14 @@ const ZONES = [
 export default function StepBodyMap({ data, onChange }) {
   const [view, setView] = useState("front");
   const marked = data.marked_zones || [];
+  const toggleRef = useRef(null);
+
+  // Auto-scroll so the toggle + diagram are at the top on mount
+  useEffect(() => {
+    setTimeout(() => {
+      toggleRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  }, []);
 
   const toggle = (id) => {
     const next = marked.includes(id)
@@ -213,6 +221,14 @@ export default function StepBodyMap({ data, onChange }) {
   };
 
   const visibleZones = ZONES.filter(z => view === "front" ? z.front !== null : z.back !== null);
+
+  // Fixed box: back SVG fills 220px wide at 370px tall; front SVG is narrower (~159px) and centered within
+  const BOX_H = 370;
+  const frontW = Math.round(BOX_H * FRONT_W / FRONT_H); // ~159
+  const backW  = Math.round(BOX_H * BACK_W  / BACK_H);  // ~219
+  const BOX_W  = backW; // always use back width as the box width
+  const imgW   = view === "front" ? frontW : backW;
+  const imgOffsetX = Math.round((BOX_W - imgW) / 2);
 
   return (
     <div className="space-y-4">
@@ -227,7 +243,7 @@ export default function StepBodyMap({ data, onChange }) {
       </div>
 
       {/* Front / Back toggle */}
-      <div className="flex justify-center gap-3">
+      <div ref={toggleRef} className="flex justify-center gap-3">
         {["front", "back"].map(v => (
           <button
             key={v}
@@ -243,19 +259,23 @@ export default function StepBodyMap({ data, onChange }) {
         ))}
       </div>
 
-      {/* Body diagram — centered, fixed size */}
+      {/* Body diagram — fixed box, image centered inside */}
       <div className="flex justify-center">
-        <div className="relative select-none" style={{ height: "370px", width: view === "front" ? "calc(370px * 151.92 / 352.32)" : "calc(370px * 209.04 / 352.08)" }}>
+        <div className="relative select-none" style={{ height: `${BOX_H}px`, width: `${BOX_W}px` }}>
+          {/* image positioned so it's centered in the fixed box */}
           <img
             src={view === "front" ? FRONT_SVG : BACK_SVG}
             alt={`${view} body diagram`}
-            className="w-full h-full block"
+            style={{ position: "absolute", left: `${imgOffsetX}px`, top: 0, width: `${imgW}px`, height: `${BOX_H}px` }}
             draggable={false}
           />
 
           {visibleZones.map(zone => {
             const pos = view === "front" ? zone.front : zone.back;
             const isMarked = marked.includes(zone.id);
+            // Dots are % of the image, but the container is BOX_W wide.
+            // Convert image-% to container-% so dots align with the image.
+            const leftPct = (imgOffsetX + pos[0] / 100 * imgW) / BOX_W * 100;
 
             return (
               <button
@@ -264,7 +284,7 @@ export default function StepBodyMap({ data, onChange }) {
                 title={zone.label}
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 rounded-full transition-all hover:scale-110"
                 style={{
-                  left: `${pos[0]}%`,
+                  left: `${leftPct}%`,
                   top: `${pos[1]}%`,
                   width: "26px",
                   height: "26px",
