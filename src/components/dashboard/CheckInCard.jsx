@@ -45,7 +45,7 @@ export default function CheckInCard({ onCheckInComplete }) {
 
       <div>
         <p className="text-sm font-medium text-foreground mb-3">Pain & Mood</p>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-5 gap-2">
           {MOODS.map(m => {
             const Icon = m.icon;
             const active = mood === m.value;
@@ -53,7 +53,7 @@ export default function CheckInCard({ onCheckInComplete }) {
               <button
                 key={m.value}
                 onClick={() => setMood(m.value)}
-                className={`flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
+                className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
                   active ? m.bg : "border-border hover:border-primary/20"
                 }`}
               >
