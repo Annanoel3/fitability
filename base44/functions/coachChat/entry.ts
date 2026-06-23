@@ -49,7 +49,7 @@ USER PROFILE:
 - Age: ${profile?.age || 'Unknown'}, Activity level: ${profile?.activity_level || 'Unknown'}
 - Fitness mode: ${profile?.fitness_mode || 'Standard'}
 - Conditions/disabilities: ${(profile?.disabilities || []).join(', ') || 'None reported'}
-- Body limitations: ${(profile?.body_limitations || []).join(', ') || 'None reported'}
+- Body limitations and injuries: ${(profile?.body_limitations || []).join(' | ') || 'None reported'}
 - Goals: ${(profile?.goals || []).join(', ') || 'Not set'}
 
 CURRENT WORKOUT PLAN:

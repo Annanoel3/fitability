@@ -58,6 +58,14 @@ export default function Onboarding() {
       fitnessMode = "Chair";
     }
 
+    // Build a readable body issues summary from zone descriptions
+    const zoneDescriptions = data.zone_descriptions || {};
+    const markedZones = data.marked_zones || [];
+    const bodyIssuesSummary = markedZones
+      .filter(z => zoneDescriptions[z]?.trim())
+      .map(z => `${z.replace(/_/g, ' ')}: ${zoneDescriptions[z].trim()}`)
+      .join('; ');
+
     const profile = {
       display_name: data.display_name,
       age: data.age,
@@ -67,7 +75,7 @@ export default function Onboarding() {
       goals: data.goals || [],
       activity_level: data.activity_level,
       disabilities: data.disabilities || [],
-      body_limitations: data.body_limitations || [],
+      body_limitations: bodyIssuesSummary ? [bodyIssuesSummary] : (data.body_limitations || []),
       pain_areas: data.pain_areas || {},
       current_abilities: data.current_abilities || {},
       risk_factors: data.risk_factors || [],

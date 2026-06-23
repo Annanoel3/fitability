@@ -1,123 +1,76 @@
-import React, { useState } from "react";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
-
-// Map zone id → relevant condition options
-const ZONE_CONDITIONS = {
-  head: [
-    "Neck pain (chronic)", "Cervical herniated disc", "Limited neck rotation",
-    "Neck surgery (recent)", "Whiplash injury", "Vertigo / dizziness",
-    "Traumatic brain injury", "Concussion history", "Cannot turn head fully"
-  ],
-  left_shoulder: [
-    "Left shoulder pain", "Torn rotator cuff (left)", "Left shoulder replacement",
-    "Left shoulder surgery (recent)", "Cannot raise left arm overhead",
-    "Limited left shoulder range of motion"
-  ],
-  right_shoulder: [
-    "Right shoulder pain", "Torn rotator cuff (right)", "Right shoulder replacement",
-    "Right shoulder surgery (recent)", "Cannot raise right arm overhead",
-    "Limited right shoulder range of motion"
-  ],
-  chest: [
-    "Heart disease", "High blood pressure", "Heart failure",
-    "Post-cardiac surgery", "Exercise-induced chest pain",
-    "COPD", "Asthma", "Oxygen dependent"
-  ],
-  upper_back: [
-    "Upper back pain", "Scoliosis", "Spinal stenosis",
-    "Cannot twist torso", "Post-spinal surgery"
-  ],
-  lower_back: [
-    "Lower back pain", "Herniated disc", "Sciatica",
-    "Spinal fusion surgery", "Cannot bend at waist",
-    "Cannot lie flat on back", "Spinal stenosis"
-  ],
-  left_arm: [
-    "Left elbow pain", "Tennis elbow (left)", "Left arm weakness",
-    "Uses prosthetic (left arm)", "Amputee (upper left)"
-  ],
-  right_arm: [
-    "Right elbow pain", "Tennis elbow (right)", "Right arm weakness",
-    "Uses prosthetic (right arm)", "Amputee (upper right)"
-  ],
-  left_wrist: [
-    "Left wrist pain", "Carpal tunnel (left)", "Cannot grip with left hand",
-    "Cannot bear weight on left wrist", "Wrist fracture / surgery (left)",
-    "Arthritis in left hand"
-  ],
-  right_wrist: [
-    "Right wrist pain", "Carpal tunnel (right)", "Cannot grip with right hand",
-    "Cannot bear weight on right wrist", "Wrist fracture / surgery (right)",
-    "Arthritis in right hand"
-  ],
-  abdomen: [
-    "Hernia", "Post-abdominal surgery", "Cannot do sit-ups / crunches",
-    "Diastasis recti", "Ostomy / colostomy present", "Weak core"
-  ],
-  left_hip: [
-    "Left hip pain", "Hip replacement (left)", "Hip arthritis (left)",
-    "Hip labral tear (left)", "Hip surgery (recent, left)",
-    "Cannot bear weight on left leg", "Limited hip range (left)"
-  ],
-  right_hip: [
-    "Right hip pain", "Hip replacement (right)", "Hip arthritis (right)",
-    "Hip labral tear (right)", "Hip surgery (recent, right)",
-    "Cannot bear weight on right leg", "Limited hip range (right)"
-  ],
-  left_knee: [
-    "Left knee pain", "Left knee arthritis", "Left knee replacement",
-    "Torn ACL / meniscus (left)", "Left knee surgery (recent)",
-    "Cannot fully bend left knee", "Cannot kneel on left knee"
-  ],
-  right_knee: [
-    "Right knee pain", "Right knee arthritis", "Right knee replacement",
-    "Torn ACL / meniscus (right)", "Right knee surgery (recent)",
-    "Cannot fully bend right knee", "Cannot kneel on right knee"
-  ],
-  left_ankle: [
-    "Left ankle pain / sprain", "Plantar fasciitis (left)",
-    "Foot surgery (recent, left)", "Limited ankle mobility (left)",
-    "Uses prosthetic (lower left)", "Amputee (lower left)"
-  ],
-  right_ankle: [
-    "Right ankle pain / sprain", "Plantar fasciitis (right)",
-    "Foot surgery (recent, right)", "Limited ankle mobility (right)",
-    "Uses prosthetic (lower right)", "Amputee (lower right)"
-  ],
-};
+import React from "react";
+import { Textarea } from "@/components/ui/textarea";
 
 const ZONE_LABELS = {
   head: "Head / Neck",
+  neck: "Neck / Upper Back",
   left_shoulder: "Left Shoulder",
   right_shoulder: "Right Shoulder",
   chest: "Chest",
   upper_back: "Upper Back",
+  abdomen: "Abdomen / Core",
   lower_back: "Lower Back",
   left_arm: "Left Arm / Elbow",
   right_arm: "Right Arm / Elbow",
+  left_forearm: "Left Forearm / Elbow",
+  right_forearm: "Right Forearm / Elbow",
   left_wrist: "Left Wrist / Hand",
   right_wrist: "Right Wrist / Hand",
-  abdomen: "Abdomen / Core",
-  left_hip: "Left Hip",
-  right_hip: "Right Hip",
+  left_hip: "Left Hip / Glute",
+  right_hip: "Right Hip / Glute",
+  left_thigh: "Left Thigh",
+  right_thigh: "Right Thigh",
   left_knee: "Left Knee",
   right_knee: "Right Knee",
-  left_ankle: "Left Ankle / Foot",
-  right_ankle: "Right Ankle / Foot",
+  left_calf: "Left Shin / Calf",
+  right_calf: "Right Shin / Calf",
+  left_foot: "Left Foot / Ankle",
+  right_foot: "Right Foot / Ankle",
 };
 
 const ZONE_ICONS = {
-  head: "🫀", left_shoulder: "💪", right_shoulder: "💪",
-  chest: "❤️", upper_back: "🔙", lower_back: "🔙",
-  left_arm: "💪", right_arm: "💪", left_wrist: "🤚", right_wrist: "🤚",
-  abdomen: "🫁", left_hip: "🦴", right_hip: "🦴",
-  left_knee: "🦵", right_knee: "🦵", left_ankle: "🦶", right_ankle: "🦶",
+  head: "🧠", neck: "🔙",
+  left_shoulder: "💪", right_shoulder: "💪",
+  chest: "❤️", upper_back: "🔙", abdomen: "🫁", lower_back: "🔙",
+  left_arm: "💪", right_arm: "💪",
+  left_forearm: "💪", right_forearm: "💪",
+  left_wrist: "🤚", right_wrist: "🤚",
+  left_hip: "🦴", right_hip: "🦴",
+  left_thigh: "🦵", right_thigh: "🦵",
+  left_knee: "🦵", right_knee: "🦵",
+  left_calf: "🦵", right_calf: "🦵",
+  left_foot: "🦶", right_foot: "🦶",
+};
+
+const PLACEHOLDERS = {
+  head: "e.g. Chronic neck pain, can't turn head fully to the left...",
+  left_shoulder: "e.g. Torn rotator cuff, can't raise arm above shoulder height...",
+  right_shoulder: "e.g. Recent surgery, limited range of motion...",
+  chest: "e.g. High blood pressure, asthma, get chest pain when exerting...",
+  upper_back: "e.g. Scoliosis, can't twist torso, upper back stiffness...",
+  lower_back: "e.g. Herniated disc at L4-L5, sciatica down left leg...",
+  abdomen: "e.g. Hernia repair 6 months ago, can't do sit-ups...",
+  left_arm: "e.g. Tennis elbow, weakness in left arm, pain bending elbow...",
+  right_arm: "e.g. Prosthetic right arm, limited grip strength...",
+  left_forearm: "e.g. Tendinitis, pain with repetitive motions...",
+  right_forearm: "e.g. Carpal tunnel symptoms extending to forearm...",
+  left_wrist: "e.g. Carpal tunnel, can't bear weight on left wrist...",
+  right_wrist: "e.g. Arthritis, limited grip, wrist fracture history...",
+  left_hip: "e.g. Hip replacement, limited range, can't bear full weight...",
+  right_hip: "e.g. Hip arthritis, pain walking, labral tear...",
+  left_thigh: "e.g. Quad weakness, pain after injury, nerve damage...",
+  right_thigh: "e.g. IT band tightness, previous fracture...",
+  left_knee: "e.g. ACL replacement, can't fully bend, avoid kneeling...",
+  right_knee: "e.g. Arthritis, bone on bone, knee replacement...",
+  left_calf: "e.g. DVT history, shin splints, calf muscle tear...",
+  right_calf: "e.g. Plantar fasciitis affecting the calf, tightness...",
+  left_foot: "e.g. Plantar fasciitis, ankle sprain, limited ankle mobility...",
+  right_foot: "e.g. Prosthetic foot, drop foot, bunion pain...",
 };
 
 export default function StepZoneConditions({ data, onChange }) {
   const markedZones = data.marked_zones || [];
-  const selected = data.disabilities || [];
-  const [openZone, setOpenZone] = useState(markedZones[0] || null);
+  const descriptions = data.zone_descriptions || {};
 
   if (markedZones.length === 0) {
     return (
@@ -129,92 +82,59 @@ export default function StepZoneConditions({ data, onChange }) {
     );
   }
 
-  const toggle = (condition) => {
-    const next = selected.includes(condition)
-      ? selected.filter(c => c !== condition)
-      : [...selected, condition];
-    onChange({ disabilities: next });
+  const handleChange = (zoneId, value) => {
+    onChange({
+      zone_descriptions: {
+        ...descriptions,
+        [zoneId]: value,
+      }
+    });
   };
 
   return (
     <div className="space-y-5">
       <div className="text-center">
-        <h2 className="text-2xl font-heading font-bold text-foreground">Describe each area</h2>
-        <p className="text-muted-foreground mt-2 text-sm">Tap each marked area and select what applies.</p>
+        <h2 className="text-2xl font-heading font-bold text-foreground">Tell us about each area</h2>
+        <p className="text-muted-foreground mt-2 text-sm">
+          Describe what's wrong in your own words — our AI will use this to keep unsafe exercises out of your plan.
+        </p>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-4">
         {markedZones.map(zoneId => {
-          const conditions = ZONE_CONDITIONS[zoneId] || [];
           const label = ZONE_LABELS[zoneId] || zoneId;
           const icon = ZONE_ICONS[zoneId] || "📍";
-          const isOpen = openZone === zoneId;
-          const count = conditions.filter(c => selected.includes(c)).length;
+          const placeholder = PLACEHOLDERS[zoneId] || "Describe what's wrong with this area...";
+          const value = descriptions[zoneId] || "";
 
           return (
-            <div
-              key={zoneId}
-              className={`rounded-xl border overflow-hidden transition-all ${
-                isOpen ? "border-primary/50 shadow-sm" : count > 0 ? "border-primary/30" : "border-border"
-              }`}
-            >
-              <button
-                onClick={() => setOpenZone(prev => prev === zoneId ? null : zoneId)}
-                className={`w-full flex items-center gap-4 px-4 py-3.5 text-left transition-colors ${
-                  isOpen ? "bg-secondary/60" : "bg-card hover:bg-muted/40"
-                }`}
-              >
-                <span className="text-xl flex-shrink-0">{icon}</span>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-foreground">{label}</span>
-                    {count > 0 && (
-                      <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
-                        {count}
-                      </span>
-                    )}
-                  </div>
-                  {!isOpen && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {count > 0 ? `${count} condition${count > 1 ? "s" : ""} selected` : "Tap to specify"}
-                    </p>
-                  )}
-                </div>
-                {isOpen
-                  ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                }
-              </button>
-
-              {isOpen && (
-                <div className="grid grid-cols-1 gap-1.5 px-4 py-3 bg-muted/20 border-t border-border">
-                  {conditions.map(condition => {
-                    const active = selected.includes(condition);
-                    return (
-                      <button
-                        key={condition}
-                        onClick={() => toggle(condition)}
-                        className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
-                          active
-                            ? "border-primary bg-secondary"
-                            : "border-border bg-card hover:border-primary/30"
-                        }`}
-                      >
-                        <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${
-                          active ? "bg-primary text-primary-foreground" : "border border-muted-foreground/30"
-                        }`}>
-                          {active && <Check className="w-3 h-3" />}
-                        </div>
-                        <span className="text-sm font-medium">{condition}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+            <div key={zoneId} className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3 bg-secondary/40 border-b border-border">
+                <span className="text-lg">{icon}</span>
+                <span className="font-semibold text-sm text-foreground">{label}</span>
+                {value.trim() && (
+                  <span className="ml-auto bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full font-medium">
+                    ✓ Described
+                  </span>
+                )}
+              </div>
+              <div className="p-4">
+                <Textarea
+                  value={value}
+                  onChange={(e) => handleChange(zoneId, e.target.value)}
+                  placeholder={placeholder}
+                  className="resize-none text-sm min-h-[80px] bg-background"
+                  rows={3}
+                />
+              </div>
             </div>
           );
         })}
       </div>
+
+      <p className="text-xs text-muted-foreground text-center">
+        You can leave areas blank — even a little detail helps.
+      </p>
     </div>
   );
 }
