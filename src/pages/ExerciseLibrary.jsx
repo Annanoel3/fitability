@@ -80,12 +80,9 @@ For each exercise provide: name, description, instructions (step by step), categ
     });
 
     if (result.exercises) {
-      for (const ex of result.exercises) {
-        await base44.entities.Exercise.create({
-          ...ex,
-          safety_rating: "Safe"
-        });
-      }
+      await base44.entities.Exercise.bulkCreate(
+        result.exercises.map(ex => ({ ...ex, safety_rating: "Safe" }))
+      );
       const updated = await base44.entities.Exercise.filter({}, "name");
       setExercises(updated);
     }
