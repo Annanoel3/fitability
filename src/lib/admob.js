@@ -3,17 +3,21 @@ const SHOW_EVERY_N_OPENS = 3;
 const OPEN_COUNT_KEY = 'admgr_open_count';
 const AD_DELAY_MS = 30000;
 
-let AdMob = null;
-const isNative = window.Capacitor?.isNativePlatform?.() ?? false;
+function isNative() {
+  return window.Capacitor?.isNativePlatform?.() === true;
+}
+
+function getAdMob() {
+  return window.Capacitor?.Plugins?.AdMob;
+}
 
 export async function initAdMob() {
-  if (!isNative) return;
+  if (!isNative() || !getAdMob()) return;
   try {
-    const { AdMob: AdMobPlugin } = await import('@capacitor-community/admob');
-    AdMob = AdMobPlugin;
-    await AdMob.initialize({ initializeForTesting: false });
+    await getAdMob().initialize({ initializeForTesting: false });
+    console.log('[AdMob] initialized');
   } catch (e) {
-    AdMob = null;
+    console.error('[AdMob] initialize failed:', e);
   }
 }
 
@@ -55,14 +59,15 @@ function removeCountdownOverlay() {
 }
 
 export async function showInterstitialAd() {
-  if (!AdMob) return false;
+  if (!isNative() || !getAdMob()) return false;
   if (isUserActive()) return false;
   try {
     await showCountdownOverlay(5);
-    await AdMob.prepareInterstitial({ adId: AD_UNIT_ID, isTesting: false });
-    await AdMob.showInterstitial();
+    await getAdMob().prepareInterstitial({ adId: AD_UNIT_ID, isTesting: false });
+    await getAdMob().showInterstitial();
     return true;
   } catch (e) {
+    console.error('[AdMob] interstitial failed:', e);
     removeCountdownOverlay();
     return false;
   }
