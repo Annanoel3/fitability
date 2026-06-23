@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [emergency, setEmergency] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [showWorkoutPicker, setShowWorkoutPicker] = useState(false);
+  const [askedForPreferences, setAskedForPreferences] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -46,8 +47,9 @@ export default function Dashboard() {
     setTodayCheckin(checkin);
     if (checkin.mood === "Severe pain") {
       setEmergency(true);
-    } else {
+    } else if (!askedForPreferences) {
       setShowWorkoutPicker(true);
+      setAskedForPreferences(true);
     }
   };
 
