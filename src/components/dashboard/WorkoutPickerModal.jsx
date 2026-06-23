@@ -28,9 +28,35 @@ const EQUIPMENT_OPTIONS = [
   { id: "wheelchair", label: "Wheelchair", desc: "Seated wheelchair workouts" },
 ];
 
-export default function WorkoutPickerModal({ onConfirm, onClose }) {
+export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment = false }) {
   const [type, setType] = useState(null);
   const [intensity, setIntensity] = useState(null);
+  const [equipment, setEquipment] = useState([]);
+
+  const toggleEquipment = (id) => {
+    if (id === "none") {
+      setEquipment(["none"]);
+      return;
+    }
+    setEquipment(prev => {
+      const without_none = prev.filter(e => e !== "none");
+      return without_none.includes(id)
+        ? without_none.filter(e => e !== id)
+        : [...without_none, id];
+    });
+  };
+
+  const handleConfirm = () => {
+    onConfirm({ 
+      workoutType: type, 
+      intensity,
+      ...(showEquipment && { equipment })
+    });
+  };
+
+  const canConfirm = showEquipment 
+    ? type && intensity && equipment.length > 0
+    : type && intensity;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
@@ -96,9 +122,34 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
             </div>
           </div>
 
+          {showEquipment && (
+            <div>
+              <p className="text-sm font-semibold text-foreground mb-2">What equipment do you have?</p>
+              <div className="grid grid-cols-2 gap-2">
+                {EQUIPMENT_OPTIONS.map(e => {
+                  const selected = equipment.includes(e.id);
+                  return (
+                    <button
+                      key={e.id}
+                      onClick={() => toggleEquipment(e.id)}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${
+                        selected
+                          ? "border-primary bg-primary/10"
+                          : "border-border bg-background hover:border-primary/40"
+                      }`}
+                    >
+                      <div className={`text-sm font-semibold ${selected ? "text-foreground" : "text-muted-foreground"}`}>{e.label}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{e.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <Button
-            onClick={() => onConfirm({ workoutType: type, intensity })}
-            disabled={!type || !intensity}
+            onClick={handleConfirm}
+            disabled={!canConfirm}
             className="w-full h-12 text-base"
           >
             Generate My Workout ✨

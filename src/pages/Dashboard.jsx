@@ -214,9 +214,10 @@ Title and description should feel personal — reference their actual goals and 
   return (
     <div className="space-y-6 pb-20 md:pb-6">
       {showWorkoutPicker && (
-        <WorkoutPickerModal
+        <WorkoutPickerModal 
           onConfirm={handleWorkoutPickerConfirm}
           onClose={() => setShowWorkoutPicker(false)}
+          showEquipment={!profile?.equipment || profile.equipment.length === 0}
         />
       )}
       {/* Greeting */}
