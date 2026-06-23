@@ -11,6 +11,7 @@ import {
   ChevronRight, Eye, Save, MessageSquare, Sun, Moon
 } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
+import EquipmentEditor from "@/components/settings/EquipmentEditor";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -229,6 +230,9 @@ export default function SettingsPage() {
           />
         </div>
       </div>
+
+      {/* Equipment */}
+      <EquipmentEditor profile={profile} onUpdate={setProfile} />
 
       {/* Legal */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden">

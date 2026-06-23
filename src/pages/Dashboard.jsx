@@ -51,10 +51,8 @@ export default function Dashboard() {
     }
   };
 
-  const handleWorkoutPickerConfirm = async (preferences) => {
+  const handleWorkoutPickerConfirm = (preferences) => {
     setShowWorkoutPicker(false);
-    await base44.entities.UserProfile.update(profile.id, { equipment: preferences.equipment });
-    setProfile(prev => ({ ...prev, equipment: preferences.equipment }));
     handleGenerateWorkout(todayCheckin, preferences);
   };
 
