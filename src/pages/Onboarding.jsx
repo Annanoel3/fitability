@@ -65,6 +65,7 @@ export default function Onboarding() {
       .filter(z => zoneDescriptions[z]?.trim())
       .map(z => `${z.replace(/_/g, ' ')}: ${zoneDescriptions[z].trim()}`)
       .join('; ');
+    const extraNotes = zoneDescriptions["_extra"]?.trim() || "";
 
     const profile = {
       display_name: data.display_name,
@@ -75,7 +76,10 @@ export default function Onboarding() {
       goals: data.goals || [],
       activity_level: data.activity_level,
       disabilities: data.disabilities || [],
-      body_limitations: bodyIssuesSummary ? [bodyIssuesSummary] : (data.body_limitations || []),
+      body_limitations: [
+        ...(bodyIssuesSummary ? [bodyIssuesSummary] : (data.body_limitations || [])),
+        ...(extraNotes ? [`Additional notes: ${extraNotes}`] : [])
+      ],
       pain_areas: data.pain_areas || {},
       current_abilities: data.current_abilities || {},
       risk_factors: data.risk_factors || [],

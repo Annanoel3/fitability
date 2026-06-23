@@ -132,6 +132,22 @@ export default function StepZoneConditions({ data, onChange }) {
         })}
       </div>
 
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3 bg-secondary/40 border-b border-border">
+          <span className="text-lg">💬</span>
+          <span className="font-semibold text-sm text-foreground">Anything else the AI should know?</span>
+        </div>
+        <div className="p-4">
+          <Textarea
+            value={descriptions["_extra"] || ""}
+            onChange={(e) => handleChange("_extra", e.target.value)}
+            placeholder="e.g. I get dizzy when I stand up too fast, I've had a recent surgery, I'm recovering from COVID, I use a cane..."
+            className="resize-none text-sm min-h-[80px] bg-background"
+            rows={3}
+          />
+        </div>
+      </div>
+
       <p className="text-xs text-muted-foreground text-center">
         You can leave areas blank — even a little detail helps.
       </p>

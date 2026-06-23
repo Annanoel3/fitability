@@ -6,6 +6,7 @@ import CheckInCard from "@/components/dashboard/CheckInCard";
 import StreakCard from "@/components/dashboard/StreakCard";
 import EmergencyBanner from "@/components/dashboard/EmergencyBanner";
 import { Dumbbell, Clock, Target, Sparkles, ChevronRight, Loader2, TrendingUp } from "lucide-react";
+import WorkoutPickerModal from "@/components/dashboard/WorkoutPickerModal";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [emergency, setEmergency] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [showWorkoutPicker, setShowWorkoutPicker] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -45,11 +47,16 @@ export default function Dashboard() {
     if (checkin.mood === "Severe pain") {
       setEmergency(true);
     } else {
-      handleGenerateWorkout(checkin);
+      setShowWorkoutPicker(true);
     }
   };
 
-  const handleGenerateWorkout = async (checkin) => {
+  const handleWorkoutPickerConfirm = (preferences) => {
+    setShowWorkoutPicker(false);
+    handleGenerateWorkout(todayCheckin, preferences);
+  };
+
+  const handleGenerateWorkout = async (checkin, preferences = {}) => {
     setGenerating(true);
     const today = new Date().toISOString().split("T")[0];
     
@@ -69,6 +76,12 @@ export default function Dashboard() {
 
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `You are an expert adaptive fitness coach and physical therapist AI. Generate a highly personalized workout for this specific individual.
+
+${preferences.workoutType ? `═══ USER'S WORKOUT PREFERENCES ═══
+Requested workout type: ${preferences.workoutType} — prioritize this style of exercise.
+Requested intensity: ${preferences.intensity} — match this energy level throughout.
+` : ""}
+You are an expert adaptive fitness coach and physical therapist AI. Generate a highly personalized workout for this specific individual.
 
 ═══ CRITICAL SAFETY RULES (NON-NEGOTIABLE) ═══
 - Every listed body limitation, disability, and pain area is a HARD CONSTRAINT. Violating any = unsafe workout.
@@ -198,6 +211,12 @@ Title and description should feel personal — reference their actual goals and 
 
   return (
     <div className="space-y-6 pb-20 md:pb-6">
+      {showWorkoutPicker && (
+        <WorkoutPickerModal
+          onConfirm={handleWorkoutPickerConfirm}
+          onClose={() => setShowWorkoutPicker(false)}
+        />
+      )}
       {/* Greeting */}
       <div>
         <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
@@ -268,8 +287,8 @@ Title and description should feel personal — reference their actual goals and 
           )}
 
           {todayCheckin && !todayWorkout && !generating && (
-            <Button onClick={() => handleGenerateWorkout(todayCheckin)} className="w-full h-12">
-              <Sparkles className="w-4 h-4 mr-2" /> Generate Today's Workout
+            <Button onClick={() => setShowWorkoutPicker(true)} className="w-full h-12">
+              <Sparkles className="w-4 h-4 mr-2" /> Choose Today's Workout
             </Button>
           )}
         </>
