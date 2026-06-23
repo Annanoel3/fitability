@@ -33,6 +33,7 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false);
   const [existingProfileId, setExistingProfileId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [savedStep, setSavedStep] = useState(null); // non-null = show resume prompt
 
   // Load any saved onboarding progress on mount
   useEffect(() => {
@@ -46,9 +47,10 @@ export default function Onboarding() {
           return;
         }
         setExistingProfileId(profile.id);
-        // Restore saved step and data
+        // Restore saved step and data — but show resume prompt at step 0
         const savedStep = profile.onboarding_step || 0;
-        setStep(Math.min(savedStep, STEPS.length - 1));
+        setStep(0);
+        setSavedStep(Math.min(savedStep, STEPS.length - 1));
         // Restore fields back into onboarding data state
         const heightFt = profile.height_inches ? Math.floor(profile.height_inches / 12) : undefined;
         const heightIn = profile.height_inches ? profile.height_inches % 12 : undefined;
@@ -176,10 +178,51 @@ export default function Onboarding() {
     navigate("/");
   };
 
+  const handleStartOver = async () => {
+    if (existingProfileId) {
+      await base44.entities.UserProfile.delete(existingProfileId);
+    }
+    setExistingProfileId(null);
+    setData({});
+    setStep(0);
+    setSavedStep(null);
+  };
+
+  const handleResume = () => {
+    setStep(savedStep);
+    setSavedStep(null);
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Resume prompt — shown when a saved in-progress onboarding is found
+  if (savedStep !== null) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
+        <div className="max-w-sm w-full text-center space-y-6">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Heart className="w-7 h-7 text-primary" />
+            <span className="font-heading font-bold text-xl">FitAbility</span>
+          </div>
+          <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
+            <p className="text-lg font-heading font-semibold">Welcome back!</p>
+            <p className="text-muted-foreground text-sm">
+              You were on step {savedStep + 1} of {STEPS.length} — <strong>{STEPS[savedStep]?.label}</strong>. Want to pick up where you left off?
+            </p>
+            <Button className="w-full gap-2" onClick={handleResume}>
+              Continue where I left off <ArrowRight className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" className="w-full text-muted-foreground text-sm" onClick={handleStartOver}>
+              Start over from the beginning
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
