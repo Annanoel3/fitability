@@ -76,48 +76,48 @@ const ZONES = [
     label: "Left Arm",
     // back_left_arm_Image (upper): translate(8.16 89.52) scale(.24), w=95 h=146
     back:  [(8.16  + 95*.24/2) / BACK_W * 100,  (89.52 + 146*.24/2) / BACK_H * 100],
-    // front: left arm of figure = right side of image, manual placement
-    front: [16, 38],
+    // front: figure's left arm = image's RIGHT side (~10% x)
+    front: [9, 36],
   },
   {
     id: "right_arm",
     label: "Right Arm",
     // back_right_arm_Image: translate(100.32 87.6) scale(.24), w=96 h=162
     back:  [(100.32 + 96*.24/2) / BACK_W * 100,  (87.6 + 162*.24/2) / BACK_H * 100],
-    // front: right arm of figure = left side of image, manual placement
-    front: [84, 38],
+    // front: figure's right arm = image's LEFT side (~91% x)
+    front: [91, 36],
   },
   {
     id: "left_forearm",
     label: "Left Forearm / Elbow",
     // back_left_forearm_Image: translate(3.36 124.56) scale(.24), w=101 h=160
     back:  [(3.36  + 101*.24/2) / BACK_W * 100,  (124.56 + 160*.24/2) / BACK_H * 100],
-    // front_right_forearm_Image: translate(15.12 117.6) scale(.24), w=109 h=185
-    front: [(15.12 + 109*.24/2) / FRONT_W * 100, (117.6 + 185*.24/2) / FRONT_H * 100],
+    // front: figure's left forearm = image's far right (~7% x)
+    front: [7, 48],
   },
   {
     id: "right_forearm",
     label: "Right Forearm / Elbow",
     // back_right_forearm_Image: translate(102.72 126.48) scale(.24), w=103 h=152
     back:  [(102.72 + 103*.24/2) / BACK_W * 100, (126.48 + 152*.24/2) / BACK_H * 100],
-    // front_left_forearm_Image: translate(86.64 259.92) — wait that's shin, approximate right forearm
-    front: [(124.8 + 75*.24/2) / FRONT_W * 100,  (117.6 + 185*.24/2) / FRONT_H * 100],
+    // front: figure's right forearm = image's far left (~93% x)
+    front: [93, 48],
   },
   {
     id: "left_wrist",
     label: "Left Wrist / Hand",
     // back_left_hand_Image: translate(0 174.96) scale(.24), w=74 h=125
     back:  [(0    + 74*.24/2) / BACK_W * 100,  (174.96 + 125*.24/2) / BACK_H * 100],
-    // front: left hand of figure (right side of image), front_right_hand_Image: translate(0 168.96) scale(.24), w=105 h=155
-    front: [(0 + 105*.24/2) / FRONT_W * 100, (168.96 + 155*.24/2) / FRONT_H * 100],
+    // front: figure's left hand = far right of image (~6% x)
+    front: [6, 57],
   },
   {
     id: "right_wrist",
     label: "Right Wrist / Hand",
     // back_right_hand_Image: translate(113.04 173.04) scale(.24), w=74 h=135
     back:  [(113.04 + 74*.24/2) / BACK_W * 100,  (173.04 + 135*.24/2) / BACK_H * 100],
-    // front: right hand of figure (left side of image), front_left_hand_Image: translate(126.96 171.12) scale(.24), w=104 h=146
-    front: [(126.96 + 104*.24/2) / FRONT_W * 100, (171.12 + 146*.24/2) / FRONT_H * 100],
+    // front: figure's right hand = far left of image (~94% x)
+    front: [94, 57],
   },
   {
     id: "left_hip",
@@ -140,32 +140,32 @@ const ZONES = [
     label: "Left Thigh",
     // back_left_thigh_Image: translate(29.04 200.4) scale(.24), w=156 h=142
     back:  [(29.04 + 156*.24/2) / BACK_W * 100, (200.4 + 142*.24/2) / BACK_H * 100],
-    // front_right_thigh_Image: translate(40.08 177.84) scale(.24), w=148 h=237
-    front: [(40.08 + 148*.24/2) / FRONT_W * 100, (177.84 + 237*.24/2) / FRONT_H * 100],
+    // front: figure's left thigh = right leg, mid-thigh
+    front: [36, 58],
   },
   {
     id: "right_thigh",
     label: "Right Thigh",
     // back_right_thigh_Image: translate(66.48 200.4) scale(.24), w=146 h=142
     back:  [(66.48 + 146*.24/2) / BACK_W * 100, (200.4 + 142*.24/2) / BACK_H * 100],
-    // front_left_thigh_Image: translate(75.12 177.84) scale(.24), w=153 h=232
-    front: [(75.12 + 153*.24/2) / FRONT_W * 100, (177.84 + 232*.24/2) / FRONT_H * 100],
+    // front: figure's right thigh = left leg, mid-thigh
+    front: [64, 58],
   },
   {
     id: "left_knee",
     label: "Left Knee",
     // back_left_knee_Image: translate(35.28 234.48) scale(.24), w=101 h=86
     back:  [(35.28 + 101*.24/2) / BACK_W * 100, (234.48 + 86*.24/2) / BACK_H * 100],
-    // front_right_knee_Image: translate(41.76 234.48) scale(.24), w=191 h=110
-    front: [(41.76 + 191*.24/2) / FRONT_W * 100, (234.48 + 110*.24/2) / FRONT_H * 100],
+    // front: figure's left knee = right leg of image
+    front: [36, 69],
   },
   {
     id: "right_knee",
     label: "Right Knee",
     // back_right_knee_Image: translate(71.28 234.48) scale(.24), w=101 h=88
     back:  [(71.28 + 101*.24/2) / BACK_W * 100, (234.48 + 88*.24/2) / BACK_H * 100],
-    // front_left_knee_Image: translate(82.8 233.28) scale(.24), w=114 h=112 — center x adjusted inward
-    front: [74, (233.28 + 112*.24/2) / FRONT_H * 100],
+    // front: figure's right knee = left leg of image
+    front: [64, 69],
   },
   {
     id: "left_calf",
@@ -246,9 +246,9 @@ export default function StepBodyMap({ data, onChange }) {
       </div>
 
       {/* Body diagram — fixed height container, image scales to fit */}
-      <div className="flex justify-center items-start" style={{ height: "340px" }}>
+      <div className="flex justify-center items-start" style={{ height: "420px" }}>
         {/* inner wrapper matches actual image dimensions so % dots stay accurate */}
-        <div className="relative select-none h-full" style={{ width: view === "front" ? "calc(340px * 151.92 / 352.32)" : "calc(340px * 209.04 / 352.08)" }}>
+        <div className="relative select-none h-full" style={{ width: view === "front" ? "calc(420px * 151.92 / 352.32)" : "calc(420px * 209.04 / 352.08)" }}>
           <img
             src={view === "front" ? FRONT_SVG : BACK_SVG}
             alt={`${view} body diagram`}
@@ -269,8 +269,8 @@ export default function StepBodyMap({ data, onChange }) {
                 style={{
                   left: `${pos[0]}%`,
                   top: `${pos[1]}%`,
-                  width: "26px",
-                  height: "26px",
+                  width: "34px",
+                  height: "34px",
                   background: isMarked
                     ? "hsla(0, 72%, 51%, 0.85)"
                     : "hsla(174, 58%, 39%, 0.18)",
