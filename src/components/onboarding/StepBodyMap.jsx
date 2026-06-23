@@ -77,7 +77,7 @@ const ZONES = [
     // back_left_arm_Image (upper): translate(8.16 89.52) scale(.24), w=95 h=146
     back:  [(8.16  + 95*.24/2) / BACK_W * 100,  (89.52 + 146*.24/2) / BACK_H * 100],
     // front: figure's left arm (viewer's right) — arm sits ~17% from left edge
-    front: [17, 36],
+    front: [17, 30],
   },
   {
     id: "right_arm",
@@ -85,22 +85,22 @@ const ZONES = [
     // back_right_arm_Image: translate(100.32 87.6) scale(.24), w=96 h=162
     back:  [(100.32 + 96*.24/2) / BACK_W * 100,  (87.6 + 162*.24/2) / BACK_H * 100],
     // front: figure's right arm (viewer's left) — arm sits ~83% from left edge
-    front: [83, 36],
+    front: [83, 30],
   },
   {
     id: "left_forearm",
     label: "Left Forearm / Elbow",
     // back_left_forearm_Image: translate(3.36 124.56) scale(.24), w=101 h=160
     back:  [(3.36  + 101*.24/2) / BACK_W * 100,  (124.56 + 160*.24/2) / BACK_H * 100],
-    // front: lower arm, slightly further out
-    front: [14, 47],
+    // front: lower arm, closer to elbow
+    front: [14, 41],
   },
   {
     id: "right_forearm",
     label: "Right Forearm / Elbow",
     // back_right_forearm_Image: translate(102.72 126.48) scale(.24), w=103 h=152
     back:  [(102.72 + 103*.24/2) / BACK_W * 100, (126.48 + 152*.24/2) / BACK_H * 100],
-    front: [86, 47],
+    front: [86, 41],
   },
   {
     id: "left_wrist",
