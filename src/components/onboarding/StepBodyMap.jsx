@@ -54,8 +54,8 @@ export default function StepBodyMap({ data, onChange }) {
 
   const visibleZones = ZONES.filter(z => view === "front" ? z.front !== null : z.back !== null);
 
-  const BOX_H = view === "back" ? 500 : 370;
-  const imgW = view === "back" ? undefined : Math.round(BOX_H * FRONT_W / FRONT_H);
+  const BOX_H = 370;
+  const imgW = Math.round(BOX_H * FRONT_W / FRONT_H);
 
   return (
     <div className="space-y-4">
@@ -85,8 +85,8 @@ export default function StepBodyMap({ data, onChange }) {
         ))}
       </div>
 
-      <div className="flex justify-center px-4">
-        <div className="relative select-none" style={{ height: `${BOX_H}px`, width: imgW ? `${imgW}px` : "100%", maxWidth: view === "back" ? "500px" : "auto" }}>
+      <div className="flex justify-center">
+        <div className="relative select-none" style={{ height: `${BOX_H}px`, width: `${imgW}px` }}>
           <img
             src={view === "front" ? FRONT_SVG : BACK_SVG}
             alt={`${view} body diagram`}
