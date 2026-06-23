@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useTheme } from "@/lib/ThemeContext";
 import {
   Heart, Home, Dumbbell, BookOpen, TrendingUp,
-  Settings, Menu, X, LogOut, Bot
+  Settings, Menu, X, LogOut, Bot, Sun, Moon
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
 export default function AppLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { dark, toggle } = useTheme();
 
   const handleLogout = () => {
     base44.auth.logout("/login");
@@ -53,8 +55,15 @@ export default function AppLayout() {
               );
             })}
             <button
+              onClick={toggle}
+              className="ml-1 p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+              title={dark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
               onClick={handleLogout}
-              className="ml-2 p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+              className="ml-1 p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
             >
               <LogOut className="w-4 h-4" />
             </button>

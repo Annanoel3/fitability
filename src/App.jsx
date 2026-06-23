@@ -4,6 +4,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { ThemeProvider } from '@/lib/ThemeContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -25,6 +26,7 @@ import DataPolicy from '@/pages/DataPolicy';
 import DeleteData from '@/pages/DeleteData';
 import DeleteAccount from '@/pages/DeleteAccount';
 import CoachChat from '@/pages/CoachChat';
+import FeedbackPage from '@/pages/FeedbackPage';
 import AppLayout from '@/components/layout/AppLayout';
 
 const AuthenticatedApp = () => {
@@ -70,6 +72,7 @@ const AuthenticatedApp = () => {
           <Route path="/data-policy" element={<DataPolicy />} />
           <Route path="/delete-data" element={<DeleteData />} />
           <Route path="/delete-account" element={<DeleteAccount />} />
+          <Route path="/feedback" element={<FeedbackPage />} />
         </Route>
       </Route>
       
@@ -80,6 +83,7 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
@@ -88,6 +92,7 @@ function App() {
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>
+    </ThemeProvider>
   )
 }
 

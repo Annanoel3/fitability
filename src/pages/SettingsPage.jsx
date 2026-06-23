@@ -8,11 +8,13 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   User, FileText, LogOut, Loader2,
-  ChevronRight, Eye, Save
+  ChevronRight, Eye, Save, MessageSquare, Sun, Moon
 } from "lucide-react";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const { dark, toggle } = useTheme();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -172,6 +174,21 @@ export default function SettingsPage() {
         </Button>
       </div>
 
+      {/* Appearance */}
+      <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+        <div className="flex items-center gap-3 mb-2">
+          {dark ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
+          <h2 className="font-heading font-semibold">Appearance</h2>
+        </div>
+        <div className="flex items-center justify-between py-2">
+          <div>
+            <div className="font-medium text-sm">Dark Mode</div>
+            <div className="text-xs text-muted-foreground">Switch to a dark colour scheme</div>
+          </div>
+          <Switch checked={dark} onCheckedChange={toggle} />
+        </div>
+      </div>
+
       {/* Accessibility */}
       <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
         <div className="flex items-center gap-3 mb-2">
@@ -223,7 +240,7 @@ export default function SettingsPage() {
           { path: "/privacy", label: "Privacy Policy" },
           { path: "/terms", label: "Terms & Conditions" },
           { path: "/medical-disclaimer", label: "Medical Disclaimer" },
-          { path: "/data-policy", label: "Data Policy" },
+          { path: "/data-policy", label: "Data & IP Policy" },
           { path: "/delete-data", label: "Delete My Data" },
           { path: "/delete-account", label: "Delete My Account" }
         ].map(item => (
@@ -237,6 +254,21 @@ export default function SettingsPage() {
           </Link>
         ))}
       </div>
+
+      {/* Feedback */}
+      <Link
+        to="/feedback"
+        className="flex items-center justify-between bg-card rounded-2xl border border-border px-5 py-4 hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <MessageSquare className="w-5 h-5 text-primary" />
+          <div>
+            <div className="font-medium text-sm">Send Feedback</div>
+            <div className="text-xs text-muted-foreground">Bug reports, feature requests, or anything else</div>
+          </div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      </Link>
 
       {/* Logout */}
       <Button variant="outline" onClick={handleLogout} className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
