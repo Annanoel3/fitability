@@ -1,6 +1,15 @@
 {
   "name": "WorkoutPlan",
   "type": "object",
+  "rls": {
+    "enabled": true,
+    "rules": {
+      "create": "user",
+      "read": "owner",
+      "update": "owner",
+      "delete": "owner"
+    }
+  },
   "properties": {
     "title": {
       "type": "string"
@@ -94,6 +103,10 @@
     "workout_data": {
       "type": "string",
       "description": "Full JSON workout data"
+    },
+    "archived": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

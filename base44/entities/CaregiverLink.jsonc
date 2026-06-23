@@ -1,6 +1,15 @@
 {
   "name": "CaregiverLink",
   "type": "object",
+  "rls": {
+    "enabled": true,
+    "rules": {
+      "create": "user",
+      "read": "owner",
+      "update": "owner",
+      "delete": "owner"
+    }
+  },
   "properties": {
     "patient_user_id": {
       "type": "string",

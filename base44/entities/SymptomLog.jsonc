@@ -1,6 +1,15 @@
 {
   "name": "SymptomLog",
   "type": "object",
+  "rls": {
+    "enabled": true,
+    "rules": {
+      "create": "user",
+      "read": "owner",
+      "update": "owner",
+      "delete": "owner"
+    }
+  },
   "properties": {
     "date": {
       "type": "string",

@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   ChevronLeft, ChevronRight, Check, Clock, Target,
-  AlertTriangle, Loader2, Play, Pause, RotateCcw,
-  Shield, Dumbbell, Wind
+  Loader2, Play, Pause, RotateCcw,
+  Shield, Dumbbell, Wind, Archive
 } from "lucide-react";
 
 export default function Workout() {
@@ -102,6 +102,11 @@ export default function Workout() {
     navigate("/");
   };
 
+  const archiveWorkout = async () => {
+    await base44.entities.WorkoutPlan.update(workout.id, { archived: true });
+    navigate("/");
+  };
+
   const startTimer = (seconds) => {
     setTimerSeconds(seconds);
     setTimerActive(true);
@@ -121,9 +126,18 @@ export default function Workout() {
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h1 className="font-heading font-bold text-lg">{workoutData.title}</h1>
-        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <Clock className="w-4 h-4" />
-          {workoutData.total_duration_minutes}m
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Clock className="w-4 h-4" />
+            {workoutData.total_duration_minutes}m
+          </div>
+          <button
+            onClick={archiveWorkout}
+            title="Archive workout"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <Archive className="w-4 h-4" />
+          </button>
         </div>
       </div>
 

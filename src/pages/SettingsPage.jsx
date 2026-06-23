@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  User, Shield, FileText, Trash2, LogOut, Loader2,
-  ChevronRight, Heart, Eye, Volume2, Brain
+  User, FileText, LogOut, Loader2,
+  ChevronRight, Eye, Save
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -57,11 +57,12 @@ export default function SettingsPage() {
       <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
         <div className="flex items-center gap-3 mb-2">
           <User className="w-5 h-5 text-primary" />
-          <h2 className="font-heading font-semibold">Profile</h2>
+          <h2 className="font-heading font-semibold">My Profile</h2>
         </div>
+
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label className="text-sm">Name</Label>
+          <div className="col-span-2">
+            <Label className="text-sm">Display Name</Label>
             <Input
               value={profile?.display_name || ""}
               onChange={e => setProfile(p => ({ ...p, display_name: e.target.value }))}
@@ -69,6 +70,82 @@ export default function SettingsPage() {
               className="mt-1"
             />
           </div>
+
+          <div>
+            <Label className="text-sm">Date of Birth</Label>
+            <Input
+              type="date"
+              value={profile?.date_of_birth || ""}
+              onChange={e => setProfile(p => ({ ...p, date_of_birth: e.target.value }))}
+              onBlur={() => updateProfile({ date_of_birth: profile?.date_of_birth })}
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <Label className="text-sm">Sex</Label>
+            <Select
+              value={profile?.sex || ""}
+              onValueChange={v => updateProfile({ sex: v })}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Male">Male</SelectItem>
+                <SelectItem value="Female">Female</SelectItem>
+                <SelectItem value="Non-binary">Non-binary</SelectItem>
+                <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label className="text-sm">Height (ft)</Label>
+            <Input
+              type="number"
+              min={1} max={8}
+              value={profile?.height_inches ? Math.floor(profile.height_inches / 12) : ""}
+              onChange={e => {
+                const ft = parseInt(e.target.value) || 0;
+                const inches = profile?.height_inches ? profile.height_inches % 12 : 0;
+                setProfile(p => ({ ...p, height_inches: ft * 12 + inches }));
+              }}
+              onBlur={() => updateProfile({ height_inches: profile?.height_inches })}
+              className="mt-1"
+              placeholder="5"
+            />
+          </div>
+
+          <div>
+            <Label className="text-sm">Height (in)</Label>
+            <Input
+              type="number"
+              min={0} max={11}
+              value={profile?.height_inches ? profile.height_inches % 12 : ""}
+              onChange={e => {
+                const inches = parseInt(e.target.value) || 0;
+                const ft = profile?.height_inches ? Math.floor(profile.height_inches / 12) : 0;
+                setProfile(p => ({ ...p, height_inches: ft * 12 + inches }));
+              }}
+              onBlur={() => updateProfile({ height_inches: profile?.height_inches })}
+              className="mt-1"
+              placeholder="8"
+            />
+          </div>
+
+          <div>
+            <Label className="text-sm">Current Weight (lbs)</Label>
+            <Input
+              type="number"
+              value={profile?.weight_lbs || ""}
+              onChange={e => setProfile(p => ({ ...p, weight_lbs: parseFloat(e.target.value) || undefined }))}
+              onBlur={() => updateProfile({ weight_lbs: profile?.weight_lbs })}
+              className="mt-1"
+              placeholder="150"
+            />
+          </div>
+
           <div>
             <Label className="text-sm">Fitness Mode</Label>
             <Select
@@ -87,8 +164,11 @@ export default function SettingsPage() {
             </Select>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate("/onboarding")} className="mt-2">
-          Redo Onboarding
+
+        {saving && <p className="text-xs text-muted-foreground flex items-center gap-1"><Save className="w-3 h-3" /> Saving...</p>}
+
+        <Button variant="outline" size="sm" onClick={() => navigate("/onboarding")}>
+          Redo Full Onboarding
         </Button>
       </div>
 

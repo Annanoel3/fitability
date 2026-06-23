@@ -30,7 +30,7 @@ export default function Dashboard() {
     }
     setProfile(profiles[0]);
 
-    const allWorkouts = await base44.entities.WorkoutPlan.filter({}, "-date", 30);
+    const allWorkouts = await base44.entities.WorkoutPlan.filter({ archived: false }, "-date", 30);
     setWorkouts(allWorkouts);
 
     const today = new Date().toISOString().split("T")[0];

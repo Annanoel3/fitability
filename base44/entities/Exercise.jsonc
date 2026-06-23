@@ -1,6 +1,15 @@
 {
   "name": "Exercise",
   "type": "object",
+  "rls": {
+    "enabled": true,
+    "rules": {
+      "create": "user",
+      "read": "owner",
+      "update": "owner",
+      "delete": "owner"
+    }
+  },
   "properties": {
     "name": {
       "type": "string"

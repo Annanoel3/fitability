@@ -1,10 +1,24 @@
 {
   "name": "UserProfile",
   "type": "object",
+  "rls": {
+    "enabled": true,
+    "rules": {
+      "create": "user",
+      "read": "owner",
+      "update": "owner",
+      "delete": "owner"
+    }
+  },
   "properties": {
     "display_name": {
       "type": "string",
       "description": "User's display name"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of birth"
     },
     "age": {
       "type": "number"
@@ -24,7 +38,7 @@
     },
     "weight_lbs": {
       "type": "number",
-      "description": "Weight in pounds"
+      "description": "Current weight in pounds"
     },
     "goals": {
       "type": "array",
