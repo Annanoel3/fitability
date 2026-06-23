@@ -111,7 +111,9 @@ For each exercise provide: name, description, instructions (step by step), categ
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        {generating && <p className="text-sm text-muted-foreground">Building your personalized exercise library...</p>}
+        <p className="text-sm text-muted-foreground">
+          {generating ? "Building your personalized exercise library..." : "Loading exercises..."}
+        </p>
       </div>
     );
   }
