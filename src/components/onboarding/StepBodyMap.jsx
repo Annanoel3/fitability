@@ -90,7 +90,7 @@ export default function StepBodyMap({ data, onChange }) {
           <img
             src={view === "front" ? FRONT_SVG : BACK_SVG}
             alt={`${view} body diagram`}
-            style={{ position: "absolute", left: view === "back" ? "32px" : 0, top: 0, width: "100%", height: "100%", transform: view === "back" ? "scale(1.3)" : "scale(1)", transformOrigin: "center" }}
+            style={{ position: "absolute", left: view === "back" ? "42px" : 0, top: 0, width: "100%", height: "100%", transform: view === "back" ? "scale(1.3)" : "scale(1)", transformOrigin: "center" }}
             draggable={false}
           />
           {visibleZones.map(zone => {
