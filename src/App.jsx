@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -28,9 +29,13 @@ import DeleteAccount from '@/pages/DeleteAccount';
 import CoachChat from '@/pages/CoachChat';
 import FeedbackPage from '@/pages/FeedbackPage';
 import AppLayout from '@/components/layout/AppLayout';
+import { initAdMob, maybeShowAdOnOpen } from '@/lib/admob';
+import OneSignalInit from '@/components/shared/OneSignalInit';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
+
+  useEffect(() => { initAdMob().then(() => maybeShowAdOnOpen()); }, []);
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -50,48 +55,51 @@ const AuthenticatedApp = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
+    <>
+      <OneSignalInit user={user} />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route path="/onboarding" element={<Onboarding />} />
-        
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/workout" element={<Workout />} />
-          <Route path="/exercises" element={<ExerciseLibrary />} />
-          <Route path="/progress" element={<ProgressPage />} />
-          <Route path="/coach" element={<CoachChat />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<TermsConditions />} />
-          <Route path="/medical-disclaimer" element={<MedicalDisclaimer />} />
-          <Route path="/data-policy" element={<DataPolicy />} />
-          <Route path="/delete-data" element={<DeleteData />} />
-          <Route path="/delete-account" element={<DeleteAccount />} />
-          <Route path="/feedback" element={<FeedbackPage />} />
+        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+          <Route path="/onboarding" element={<Onboarding />} />
+
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/workout" element={<Workout />} />
+            <Route path="/exercises" element={<ExerciseLibrary />} />
+            <Route path="/progress" element={<ProgressPage />} />
+            <Route path="/coach" element={<CoachChat />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsConditions />} />
+            <Route path="/medical-disclaimer" element={<MedicalDisclaimer />} />
+            <Route path="/data-policy" element={<DataPolicy />} />
+            <Route path="/delete-data" element={<DeleteData />} />
+            <Route path="/delete-account" element={<DeleteAccount />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
+          </Route>
         </Route>
-      </Route>
-      
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </>
   );
 };
 
 function App() {
   return (
     <ThemeProvider>
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
     </ThemeProvider>
   )
 }
