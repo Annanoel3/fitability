@@ -6,42 +6,45 @@ const BACK_SVG = "https://media.base44.com/images/public/6a2e01da2bef77611a12714
 
 // ViewBox dimensions
 const FRONT_W = 151.92, FRONT_H = 352.32;
-const BACK_W = 209.04, BACK_H = 352.08;
+const BACK_W = 138.58, BACK_H = 360;
 
 // Helper: convert SVG transform="translate(tx ty) scale(s)" + image (w, h) to % of viewBox
 // cx = (tx + w*s/2) / VW * 100
 // cy = (ty + h*s/2) / VH * 100
 // Each zone: [xPct, yPct] relative to their respective SVG viewBox
 
+// Helper: cx = (tx + w*scale/2) / VW * 100,  cy = (ty + h*scale/2) / VH * 100
+// All back transforms from SVG file: viewBox="0 0 138.58 360"
+const B = (tx, ty, w, h, s=0.24) => [(tx + w*s/2) / BACK_W * 100, (ty + h*s/2) / BACK_H * 100];
+const F = (tx, ty, w, h, s=0.24) => [(tx + w*s/2) / FRONT_W * 100, (ty + h*s/2) / FRONT_H * 100];
+
 const ZONES = [
-  // ── BOTH VIEWS ──
   {
     id: "head",
     label: "Head / Neck",
-    // back_head_Image: translate(46.32 0) scale(.24), w=158 h=161 → cx=(46.32+158*.24/2)/209.04 cy=(0+161*.24/2)/352.08
-    back:  [( 46.32 + 158*.24/2) / BACK_W * 100,  ( 0    + 161*.24/2) / BACK_H * 100],
-    // Front_head is not listed explicitly; using approximate center from known layers
+    // back_head_Image: translate(50.28 3.96) scale(.24), w=158 h=161
+    back:  B(50.28, 3.96, 158, 161),
     front: [50, 8],
   },
   {
     id: "neck",
     label: "Neck / Upper Back",
-    // back_neck_Image: translate(42.24 38.64) scale(.24), w=193 h=62
-    back:  [( 42.24 + 193*.24/2) / BACK_W * 100,  (38.64 + 62*.24/2)  / BACK_H * 100],
+    // back_neck_Image: translate(46.2 42.6) scale(.24), w=193 h=62
+    back:  B(46.2, 42.6, 193, 62),
     front: [50, 16],
   },
   {
     id: "left_shoulder",
     label: "Left Shoulder",
-    // back_left_shoulder_Image: translate(13.92 53.52) scale(.24), w=190 h=150
-    back:  [(13.92 + 190*.24/2) / BACK_W * 100,  (53.52 + 150*.24/2) / BACK_H * 100],
+    // back_left_shoulder_Image: translate(17.88 57.48) scale(.24), w=190 h=150
+    back:  B(17.88, 57.48, 190, 150),
     front: [28, 22],
   },
   {
     id: "right_shoulder",
     label: "Right Shoulder",
-    // back_right_shoulder_Image: translate(87.6 53.52) scale(.24), w=121 h=142
-    back:  [(87.6 + 121*.24/2) / BACK_W * 100,  (53.52 + 142*.24/2) / BACK_H * 100],
+    // back_right_shoulder_Image: translate(91.56 57.48) scale(.24), w=121 h=142
+    back:  B(91.56, 57.48, 121, 142),
     front: [72, 22],
   },
   {
@@ -53,151 +56,135 @@ const ZONES = [
   {
     id: "upper_back",
     label: "Upper Back",
-    // back_upper_Image: translate(30.96 53.52) scale(.24), w=289 h=280
-    back:  [(30.96 + 289*.24/2) / BACK_W * 100, (53.52 + 280*.24/2) / BACK_H * 100],
+    // back_upper_Image: translate(34.92 57.48) scale(.24), w=289 h=280
+    back:  B(34.92, 57.48, 289, 280),
     front: null,
   },
   {
     id: "abdomen",
     label: "Abdomen",
-    // front_abdomen_Image: translate(45.36 113.04) scale(.24), w=257 h=127
     back:  null,
-    front: [(45.36 + 257*.24/2) / FRONT_W * 100, (113.04 + 127*.24/2) / FRONT_H * 100],
+    front: F(45.36, 113.04, 257, 127),
   },
   {
     id: "lower_back",
     label: "Lower Back",
-    // back_lower_Image: translate(31.68 120.72) scale(.24), w=281 h=176
-    back:  [(31.68 + 281*.24/2) / BACK_W * 100, (120.72 + 176*.24/2) / BACK_H * 100],
+    // back_lower_Image: translate(35.64 124.68) scale(.24), w=281 h=176
+    back:  B(35.64, 124.68, 281, 176),
     front: null,
   },
   {
     id: "left_arm",
     label: "Left Arm",
-    // back_left_arm_Image (upper): translate(8.16 89.52) scale(.24), w=95 h=146
-    back:  [(8.16  + 95*.24/2) / BACK_W * 100,  (89.52 + 146*.24/2) / BACK_H * 100],
-    // front: figure's left arm (viewer's right) — arm sits ~17% from left edge
+    // back_left_arm_Image: translate(12.12 93.48) scale(.24), w=95 h=146
+    back:  B(12.12, 93.48, 95, 146),
     front: [17, 30],
   },
   {
     id: "right_arm",
     label: "Right Arm",
-    // back_right_arm_Image: translate(100.32 87.6) scale(.24), w=96 h=162
-    back:  [(100.32 + 96*.24/2) / BACK_W * 100,  (87.6 + 162*.24/2) / BACK_H * 100],
-    // front: figure's right arm (viewer's left) — arm sits ~83% from left edge
+    // back_right_arm_Image: translate(104.28 91.56) scale(.24), w=96 h=162
+    back:  B(104.28, 91.56, 96, 162),
     front: [83, 30],
   },
   {
     id: "left_forearm",
     label: "Left Forearm / Elbow",
-    // back_left_forearm_Image: translate(3.36 124.56) scale(.24), w=101 h=160
-    back:  [(3.36  + 101*.24/2) / BACK_W * 100,  (124.56 + 160*.24/2) / BACK_H * 100],
-    // front: lower arm, closer to elbow
+    // back_left_forearm_Image: translate(7.32 128.52) scale(.24), w=101 h=160
+    back:  B(7.32, 128.52, 101, 160),
     front: [14, 41],
   },
   {
     id: "right_forearm",
     label: "Right Forearm / Elbow",
-    // back_right_forearm_Image: translate(102.72 126.48) scale(.24), w=103 h=152
-    back:  [(102.72 + 103*.24/2) / BACK_W * 100, (126.48 + 152*.24/2) / BACK_H * 100],
+    // back_right_forearm_Image: translate(106.68 130.44) scale(.24), w=103 h=152
+    back:  B(106.68, 130.44, 103, 152),
     front: [86, 41],
   },
   {
     id: "left_wrist",
     label: "Left Wrist / Hand",
-    // back_left_hand_Image: translate(0 174.96) scale(.24), w=74 h=125
-    back:  [(0    + 74*.24/2) / BACK_W * 100,  (174.96 + 125*.24/2) / BACK_H * 100],
-    // front: hand hangs at ~55% height, ~11% from left
+    // back_left_hand_Image: translate(3.96 178.92) scale(.24), w=74 h=125
+    back:  B(3.96, 178.92, 74, 125),
     front: [11, 56],
   },
   {
     id: "right_wrist",
     label: "Right Wrist / Hand",
-    // back_right_hand_Image: translate(113.04 173.04) scale(.24), w=74 h=135
-    back:  [(113.04 + 74*.24/2) / BACK_W * 100,  (173.04 + 135*.24/2) / BACK_H * 100],
+    // back_right_wrist_Image: translate(119.64 166.92) scale(.24), w=53 h=42  (wrist marker)
+    // back_right_hand_Image: translate(117 177) scale(.24), w=74 h=135
+    back:  B(117, 177, 74, 135),
     front: [89, 56],
   },
   {
     id: "left_hip",
     label: "Left Hip / Glute",
-    // back_left_hip_Image: translate(28.8 162.96) scale(.24), w=155 h=156
-    back:  [(28.8  + 155*.24/2) / BACK_W * 100, (162.96 + 156*.24/2) / BACK_H * 100],
-    // front_right_hip_Image: translate(40.56 143.28) scale(.24), w=148 h=146
-    front: [(40.56 + 148*.24/2) / FRONT_W * 100, (143.28 + 146*.24/2) / FRONT_H * 100],
+    // back_left_hip_Image: translate(32.76 166.92) scale(.24), w=155 h=156
+    back:  B(32.76, 166.92, 155, 156),
+    front: F(40.56, 143.28, 148, 146),
   },
   {
     id: "right_hip",
     label: "Right Hip / Glute",
-    // back_right_hip_Image: translate(66 162.96) scale(.24), w=150 h=156
-    back:  [(66    + 150*.24/2) / BACK_W * 100, (162.96 + 156*.24/2) / BACK_H * 100],
-    // front_left_hip_Image: translate(75.84 143.28) scale(.24), w=148 h=148
-    front: [(75.84 + 148*.24/2) / FRONT_W * 100, (143.28 + 148*.24/2) / FRONT_H * 100],
+    // back_right_hip_Image: translate(69.96 166.92) scale(.24), w=150 h=156
+    back:  B(69.96, 166.92, 150, 156),
+    front: F(75.84, 143.28, 148, 148),
   },
   {
     id: "left_thigh",
     label: "Left Thigh",
-    // back_left_thigh_Image: translate(29.04 200.4) scale(.24), w=156 h=142
-    back:  [(29.04 + 156*.24/2) / BACK_W * 100, (200.4 + 142*.24/2) / BACK_H * 100],
-    // front: figure's left thigh = right leg, mid-thigh
+    // back_left_thigh_Image: translate(33 204.36) scale(.24), w=156 h=142
+    back:  B(33, 204.36, 156, 142),
     front: [36, 58],
   },
   {
     id: "right_thigh",
     label: "Right Thigh",
-    // back_right_thigh_Image: translate(66.48 200.4) scale(.24), w=146 h=142
-    back:  [(66.48 + 146*.24/2) / BACK_W * 100, (200.4 + 142*.24/2) / BACK_H * 100],
-    // front: figure's right thigh = left leg, mid-thigh
+    // back_right_thigh_Image: translate(70.44 204.36) scale(.24), w=146 h=142
+    back:  B(70.44, 204.36, 146, 142),
     front: [64, 58],
   },
   {
     id: "left_knee",
     label: "Left Knee",
-    // back_left_knee_Image: translate(35.28 234.48) scale(.24), w=101 h=86
-    back:  [(35.28 + 101*.24/2) / BACK_W * 100, (234.48 + 86*.24/2) / BACK_H * 100],
-    // front: figure's left knee = right leg of image
+    // back_left_knee_Image: translate(39.24 238.44) scale(.24), w=101 h=86
+    back:  B(39.24, 238.44, 101, 86),
     front: [36, 69],
   },
   {
     id: "right_knee",
     label: "Right Knee",
-    // back_right_knee_Image: translate(71.28 234.48) scale(.24), w=101 h=88
-    back:  [(71.28 + 101*.24/2) / BACK_W * 100, (234.48 + 88*.24/2) / BACK_H * 100],
-    // front: figure's right knee = left leg of image
+    // back_right_knee_Image: translate(75.24 238.44) scale(.24), w=101 h=88
+    back:  B(75.24, 238.44, 101, 88),
     front: [64, 69],
   },
   {
     id: "left_calf",
     label: "Left Shin / Calf",
-    // back_left_calf_Image: translate(35.04 255.12) scale(.24), w=113 h=234
-    back:  [(35.04 + 113*.24/2) / BACK_W * 100, (255.12 + 234*.24/2) / BACK_H * 100],
-    // front_right_shin_Image: translate(40.8 260.4) scale(.24), w=103 h=209
-    front: [(40.8 + 103*.24/2) / FRONT_W * 100, (260.4 + 209*.24/2) / FRONT_H * 100],
+    // back_left_calf_Image: translate(39 259.08) scale(.24), w=113 h=234
+    back:  B(39, 259.08, 113, 234),
+    front: F(40.8, 260.4, 103, 209),
   },
   {
     id: "right_calf",
     label: "Right Shin / Calf",
-    // back_right_calf_Image: translate(68.64 255.6) scale(.24), w=112 h=238
-    back:  [(68.64 + 112*.24/2) / BACK_W * 100, (255.6 + 238*.24/2) / BACK_H * 100],
-    // front_left_shin_Image: translate(86.64 259.92) scale(.24), w=103 h=204
-    front: [(86.64 + 103*.24/2) / FRONT_W * 100, (259.92 + 204*.24/2) / FRONT_H * 100],
+    // back_right_calf_Image: translate(72.6 259.56) scale(.24), w=112 h=238
+    back:  B(72.6, 259.56, 112, 238),
+    front: F(86.64, 259.92, 103, 204),
   },
   {
     id: "left_foot",
     label: "Left Foot / Ankle",
-    // back_left_foot_Image: translate(35.28 0) scale(.24), w=724 h=1467 — this is the full background silhouette
-    // back_left_achilles: translate(41.76 311.28), back_left_calf bottom ~ translate(35.04+113*.24, 255.12+234*.24)
-    // Use achilles/ankle position
-    back:  [(41.76 + 71*.24/2) / BACK_W * 100, (311.28 + 76*.24/2) / BACK_H * 100],
-    // front_right_ankle: translate(48.24 310.32) scale(.24), w=69 h=75
-    front: [(48.24 + 69*.24/2) / FRONT_W * 100, (310.32 + 75*.24/2) / FRONT_H * 100],
+    // back_left_achilles_Image: translate(45.72 315.24) scale(.24), w=71 h=76
+    back:  B(45.72, 315.24, 71, 76),
+    front: F(48.24, 310.32, 69, 75),
   },
   {
     id: "right_foot",
     label: "Right Foot / Ankle",
-    // back_right_achilles: translate(72.24 312.72) scale(.24), w=70 h=76
-    back:  [(72.24 + 70*.24/2) / BACK_W * 100, (312.72 + 76*.24/2) / BACK_H * 100],
-    // front_left_ankle: translate(87.12 308.64) scale(.24), w=70 h=85
-    front: [(87.12 + 70*.24/2) / FRONT_W * 100, (308.64 + 85*.24/2) / FRONT_H * 100],
+    // back_right_achilles_Image: translate(76.2 316.68) scale(.24), w=70 h=76
+    back:  B(76.2, 316.68, 70, 76),
+    front: F(87.12, 308.64, 70, 85),
   },
 ];
 
