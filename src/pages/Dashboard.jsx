@@ -80,6 +80,8 @@ export default function Dashboard() {
 ${preferences.workoutType ? `═══ USER'S WORKOUT PREFERENCES ═══
 Requested workout type: ${preferences.workoutType} — prioritize this style of exercise.
 Requested intensity: ${preferences.intensity} — match this energy level throughout.
+Available equipment: ${(preferences.equipment || []).join(", ") || "none — use bodyweight only"}.
+IMPORTANT: Only include exercises that use the listed equipment. If no equipment, all exercises must be bodyweight-only.
 ` : ""}
 You are an expert adaptive fitness coach and physical therapist AI. Generate a highly personalized workout for this specific individual.
 
