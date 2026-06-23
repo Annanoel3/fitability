@@ -222,11 +222,10 @@ export default function StepBodyMap({ data, onChange }) {
 
   const visibleZones = ZONES.filter(z => view === "front" ? z.front !== null : z.back !== null);
 
-  // Fixed box: back SVG fills 220px wide at 370px tall; front SVG is narrower (~159px) and centered within
   const BOX_H = 370;
+  const BOX_W = 220; // fixed container width for both views
   const frontW = Math.round(BOX_H * FRONT_W / FRONT_H); // ~159
   const backW  = Math.round(BOX_H * BACK_W  / BACK_H);  // ~219
-  const BOX_W  = backW; // always use back width as the box width
   const imgW   = view === "front" ? frontW : backW;
   const imgOffsetX = Math.round((BOX_W - imgW) / 2);
 
@@ -259,23 +258,20 @@ export default function StepBodyMap({ data, onChange }) {
         ))}
       </div>
 
-      {/* Body diagram — fixed box, image centered inside */}
+      {/* Body diagram — each view sized to its natural aspect ratio, centered via flexbox */}
       <div className="flex justify-center">
-        <div className="relative select-none" style={{ height: `${BOX_H}px`, width: `${BOX_W}px` }}>
-          {/* image positioned so it's centered in the fixed box */}
+        <div className="relative select-none" style={{ height: `${BOX_H}px`, width: `${imgW}px` }}>
           <img
             src={view === "front" ? FRONT_SVG : BACK_SVG}
             alt={`${view} body diagram`}
-            style={{ position: "absolute", left: `${imgOffsetX}px`, top: 0, width: `${imgW}px`, height: `${BOX_H}px` }}
+            style={{ position: "absolute", left: 0, top: 0, width: `${imgW}px`, height: `${BOX_H}px` }}
             draggable={false}
           />
 
           {visibleZones.map(zone => {
             const pos = view === "front" ? zone.front : zone.back;
             const isMarked = marked.includes(zone.id);
-            // Dots are % of the image, but the container is BOX_W wide.
-            // Convert image-% to container-% so dots align with the image.
-            const leftPct = (imgOffsetX + pos[0] / 100 * imgW) / BOX_W * 100;
+            const leftPct = pos[0];
 
             return (
               <button
