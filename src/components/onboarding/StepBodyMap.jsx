@@ -245,13 +245,14 @@ export default function StepBodyMap({ data, onChange }) {
         ))}
       </div>
 
-      {/* Body diagram */}
-      <div className="flex justify-center">
-        <div className="relative select-none" style={{ width: "200px" }}>
+      {/* Body diagram — fixed height container, image scales to fit */}
+      <div className="flex justify-center items-start" style={{ height: "340px" }}>
+        {/* inner wrapper matches actual image dimensions so % dots stay accurate */}
+        <div className="relative select-none h-full" style={{ width: view === "front" ? "calc(340px * 151.92 / 352.32)" : "calc(340px * 209.04 / 352.08)" }}>
           <img
             src={view === "front" ? FRONT_SVG : BACK_SVG}
             alt={`${view} body diagram`}
-            className="w-full h-auto block"
+            className="w-full h-full block"
             draggable={false}
           />
 
@@ -268,8 +269,8 @@ export default function StepBodyMap({ data, onChange }) {
                 style={{
                   left: `${pos[0]}%`,
                   top: `${pos[1]}%`,
-                  width: "28px",
-                  height: "28px",
+                  width: "26px",
+                  height: "26px",
                   background: isMarked
                     ? "hsla(0, 72%, 51%, 0.85)"
                     : "hsla(174, 58%, 39%, 0.18)",
