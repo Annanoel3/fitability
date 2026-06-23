@@ -58,8 +58,9 @@ export default function StepBodyMap({ data, onChange }) {
 
   const visibleZones = ZONES.filter(z => view === "front" ? z.front !== null : z.back !== null);
 
-  const BOX_H = 370;
-  const imgW = Math.round(BOX_H * FRONT_W / FRONT_H); // same width for both — back SVG matches same proportions
+  // Use padding-bottom aspect-ratio trick so the container is always as wide as available
+  // and maintains the correct height. Front: 151.92/352.32 ≈ 43.1%, Back: same container.
+  const aspectPct = (FRONT_H / FRONT_W) * 100; // ~231.9%
 
   return (
     <div className="space-y-4">
@@ -90,13 +91,13 @@ export default function StepBodyMap({ data, onChange }) {
         ))}
       </div>
 
-      {/* Body diagram */}
-      <div className="flex justify-center">
-        <div className="relative select-none" style={{ height: `${BOX_H}px`, width: `${imgW}px` }}>
+      {/* Body diagram — fluid width, fixed aspect ratio */}
+      <div className="w-full max-w-[220px] mx-auto">
+        <div className="relative select-none w-full" style={{ paddingBottom: `${aspectPct}%` }}>
           <img
             src={view === "front" ? FRONT_SVG : BACK_SVG}
             alt={`${view} body diagram`}
-            style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%" }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }}
             draggable={false}
           />
 
