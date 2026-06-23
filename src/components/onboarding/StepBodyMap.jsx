@@ -47,9 +47,8 @@ const ZONES = [
   {
     id: "chest",
     label: "Chest",
-    // front only — front_abdomen is around y≈32 range (estimate from layer positions)
     back:  null,
-    front: [50, 30],
+    front: [50, 26],
   },
   {
     id: "upper_back",
@@ -77,16 +76,16 @@ const ZONES = [
     label: "Left Arm",
     // back_left_arm_Image (upper): translate(8.16 89.52) scale(.24), w=95 h=146
     back:  [(8.16  + 95*.24/2) / BACK_W * 100,  (89.52 + 146*.24/2) / BACK_H * 100],
-    // front_right_arm_Image: translate(22.8 82.8) scale(.24), w=99 h=146
-    front: [(22.8  + 99*.24/2) / FRONT_W * 100, (82.8  + 146*.24/2) / FRONT_H * 100],
+    // front: left arm of figure = right side of image, manual placement
+    front: [16, 38],
   },
   {
     id: "right_arm",
     label: "Right Arm",
     // back_right_arm_Image: translate(100.32 87.6) scale(.24), w=96 h=162
     back:  [(100.32 + 96*.24/2) / BACK_W * 100,  (87.6 + 162*.24/2) / BACK_H * 100],
-    // front_left_arm would be mirrored — approximate
-    front: [(126.96 + 104*.24/2) / FRONT_W * 100, (82.8 + 146*.24/2) / FRONT_H * 100],
+    // front: right arm of figure = left side of image, manual placement
+    front: [84, 38],
   },
   {
     id: "left_forearm",
@@ -109,16 +108,16 @@ const ZONES = [
     label: "Left Wrist / Hand",
     // back_left_hand_Image: translate(0 174.96) scale(.24), w=74 h=125
     back:  [(0    + 74*.24/2) / BACK_W * 100,  (174.96 + 125*.24/2) / BACK_H * 100],
-    // front_right_wrist_Image: translate(11.04 161.76) scale(.24), w=65 h=31
-    front: [(11.04 + 65*.24/2) / FRONT_W * 100, (161.76 + 31*.24/2) / FRONT_H * 100],
+    // front: left hand of figure (right side of image), front_right_hand_Image: translate(0 168.96) scale(.24), w=105 h=155
+    front: [(0 + 105*.24/2) / FRONT_W * 100, (168.96 + 155*.24/2) / FRONT_H * 100],
   },
   {
     id: "right_wrist",
     label: "Right Wrist / Hand",
     // back_right_hand_Image: translate(113.04 173.04) scale(.24), w=74 h=135
     back:  [(113.04 + 74*.24/2) / BACK_W * 100,  (173.04 + 135*.24/2) / BACK_H * 100],
-    // front_left_wrist_Image: translate(124.8 160.08) scale(.24), w=75 h=48
-    front: [(124.8  + 75*.24/2) / FRONT_W * 100, (160.08 + 48*.24/2)  / FRONT_H * 100],
+    // front: right hand of figure (left side of image), front_left_hand_Image: translate(126.96 171.12) scale(.24), w=104 h=146
+    front: [(126.96 + 104*.24/2) / FRONT_W * 100, (171.12 + 146*.24/2) / FRONT_H * 100],
   },
   {
     id: "left_hip",
@@ -165,8 +164,8 @@ const ZONES = [
     label: "Right Knee",
     // back_right_knee_Image: translate(71.28 234.48) scale(.24), w=101 h=88
     back:  [(71.28 + 101*.24/2) / BACK_W * 100, (234.48 + 88*.24/2) / BACK_H * 100],
-    // front_left_knee_Image: translate(82.8 233.28) scale(.24), w=114 h=112
-    front: [(82.8 + 114*.24/2) / FRONT_W * 100, (233.28 + 112*.24/2) / FRONT_H * 100],
+    // front_left_knee_Image: translate(82.8 233.28) scale(.24), w=114 h=112 — center x adjusted inward
+    front: [74, (233.28 + 112*.24/2) / FRONT_H * 100],
   },
   {
     id: "left_calf",
