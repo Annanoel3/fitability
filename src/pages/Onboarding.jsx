@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Heart } from "lucide-react";
+import { ArrowLeft, ArrowRight, Heart, Lightbulb } from "lucide-react";
 import StepBasicInfo from "@/components/onboarding/StepBasicInfo";
 import StepGoals from "@/components/onboarding/StepGoals";
 import StepActivityLevel from "@/components/onboarding/StepActivityLevel";
@@ -247,6 +247,14 @@ export default function Onboarding() {
       {/* Scrollable Step Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
+          {step < STEPS.length && (
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 mb-6 flex items-start gap-3">
+              <Lightbulb className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-foreground">
+                After onboarding, visit the <strong>Coach</strong> page anytime to adjust your workouts, get personalized tips, or ask questions about exercises.
+              </p>
+            </div>
+          )}
           <StepComponent data={data} onChange={handleChange} />
         </div>
       </div>
