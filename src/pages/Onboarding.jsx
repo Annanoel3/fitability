@@ -31,6 +31,50 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [data, setData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [existingProfileId, setExistingProfileId] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load any saved onboarding progress on mount
+  useEffect(() => {
+    const loadProgress = async () => {
+      const profiles = await base44.entities.UserProfile.filter({});
+      if (profiles.length > 0) {
+        const profile = profiles[0];
+        // If already completed, go to dashboard
+        if (profile.onboarding_completed) {
+          navigate("/");
+          return;
+        }
+        setExistingProfileId(profile.id);
+        // Restore saved step and data
+        const savedStep = profile.onboarding_step || 0;
+        setStep(Math.min(savedStep, STEPS.length - 1));
+        // Restore fields back into onboarding data state
+        const heightFt = profile.height_inches ? Math.floor(profile.height_inches / 12) : undefined;
+        const heightIn = profile.height_inches ? profile.height_inches % 12 : undefined;
+        setData({
+          display_name: profile.display_name,
+          age: profile.age,
+          sex: profile.sex,
+          height_ft: heightFt,
+          height_in: heightIn,
+          weight_lbs: profile.weight_lbs,
+          goals: profile.goals,
+          activity_level: profile.activity_level,
+          disabilities: profile.disabilities,
+          body_limitations: profile.body_limitations,
+          pain_areas: profile.pain_areas,
+          current_abilities: profile.current_abilities,
+          risk_factors: profile.risk_factors,
+          is_veteran: profile.is_veteran,
+          veteran_details: profile.veteran_details,
+          fitness_mode: profile.fitness_mode,
+        });
+      }
+      setLoading(false);
+    };
+    loadProgress();
+  }, []);
 
   const progress = ((step + 1) / STEPS.length) * 100;
   const StepComponent = STEPS[step].component;
@@ -40,11 +84,45 @@ export default function Onboarding() {
   };
 
   const canProceed = () => {
-    if (step === 0) return data.is_veteran !== undefined; // veteran step requires a yes/no answer
+    if (step === 0) return data.is_veteran !== undefined;
     if (step === 1) return data.display_name && data.age;
     if (step === 2) return (data.goals || []).length > 0;
     if (step === 3) return !!data.activity_level;
     return true;
+  };
+
+  // Save progress whenever step advances
+  const saveProgress = async (nextStep, currentData) => {
+    const heightInches = ((currentData.height_ft || 0) * 12) + (currentData.height_in || 0);
+    const partial = {
+      display_name: currentData.display_name || "User",
+      age: currentData.age,
+      sex: currentData.sex,
+      height_inches: heightInches || undefined,
+      weight_lbs: currentData.weight_lbs,
+      goals: currentData.goals || [],
+      activity_level: currentData.activity_level,
+      disabilities: currentData.disabilities || [],
+      pain_areas: currentData.pain_areas || {},
+      current_abilities: currentData.current_abilities || {},
+      risk_factors: currentData.risk_factors || [],
+      is_veteran: currentData.is_veteran || false,
+      veteran_details: currentData.veteran_details || {},
+      onboarding_completed: false,
+      onboarding_step: nextStep,
+    };
+    if (existingProfileId) {
+      await base44.entities.UserProfile.update(existingProfileId, partial);
+    } else {
+      const created = await base44.entities.UserProfile.create(partial);
+      setExistingProfileId(created.id);
+    }
+  };
+
+  const handleNext = async () => {
+    const next = step + 1;
+    await saveProgress(next, data);
+    setStep(next);
   };
 
   const handleFinish = async () => {
@@ -90,9 +168,21 @@ export default function Onboarding() {
       onboarding_step: STEPS.length
     };
 
-    await base44.entities.UserProfile.create(profile);
+    if (existingProfileId) {
+      await base44.entities.UserProfile.update(existingProfileId, profile);
+    } else {
+      await base44.entities.UserProfile.create(profile);
+    }
     navigate("/");
   };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -133,7 +223,7 @@ export default function Onboarding() {
 
           {step < STEPS.length - 1 ? (
             <Button
-              onClick={() => setStep(s => s + 1)}
+              onClick={handleNext}
               disabled={!canProceed()}
               className="gap-2 px-8 h-12 text-base"
             >
