@@ -9,7 +9,7 @@ import StepGoals from "@/components/onboarding/StepGoals";
 import StepActivityLevel from "@/components/onboarding/StepActivityLevel";
 import StepBodyMap from "@/components/onboarding/StepBodyMap";
 import StepZoneConditions from "@/components/onboarding/StepZoneConditions";
-import StepPainAssessment from "@/components/onboarding/StepPainAssessment";
+
 import StepAbilities from "@/components/onboarding/StepAbilities";
 import StepRiskFactors from "@/components/onboarding/StepRiskFactors";
 import StepVeteran from "@/components/onboarding/StepVeteran";
@@ -21,7 +21,6 @@ const STEPS = [
   { key: "activity", label: "Activity", component: StepActivityLevel },
   { key: "disabilities", label: "Body Map", component: StepBodyMap },
   { key: "limitations", label: "Conditions", component: StepZoneConditions },
-  { key: "pain", label: "Pain", component: StepPainAssessment },
   { key: "abilities", label: "Abilities", component: StepAbilities },
   { key: "risk", label: "Risk Factors", component: StepRiskFactors },
 ];
