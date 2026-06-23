@@ -54,7 +54,7 @@ export default function StepBodyMap({ data, onChange }) {
 
   const visibleZones = ZONES.filter(z => view === "front" ? z.front !== null : z.back !== null);
 
-  const BOX_H = 370;
+  const BOX_H = view === "back" ? 480 : 370;
   const imgW = Math.round(BOX_H * FRONT_W / FRONT_H);
 
   return (
