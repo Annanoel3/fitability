@@ -4,12 +4,9 @@ import { Shield } from "lucide-react";
 const FRONT_SVG = "https://media.base44.com/images/public/6a2e01da2bef77611a127149/e4407373c_bodyfront.svg";
 const BACK_SVG = "https://media.base44.com/images/public/6a2e01da2bef77611a127149/a805393a8_bodyback.svg";
 
-// Front SVG viewBox dimensions
 const FRONT_W = 151.92, FRONT_H = 352.32;
 const F = (tx, ty, w, h, s=0.24) => [(tx + w*s/2) / FRONT_W * 100, (ty + h*s/2) / FRONT_H * 100];
 
-// Back view: simple visual % coordinates calibrated to the back anatomy SVG
-// [left%, top%] — measured visually against the figure
 const ZONES = [
   { id: "head",           label: "Head / Neck",            back: [50, 7],   front: [50, 8]   },
   { id: "neck",           label: "Neck / Upper Back",      back: [50, 15],  front: [50, 16]  },
@@ -42,7 +39,6 @@ export default function StepBodyMap({ data, onChange }) {
   const marked = data.marked_zones || [];
   const toggleRef = useRef(null);
 
-  // Auto-scroll so the toggle + diagram are at the top on mount
   useEffect(() => {
     setTimeout(() => {
       toggleRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -58,9 +54,8 @@ export default function StepBodyMap({ data, onChange }) {
 
   const visibleZones = ZONES.filter(z => view === "front" ? z.front !== null : z.back !== null);
 
-  // Use padding-bottom aspect-ratio trick so the container is always as wide as available
-  // and maintains the correct height. Front: 151.92/352.32 ≈ 43.1%, Back: same container.
-  const aspectPct = (FRONT_H / FRONT_W) * 100; // ~231.9%
+  const BOX_H = 370;
+  const imgW = Math.round(BOX_H * FRONT_W / FRONT_H);
 
   return (
     <div className="space-y-4">
@@ -74,7 +69,6 @@ export default function StepBodyMap({ data, onChange }) {
         <p className="text-xs text-muted-foreground">Used <strong>only</strong> to keep unsafe exercises out of your workouts.</p>
       </div>
 
-      {/* Front / Back toggle */}
       <div ref={toggleRef} className="flex justify-center gap-3">
         {["front", "back"].map(v => (
           <button
@@ -91,21 +85,17 @@ export default function StepBodyMap({ data, onChange }) {
         ))}
       </div>
 
-      {/* Body diagram — fluid width, fixed aspect ratio */}
-      <div className="w-full max-w-[220px] mx-auto">
-        <div className="relative select-none w-full" style={{ paddingBottom: `${aspectPct}%` }}>
+      <div className="flex justify-center">
+        <div className="relative select-none" style={{ height: `${BOX_H}px`, width: `${imgW}px` }}>
           <img
             src={view === "front" ? FRONT_SVG : BACK_SVG}
             alt={`${view} body diagram`}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }}
+            style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%" }}
             draggable={false}
           />
-
           {visibleZones.map(zone => {
             const pos = view === "front" ? zone.front : zone.back;
             const isMarked = marked.includes(zone.id);
-            const leftPct = pos[0];
-
             return (
               <button
                 key={zone.id}
@@ -113,16 +103,12 @@ export default function StepBodyMap({ data, onChange }) {
                 title={zone.label}
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 rounded-full transition-all hover:scale-110"
                 style={{
-                  left: `${leftPct}%`,
+                  left: `${pos[0]}%`,
                   top: `${pos[1]}%`,
                   width: "26px",
                   height: "26px",
-                  background: isMarked
-                    ? "hsla(0, 72%, 51%, 0.85)"
-                    : "hsla(174, 58%, 39%, 0.18)",
-                  border: isMarked
-                    ? "2px solid hsl(0, 72%, 51%)"
-                    : "2px solid hsla(174, 58%, 39%, 0.5)",
+                  background: isMarked ? "hsla(0, 72%, 51%, 0.85)" : "hsla(174, 58%, 39%, 0.18)",
+                  border: isMarked ? "2px solid hsl(0, 72%, 51%)" : "2px solid hsla(174, 58%, 39%, 0.5)",
                 }}
               />
             );
@@ -130,7 +116,6 @@ export default function StepBodyMap({ data, onChange }) {
         </div>
       </div>
 
-      {/* Marked tags */}
       {marked.length > 0 ? (
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground text-center font-medium">Marked — tap to remove:</p>
