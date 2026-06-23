@@ -69,21 +69,21 @@ export default function StepBodyMap({ data, onChange }) {
         <p className="text-xs text-muted-foreground">Used <strong>only</strong> to keep unsafe exercises out of your workouts.</p>
       </div>
 
-      <div ref={toggleRef} className="flex justify-center gap-3">
-        {["front", "back"].map(v => (
-          <button
-            key={v}
-            onClick={() => setView(v)}
-            className={`px-10 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
-              view === v
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border hover:border-primary/40"
-            }`}
-          >
-            {v.charAt(0).toUpperCase() + v.slice(1)}
-          </button>
-        ))}
-      </div>
+      <div ref={toggleRef} className="flex justify-center gap-3 relative z-10">
+         {["front", "back"].map(v => (
+           <button
+             key={v}
+             onClick={() => setView(v)}
+             className={`px-10 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
+               view === v
+                 ? "bg-primary text-primary-foreground border-primary"
+                 : "bg-card text-muted-foreground border-border hover:border-primary/40"
+             }`}
+           >
+             {v.charAt(0).toUpperCase() + v.slice(1)}
+           </button>
+         ))}
+       </div>
 
       <div className="flex justify-center">
         <div className="relative select-none" style={{ height: `${BOX_H}px`, width: `${imgW}px` }}>
