@@ -117,19 +117,41 @@ export default function StepBodyMap({ data, onChange }) {
       </div>
 
       {marked.length > 0 ? (
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground text-center font-medium">Marked — tap to remove:</p>
-          <div className="flex flex-wrap gap-2 justify-center">
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground text-center font-medium">Rate pain level for each area (0 = none, 10 = severe):</p>
+          <div className="space-y-2">
             {marked.map(id => {
               const zone = ZONES.find(z => z.id === id);
+              const painLevel = data.pain_areas?.[id] ?? 0;
               return (
-                <button
-                  key={id}
-                  onClick={() => toggle(id)}
-                  className="px-3 py-1 bg-destructive/10 text-destructive border border-destructive/30 rounded-full text-xs font-medium"
-                >
-                  {zone?.label} ×
-                </button>
+                <div key={id} className="bg-secondary/30 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">{zone?.label}</span>
+                    <span className="text-sm font-bold text-primary">{painLevel}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={painLevel}
+                    onChange={(e) => {
+                      const newLevel = parseInt(e.target.value);
+                      const newPainAreas = { ...data.pain_areas, [id]: newLevel };
+                      onChange({ pain_areas: newPainAreas });
+                    }}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>None</span>
+                    <span>Severe</span>
+                  </div>
+                  <button
+                    onClick={() => toggle(id)}
+                    className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
               );
             })}
           </div>
