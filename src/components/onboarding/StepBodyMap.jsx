@@ -76,48 +76,46 @@ const ZONES = [
     label: "Left Arm",
     // back_left_arm_Image (upper): translate(8.16 89.52) scale(.24), w=95 h=146
     back:  [(8.16  + 95*.24/2) / BACK_W * 100,  (89.52 + 146*.24/2) / BACK_H * 100],
-    // front: figure's left arm = image's RIGHT side (~10% x)
-    front: [9, 36],
+    // front: figure's left arm (viewer's right) — arm sits ~17% from left edge
+    front: [17, 36],
   },
   {
     id: "right_arm",
     label: "Right Arm",
     // back_right_arm_Image: translate(100.32 87.6) scale(.24), w=96 h=162
     back:  [(100.32 + 96*.24/2) / BACK_W * 100,  (87.6 + 162*.24/2) / BACK_H * 100],
-    // front: figure's right arm = image's LEFT side (~91% x)
-    front: [91, 36],
+    // front: figure's right arm (viewer's left) — arm sits ~83% from left edge
+    front: [83, 36],
   },
   {
     id: "left_forearm",
     label: "Left Forearm / Elbow",
     // back_left_forearm_Image: translate(3.36 124.56) scale(.24), w=101 h=160
     back:  [(3.36  + 101*.24/2) / BACK_W * 100,  (124.56 + 160*.24/2) / BACK_H * 100],
-    // front: figure's left forearm = image's far right (~7% x)
-    front: [7, 48],
+    // front: lower arm, slightly further out
+    front: [14, 47],
   },
   {
     id: "right_forearm",
     label: "Right Forearm / Elbow",
     // back_right_forearm_Image: translate(102.72 126.48) scale(.24), w=103 h=152
     back:  [(102.72 + 103*.24/2) / BACK_W * 100, (126.48 + 152*.24/2) / BACK_H * 100],
-    // front: figure's right forearm = image's far left (~93% x)
-    front: [93, 48],
+    front: [86, 47],
   },
   {
     id: "left_wrist",
     label: "Left Wrist / Hand",
     // back_left_hand_Image: translate(0 174.96) scale(.24), w=74 h=125
     back:  [(0    + 74*.24/2) / BACK_W * 100,  (174.96 + 125*.24/2) / BACK_H * 100],
-    // front: figure's left hand = far right of image (~6% x)
-    front: [6, 57],
+    // front: hand hangs at ~55% height, ~11% from left
+    front: [11, 56],
   },
   {
     id: "right_wrist",
     label: "Right Wrist / Hand",
     // back_right_hand_Image: translate(113.04 173.04) scale(.24), w=74 h=135
     back:  [(113.04 + 74*.24/2) / BACK_W * 100,  (173.04 + 135*.24/2) / BACK_H * 100],
-    // front: figure's right hand = far left of image (~94% x)
-    front: [94, 57],
+    front: [89, 56],
   },
   {
     id: "left_hip",
@@ -246,9 +244,9 @@ export default function StepBodyMap({ data, onChange }) {
       </div>
 
       {/* Body diagram — fixed height container, image scales to fit */}
-      <div className="flex justify-center items-center" style={{ height: "520px" }}>
+      <div className="flex justify-center items-center" style={{ height: "370px" }}>
         {/* inner wrapper matches actual image dimensions so % dots stay accurate */}
-        <div className="relative select-none h-full mx-auto" style={{ width: view === "front" ? "calc(520px * 151.92 / 352.32)" : "calc(520px * 209.04 / 352.08)" }}>
+        <div className="relative select-none h-full mx-auto" style={{ width: view === "front" ? "calc(370px * 151.92 / 352.32)" : "calc(370px * 209.04 / 352.08)" }}>
           <img
             src={view === "front" ? FRONT_SVG : BACK_SVG}
             alt={`${view} body diagram`}
