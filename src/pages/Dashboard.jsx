@@ -17,7 +17,6 @@ export default function Dashboard() {
   const [emergency, setEmergency] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [showWorkoutPicker, setShowWorkoutPicker] = useState(false);
-  const [askedForPreferences, setAskedForPreferences] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -47,14 +46,15 @@ export default function Dashboard() {
     setTodayCheckin(checkin);
     if (checkin.mood === "Severe pain") {
       setEmergency(true);
-    } else if (!askedForPreferences) {
+    } else if (!profile.equipment) {
       setShowWorkoutPicker(true);
-      setAskedForPreferences(true);
     }
   };
 
-  const handleWorkoutPickerConfirm = (preferences) => {
+  const handleWorkoutPickerConfirm = async (preferences) => {
     setShowWorkoutPicker(false);
+    await base44.entities.UserProfile.update(profile.id, { equipment: preferences.equipment });
+    setProfile(prev => ({ ...prev, equipment: preferences.equipment }));
     handleGenerateWorkout(todayCheckin, preferences);
   };
 

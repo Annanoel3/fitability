@@ -110,6 +110,13 @@
       "type": "object",
       "description": "Large text, high contrast, simplified mode preferences"
     },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Available equipment list"
+    },
     "onboarding_completed": {
       "type": "boolean",
       "default": false
