@@ -24,8 +24,6 @@ const EQUIPMENT_OPTIONS = [
   { id: "dumbbells", label: "Dumbbells", desc: "Free weights" },
   { id: "mat", label: "Exercise mat", desc: "Yoga or gym mat" },
   { id: "wall", label: "Wall space", desc: "For support & balance" },
-  { id: "cane_walker", label: "Cane / Walker", desc: "For stability support" },
-  { id: "wheelchair", label: "Wheelchair", desc: "Seated wheelchair workouts" },
 ];
 
 export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment = false }) {
