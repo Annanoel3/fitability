@@ -3,11 +3,9 @@ import { base44 } from "@/api/base44Client";
 
 const EQUIPMENT_OPTIONS = [
   { id: "none", label: "No equipment", desc: "Bodyweight only" },
-  { id: "chair", label: "Chair", desc: "A sturdy chair or seat" },
   { id: "resistance_bands", label: "Resistance bands", desc: "Light to heavy bands" },
   { id: "dumbbells", label: "Dumbbells", desc: "Free weights" },
   { id: "mat", label: "Exercise mat", desc: "Yoga or gym mat" },
-  { id: "wall", label: "Wall space", desc: "For support & balance" },
   { id: "cane_walker", label: "Cane / Walker", desc: "For stability support" },
   { id: "wheelchair", label: "Wheelchair", desc: "Seated wheelchair workouts" },
 ];

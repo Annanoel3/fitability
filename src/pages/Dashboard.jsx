@@ -134,6 +134,7 @@ export default function Dashboard() {
     handleGenerateWorkout(todayCheckin, { ...preferences, workoutType, equipment: profile?.equipment || [] });
   };
 
+
   const handleGenerateWorkout = async (checkin, preferences = {}) => {
     setGenerating(true);
     const today = new Date().toISOString().split("T")[0];
@@ -160,7 +161,11 @@ export default function Dashboard() {
 
     // Build user restriction tags from profile to pre-filter the shared library
     const userRestrictionTags = buildUserRestrictionTags(p);
-    const userEquipment = (preferences.equipment || p.equipment || []).map(e => e.toLowerCase().replace(/\s+/g, '_'));
+    // chair and wall are always available — everyone has them
+    const userEquipment = [...new Set([
+      'chair', 'wall',
+      ...(preferences.equipment || p.equipment || []).map(e => e.toLowerCase().replace(/\s+/g, '_'))
+    ])];
 
     // Pull candidate exercises from shared library — filter out restricted ones
     let candidateExercises = [];
@@ -197,7 +202,7 @@ export default function Dashboard() {
 ${preferences.workoutType ? `═══ USER'S WORKOUT PREFERENCES ═══
 Requested workout type: ${preferences.workoutType} — prioritize this style of exercise.
 Requested intensity: ${preferences.intensity} — match this energy level throughout.
-Available equipment: ${(preferences.equipment || []).join(", ") || "NONE — bodyweight only, absolutely no props or weights of any kind"}.
+Available equipment: chair, wall${(preferences.equipment || p.equipment || []).filter(e => e !== 'none').length > 0 ? ", " + (preferences.equipment || p.equipment || []).filter(e => e !== 'none' && e !== 'chair' && e !== 'wall').join(", ") : ""} (chair and wall are always available).
 HARD RULE: Only use equipment that is explicitly listed above. If none is listed, every exercise must be purely bodyweight — no dumbbells, no bands, no weights, no machines. Violating this is a critical error.
 ` : ""}${recentExercisesStr}
 
