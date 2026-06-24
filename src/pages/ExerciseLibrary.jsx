@@ -24,68 +24,53 @@ export default function ExerciseLibrary() {
     const profiles = await base44.entities.UserProfile.filter({});
     const profile = profiles[0];
     
-    let data = await base44.entities.Exercise.filter({}, "name");
-    
-    // Filter out unsafe exercises based on user profile
-    if (profile) {
-      data = data.filter(ex => {
-        // If exercise has restrictions, check against user's conditions
-        if (ex.restrictions && ex.restrictions.length > 0) {
-          const userDisabilities = (profile.disabilities || []).map(d => d.toLowerCase());
-          const userLimitations = (profile.body_limitations || []).map(b => b.toLowerCase());
-          const userRisks = (profile.risk_factors || []).map(r => r.toLowerCase());
-          
-          // Check if any restriction matches user's conditions
-          const isRestricted = ex.restrictions.some(restriction => {
-            const restrictionLower = restriction.toLowerCase();
-            return userDisabilities.some(d => restrictionLower.includes(d)) ||
-                   userLimitations.some(l => restrictionLower.includes(l)) ||
-                   userRisks.some(r => restrictionLower.includes(r));
-          });
-          
-          if (isRestricted) return false;
-        }
-        
-        // Filter by fitness mode and position compatibility
-        if (profile.fitness_mode === "Wheelchair") {
-          return ex.position === "Wheelchair" || ex.position === "Seated" || ex.position === "Any";
-        }
-        if (profile.fitness_mode === "Chair") {
-          return ex.position === "Seated" || ex.position === "Any";
-        }
-        
-        return true;
-      });
+    if (!profile) {
+      setLoading(false);
+      return;
     }
-    
-    setExercises(data);
-    setLoading(false);
 
-    if (data.length === 0) {
-      generateInitialLibrary();
-    }
-  };
-
-  const generateInitialLibrary = async () => {
     setGenerating(true);
-    const profiles = await base44.entities.UserProfile.filter({});
-    const profile = profiles[0];
+    
+    // Generate AI-curated exercises for this user's profile
+    const heightFt = profile.height_inches ? Math.floor(profile.height_inches / 12) : null;
+    const heightIn = profile.height_inches ? profile.height_inches % 12 : null;
+    const heightStr = heightFt ? `${heightFt}'${heightIn}"` : "Not provided";
+    const bmi = (profile.weight_lbs && profile.height_inches)
+      ? ((profile.weight_lbs / (profile.height_inches * profile.height_inches)) * 703).toFixed(1)
+      : null;
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `Generate a library of 20 adaptive exercises suitable for people with disabilities and mobility limitations.
-      
-${profile ? `User profile: Activity level: ${profile.activity_level}, Disabilities: ${(profile.disabilities || []).join(", ")}, Mode: ${profile.fitness_mode}` : "General adaptive exercises"}
+      prompt: `You are an expert adaptive fitness coach. Generate 15-20 of the BEST exercises for this specific person based on their profile.
 
-Include a mix of:
-- Seated exercises
-- Standing exercises (if applicable)
-- Wheelchair exercises
-- Balance exercises
-- Flexibility/stretching
-- Breathing exercises
-- Warmup/cooldown moves
+═══ USER PROFILE ═══
+Name: ${profile.display_name || "User"}
+Age: ${profile.age || "Unknown"}
+Activity Level: ${profile.activity_level || "Unknown"}
+Fitness Mode: ${profile.fitness_mode || "Standard"}
+Height: ${heightStr}
+Weight: ${profile.weight_lbs ? profile.weight_lbs + " lbs" : "Not provided"}
+BMI (estimated): ${bmi || "Unknown"}
 
-For each exercise provide: name, description, instructions (step by step), category (Warmup/Strength/Cardio/Balance/Flexibility/Cooldown/Breathing/Recovery), position (Seated/Standing/Wheelchair/Lying down/Any), difficulty (Beginner/Easy/Moderate/Advanced), muscles_used (array), equipment_needed (array, can be empty), restrictions (array of conditions where this should NOT be used), modifications, default_sets, default_reps, default_duration_seconds`,
+Goals: ${(profile.goals || []).join(", ") || "None specified"}
+
+Disabilities & Conditions:
+${(profile.disabilities || []).length > 0 ? (profile.disabilities || []).join(", ") : "None listed"}
+
+Body Limitations (HARD CONSTRAINTS):
+${(profile.body_limitations || []).length > 0 ? (profile.body_limitations || []).join(", ") : "None listed"}
+
+Pain Areas:
+${Object.entries(profile.pain_areas || {}).map(([area, level]) => `${area}: ${level}/10`).join(", ") || "None"}
+
+═══ INSTRUCTIONS ═══
+Select the 15-20 most appropriate, safe, and effective exercises for THIS user.
+- Every exercise MUST be safe for their fitness mode and body limitations.
+- Avoid ANY exercise that could worsen their pain areas or disabilities.
+- Mix categories: warmup, strength, cardio, balance, flexibility, cooldown.
+- Include modifications they can use.
+- Prioritize their stated goals.
+
+For each exercise provide: name, description, instructions (step by step), category, position, difficulty, muscles_used, equipment_needed, restrictions, modifications, default_sets, default_reps, default_duration_seconds`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -116,14 +101,13 @@ For each exercise provide: name, description, instructions (step by step), categ
     });
 
     if (result.exercises) {
-      await base44.entities.Exercise.bulkCreate(
-        result.exercises.map(ex => ({ ...ex, safety_rating: "Safe" }))
-      );
-      const updated = await base44.entities.Exercise.filter({}, "name");
-      setExercises(updated);
+      setExercises(result.exercises.map(ex => ({ ...ex, safety_rating: "Safe" })));
     }
+    setLoading(false);
     setGenerating(false);
   };
+
+
 
   const filtered = exercises.filter(ex => {
     if (search && !ex.name.toLowerCase().includes(search.toLowerCase()) && 
