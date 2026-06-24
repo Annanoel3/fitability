@@ -13,11 +13,10 @@ Deno.serve(async (req) => {
     const prompt = `Create a minimalist instructional diagram showing how to perform the "${exercise_name}" exercise. Use simple geometric shapes and stick figures with clean lines and movement arrows. No realistic people, faces, or hands. Style: clinical/educational diagram, black and white or simple colors, viewed from a clear angle showing the full body position and movement. This is for adaptive fitness coaching.`;
 
     const image = await openai.images.generate({
-      model: "dall-e-3",
+      model: "dall-e-2",
       prompt: prompt,
       n: 1,
-      size: "1024x1024",
-      quality: "standard"
+      size: "1024x1024"
     });
 
     return Response.json({ 
