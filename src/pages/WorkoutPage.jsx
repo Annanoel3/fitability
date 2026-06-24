@@ -11,6 +11,8 @@ export default function WorkoutPage() {
   const [loading, setLoading] = useState(true);
   const [completedExercises, setCompletedExercises] = useState(new Set());
   const [expandedExercise, setExpandedExercise] = useState(null);
+  const [exerciseImages, setExerciseImages] = useState({});
+  const [loadingImages, setLoadingImages] = useState({});
   const [finishing, setFinishing] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -39,6 +41,20 @@ export default function WorkoutPage() {
       setWorkoutData({});
     }
     setLoading(false);
+  };
+
+  const loadExerciseImage = async (idx, ex) => {
+    if (exerciseImages[idx] || loadingImages[idx]) return;
+    setLoadingImages(prev => ({ ...prev, [idx]: true }));
+    try {
+      const { url } = await base44.integrations.Core.GenerateImage({
+        prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || "standing"}. ${ex.muscles_used?.length ? "Muscles worked: " + ex.muscles_used.slice(0, 3).join(", ") + "." : ""} Simple, clear diagram style, white background, no text.`
+      });
+      setExerciseImages(prev => ({ ...prev, [idx]: url }));
+    } catch (e) {
+      // silently fail — no image shown
+    }
+    setLoadingImages(prev => ({ ...prev, [idx]: false }));
   };
 
   const toggleExercise = (idx) => {
@@ -159,15 +175,25 @@ export default function WorkoutPage() {
                     {ex.position && ` · ${ex.position}`}
                   </p>
                 </div>
-                <button onClick={() => setExpandedExercise(expanded ? null : idx)} className="p-1 text-muted-foreground">
+                <button onClick={() => { const next = expanded ? null : idx; setExpandedExercise(next); if (next !== null) loadExerciseImage(idx, ex); }} className="p-1 text-muted-foreground">
                   {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
               </div>
 
               {expanded && (
                 <div className="px-4 pb-4 space-y-3 border-t border-border/50">
+                  {/* Exercise image */}
+                  <div className="w-full h-48 rounded-xl overflow-hidden bg-muted flex items-center justify-center mt-3">
+                    {loadingImages[idx] ? (
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    ) : exerciseImages[idx] ? (
+                      <img src={exerciseImages[idx]} alt={ex.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No image</span>
+                    )}
+                  </div>
                   {ex.description && (
-                    <p className="text-sm text-muted-foreground pt-3">{ex.description}</p>
+                    <p className="text-sm text-muted-foreground">{ex.description}</p>
                   )}
                   {ex.instructions && (
                     <div>
