@@ -66,9 +66,25 @@ export default function Dashboard() {
     
     const existingToday = workouts.find(w => w.date === today);
     if (existingToday) {
-      navigate("/workout");
       return;
     }
+
+    // Fetch recent workouts to avoid repeating exercises
+    const recentWorkouts = await base44.entities.WorkoutPlan.filter({ completed: true }, "-date", 5);
+    const recentExerciseNames = new Set();
+    recentWorkouts.forEach(w => {
+      try {
+        const data = JSON.parse(w.workout_data || "{}");
+        if (data.exercises && Array.isArray(data.exercises)) {
+          data.exercises.forEach(ex => recentExerciseNames.add(ex.name));
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    });
+    const recentExercisesStr = recentExerciseNames.size > 0 
+      ? `\n\nRECENTLY USED EXERCISES (avoid these):\n${Array.from(recentExerciseNames).join(", ")}\n\nPick DIFFERENT exercises this time to provide variety.`
+      : "";
 
     const p = profile;
     const heightFt = p.height_inches ? Math.floor(p.height_inches / 12) : null;
@@ -86,7 +102,8 @@ Requested workout type: ${preferences.workoutType} — prioritize this style of 
 Requested intensity: ${preferences.intensity} — match this energy level throughout.
 Available equipment: ${(preferences.equipment || []).join(", ") || "none — use bodyweight only"}.
 IMPORTANT: Only include exercises that use the listed equipment. If no equipment, all exercises must be bodyweight-only.
-` : ""}
+` : ""}${recentExercisesStr}
+
 You are an expert adaptive fitness coach and physical therapist AI. Generate a highly personalized workout for this specific individual.
 
 ═══ CRITICAL SAFETY RULES (NON-NEGOTIABLE) ═══
