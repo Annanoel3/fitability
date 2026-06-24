@@ -1,6 +1,5 @@
 import React from "react";
 import { ABILITIES_CHECKLIST } from "@/lib/constants";
-import { Check, X } from "lucide-react";
 
 // Map abilities to relevant pain areas
 const ABILITY_PAIN_MAP = {
@@ -34,39 +33,25 @@ export default function StepAbilities({ data, onChange }) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-heading font-bold text-foreground">Current Abilities</h2>
-        <p className="text-muted-foreground mt-2">Can you do the following?</p>
-      </div>
+         <h2 className="text-2xl font-heading font-bold text-foreground">Current Abilities</h2>
+         <p className="text-muted-foreground mt-2">Click the ones that apply to you</p>
+       </div>
 
       <div className="space-y-3">
          {relevantAbilities.map(({ key, label }) => {
-          const val = abilities[key];
+          const val = abilities[key] === true;
           return (
-            <div key={key} className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
-              <span className="font-medium text-sm flex-1 mr-4">{label}</span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setAbility(key, true)}
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                    val === true
-                      ? "bg-emerald-500 text-white"
-                      : "border-2 border-border hover:border-emerald-300"
-                  }`}
-                >
-                  <Check className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setAbility(key, false)}
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                    val === false
-                      ? "bg-red-500 text-white"
-                      : "border-2 border-border hover:border-red-300"
-                  }`}
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+            <button
+              key={key}
+              onClick={() => setAbility(key, !val)}
+              className={`w-full p-4 rounded-xl border-2 transition-all text-left font-medium text-sm ${
+                val
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-card text-foreground hover:border-primary/30"
+              }`}
+            >
+              {label}
+            </button>
           );
         })}
       </div>
