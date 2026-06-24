@@ -21,7 +21,43 @@ export default function ExerciseLibrary() {
   }, []);
 
   const loadExercises = async () => {
-    const data = await base44.entities.Exercise.filter({}, "name");
+    const profiles = await base44.entities.UserProfile.filter({});
+    const profile = profiles[0];
+    
+    let data = await base44.entities.Exercise.filter({}, "name");
+    
+    // Filter out unsafe exercises based on user profile
+    if (profile) {
+      data = data.filter(ex => {
+        // If exercise has restrictions, check against user's conditions
+        if (ex.restrictions && ex.restrictions.length > 0) {
+          const userDisabilities = (profile.disabilities || []).map(d => d.toLowerCase());
+          const userLimitations = (profile.body_limitations || []).map(b => b.toLowerCase());
+          const userRisks = (profile.risk_factors || []).map(r => r.toLowerCase());
+          
+          // Check if any restriction matches user's conditions
+          const isRestricted = ex.restrictions.some(restriction => {
+            const restrictionLower = restriction.toLowerCase();
+            return userDisabilities.some(d => restrictionLower.includes(d)) ||
+                   userLimitations.some(l => restrictionLower.includes(l)) ||
+                   userRisks.some(r => restrictionLower.includes(r));
+          });
+          
+          if (isRestricted) return false;
+        }
+        
+        // Filter by fitness mode and position compatibility
+        if (profile.fitness_mode === "Wheelchair") {
+          return ex.position === "Wheelchair" || ex.position === "Seated" || ex.position === "Any";
+        }
+        if (profile.fitness_mode === "Chair") {
+          return ex.position === "Seated" || ex.position === "Any";
+        }
+        
+        return true;
+      });
+    }
+    
     setExercises(data);
     setLoading(false);
 
