@@ -23,6 +23,9 @@ export default function Dashboard() {
   }, []);
 
   const loadData = async () => {
+    // Track activity
+    await base44.functions.invoke('trackUserActivity', {});
+
     const profiles = await base44.entities.UserProfile.filter({});
     if (profiles.length === 0) {
       navigate("/onboarding");

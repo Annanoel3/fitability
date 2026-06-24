@@ -124,6 +124,31 @@
     "onboarding_step": {
       "type": "number",
       "default": 0
+    },
+    "last_activity_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time user opened the app"
+    },
+    "last_inactivity_notification_3d": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When 3-day inactivity notification was sent"
+    },
+    "last_inactivity_notification_5d": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When 5-day inactivity notification was sent"
+    },
+    "last_inactivity_notification_weekly": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When weekly inactivity notification was sent"
+    },
+    "last_coach_reminder_notification": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When weekly coach reminder was sent to active users"
     }
   },
   "required": [
