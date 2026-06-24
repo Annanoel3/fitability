@@ -117,6 +117,13 @@ You are an expert adaptive fitness coach and physical therapist AI. Generate a h
 - Cannot stand: ZERO standing exercises.
 - Always validate each exercise against the full list before including it.
 
+═══ POSITION ASSIGNMENT RULES ═══
+- "Seated" position is ONLY for users who are bedridden, wheelchair-bound, or explicitly cannot stand at all.
+- Minor or moderate pain (knee pain, back pain, hip pain, etc.) does NOT make someone a seated-only exerciser.
+- For users with minor/moderate pain: use Standing or Any position, but MODIFY the exercise to be gentle, low-impact, and pain-aware. Example: knee pain → standing heel raises, wall squats, gentle marching — NOT seated leg lifts for every exercise.
+- A mix of positions (Standing + Any) is almost always better than all-Seated for mobile users.
+- Only assign position="Seated" if the user's fitness_mode is "Wheelchair" or "Chair", or their body_limitations explicitly say they cannot stand.
+
 ═══ FULL USER PROFILE ═══
 Name context: ${p.display_name || "User"}
 Age: ${p.age || "Unknown"}
@@ -207,7 +214,7 @@ TITLE RULES: Keep it short, natural, and motivating (e.g. "Juli's Morning Streng
       model: "gpt_5_4"
     });
 
-    const workout = await base44.entities.WorkoutPlan.create({
+    await base44.entities.WorkoutPlan.create({
       title: result.title,
       description: result.description,
       plan_type: "Daily",
@@ -221,6 +228,21 @@ TITLE RULES: Keep it short, natural, and motivating (e.g. "Juli's Morning Streng
       exercises_total: result.exercises?.length || 0,
       workout_data: JSON.stringify(result)
     });
+
+    // Pre-generate exercise images in background (non-blocking)
+    if (result.exercises?.length) {
+      result.exercises.forEach(async (ex) => {
+        try {
+          const key = ex.name.toLowerCase().trim();
+          const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: key });
+          if (cached.length > 0) return; // already cached
+          const { url } = await base44.integrations.Core.GenerateImage({
+            prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || "standing"}. ${ex.muscles_used?.length ? "Muscles worked: " + ex.muscles_used.slice(0, 3).join(", ") + "." : ""} Simple, clear diagram style, white background, no text.`
+          });
+          await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: url });
+        } catch (e) { /* silently skip */ }
+      });
+    }
 
     setGenerating(false);
   };

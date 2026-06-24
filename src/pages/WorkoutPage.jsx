@@ -31,41 +31,40 @@ export default function WorkoutPage() {
     const w = workouts[0];
     setWorkout(w);
     if (w.completed) setDone(true);
+    let exercises = [];
     try {
       const data = JSON.parse(w.workout_data || "{}");
       setWorkoutData(data);
+      exercises = data.exercises || [];
       if (w.completed) {
-        setCompletedExercises(new Set(data.exercises?.map((_, i) => i) || []));
+        setCompletedExercises(new Set(exercises.map((_, i) => i)));
       }
     } catch (e) {
       setWorkoutData({});
     }
     setLoading(false);
-  };
 
-  const loadExerciseImage = async (idx, ex) => {
-    if (exerciseImages[idx] || loadingImages[idx]) return;
-    setLoadingImages(prev => ({ ...prev, [idx]: true }));
-    try {
-      // Check shared cache first
-      const key = ex.name.toLowerCase().trim();
-      const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: key });
-      if (cached.length > 0) {
-        setExerciseImages(prev => ({ ...prev, [idx]: cached[0].image_url }));
-        setLoadingImages(prev => ({ ...prev, [idx]: false }));
-        return;
-      }
-      // Generate and cache
-      const { url } = await base44.integrations.Core.GenerateImage({
-        prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || "standing"}. ${ex.muscles_used?.length ? "Muscles worked: " + ex.muscles_used.slice(0, 3).join(", ") + "." : ""} Simple, clear diagram style, white background, no text.`
+    // Load all exercise images from cache up front
+    if (exercises.length > 0) {
+      exercises.forEach(async (ex, idx) => {
+        try {
+          const key = ex.name.toLowerCase().trim();
+          const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: key });
+          if (cached.length > 0) {
+            setExerciseImages(prev => ({ ...prev, [idx]: cached[0].image_url }));
+          } else {
+            // Still generating — mark as loading so spinner shows
+            setLoadingImages(prev => ({ ...prev, [idx]: true }));
+            const { url } = await base44.integrations.Core.GenerateImage({
+              prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || "standing"}. ${ex.muscles_used?.length ? "Muscles worked: " + ex.muscles_used.slice(0, 3).join(", ") + "." : ""} Simple, clear diagram style, white background, no text.`
+            });
+            setExerciseImages(prev => ({ ...prev, [idx]: url }));
+            await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: url });
+            setLoadingImages(prev => ({ ...prev, [idx]: false }));
+          }
+        } catch (e) { /* silently skip */ }
       });
-      setExerciseImages(prev => ({ ...prev, [idx]: url }));
-      // Save to shared cache
-      await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: url });
-    } catch (e) {
-      // silently fail
     }
-    setLoadingImages(prev => ({ ...prev, [idx]: false }));
   };
 
   const toggleExercise = (idx) => {
@@ -225,11 +224,7 @@ export default function WorkoutPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => {
-                    const next = expanded ? null : idx;
-                    setExpandedExercise(next);
-                    if (next !== null) loadExerciseImage(idx, ex);
-                  }}
+                  onClick={() => setExpandedExercise(expanded ? null : idx)}
                   className="p-1 text-muted-foreground"
                 >
                   {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
