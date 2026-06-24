@@ -53,7 +53,11 @@ export default function Dashboard() {
 
   const handleWorkoutPickerConfirm = (preferences) => {
     setShowWorkoutPicker(false);
-    handleGenerateWorkout(todayCheckin, preferences);
+    // Use first selected type if multiple, or "Mixed" if user selected that
+    const workoutType = preferences.workoutTypes.includes("mixed") 
+      ? "Mixed" 
+      : preferences.workoutTypes[0];
+    handleGenerateWorkout(todayCheckin, { ...preferences, workoutType });
   };
 
   const handleGenerateWorkout = async (checkin, preferences = {}) => {

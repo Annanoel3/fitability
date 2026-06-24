@@ -29,9 +29,13 @@ const EQUIPMENT_OPTIONS = [
 ];
 
 export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment = false }) {
-  const [type, setType] = useState(null);
+  const [types, setTypes] = useState([]);
   const [intensity, setIntensity] = useState(null);
   const [equipment, setEquipment] = useState([]);
+
+  const toggleType = (id) => {
+    setTypes(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
+  };
 
   const toggleEquipment = (id) => {
     if (id === "none") {
@@ -48,15 +52,15 @@ export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment =
 
   const handleConfirm = () => {
     onConfirm({ 
-      workoutType: type, 
+      workoutTypes: types, 
       intensity,
       ...(showEquipment && { equipment })
     });
   };
 
   const canConfirm = showEquipment 
-    ? type && intensity && equipment.length > 0
-    : type && intensity;
+    ? types.length > 0 && intensity && equipment.length > 0
+    : types.length > 0 && intensity;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
@@ -72,15 +76,15 @@ export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment =
         <div className="overflow-y-auto flex-1 px-5 pb-5 space-y-5">
           {/* Workout Type */}
           <div>
-            <p className="text-sm font-semibold text-foreground mb-2">What type of workout?</p>
+            <p className="text-sm font-semibold text-foreground mb-2">What type of workout? (choose one or more)</p>
             <div className="grid grid-cols-2 gap-2">
               {WORKOUT_TYPES.map(t => {
                 const Icon = t.icon;
-                const selected = type === t.id;
+                const selected = types.includes(t.id);
                 return (
                   <button
                     key={t.id}
-                    onClick={() => setType(t.id)}
+                    onClick={() => toggleType(t.id)}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
                       selected
                         ? "border-primary bg-primary/10 text-foreground"
