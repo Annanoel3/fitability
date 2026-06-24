@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { X, Dumbbell, Heart, Wind, Zap, Layers } from "lucide-react";
 
 const WORKOUT_TYPES = [
@@ -24,12 +25,14 @@ const EQUIPMENT_OPTIONS = [
   { id: "dumbbells", label: "Dumbbells", desc: "Free weights" },
   { id: "mat", label: "Exercise mat", desc: "Yoga or gym mat" },
   { id: "wall", label: "Wall space", desc: "For support & balance" },
+  { id: "other", label: "Other", desc: "Type your own equipment" },
 ];
 
 export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment = false }) {
   const [types, setTypes] = useState([]);
   const [intensity, setIntensity] = useState(null);
   const [equipment, setEquipment] = useState([]);
+  const [otherEquipment, setOtherEquipment] = useState("");
 
   const toggleType = (id) => {
     setTypes(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
@@ -49,15 +52,18 @@ export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment =
   };
 
   const handleConfirm = () => {
+    const finalEquipment = equipment.includes("other") && otherEquipment.trim()
+      ? [...equipment.filter(e => e !== "other"), otherEquipment.trim()]
+      : equipment;
     onConfirm({ 
       workoutTypes: types, 
       intensity,
-      ...(showEquipment && { equipment })
+      ...(showEquipment && { equipment: finalEquipment })
     });
   };
 
   const canConfirm = showEquipment 
-    ? types.length > 0 && intensity && equipment.length > 0
+    ? types.length > 0 && intensity && equipment.length > 0 && (!equipment.includes("other") || otherEquipment.trim())
     : types.length > 0 && intensity;
 
   return (
@@ -143,11 +149,19 @@ export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment =
                       <div className={`text-sm font-semibold ${selected ? "text-foreground" : "text-muted-foreground"}`}>{e.label}</div>
                       <div className="text-xs text-muted-foreground mt-0.5">{e.desc}</div>
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                    );
+                    })}
+                    </div>
+                    {equipment.includes("other") && (
+                    <Input
+                    className="mt-2"
+                    placeholder="e.g. Pull-up bar, Kettlebell, Pool..."
+                    value={otherEquipment}
+                    onChange={e => setOtherEquipment(e.target.value)}
+                    />
+                    )}
+                    </div>
+                    )}
 
         </div>
 
