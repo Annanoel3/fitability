@@ -104,8 +104,8 @@ export default function Dashboard() {
 ${preferences.workoutType ? `═══ USER'S WORKOUT PREFERENCES ═══
 Requested workout type: ${preferences.workoutType} — prioritize this style of exercise.
 Requested intensity: ${preferences.intensity} — match this energy level throughout.
-Available equipment: ${(preferences.equipment || []).join(", ") || "none — use bodyweight only"}.
-IMPORTANT: Equipment is available as a supplement — use it where it enhances exercises, but the workout should NOT revolve around any single piece of equipment. Mix bodyweight and equipment-based movements naturally. If no equipment listed, use bodyweight only.
+Available equipment: ${(preferences.equipment || []).join(", ") || "NONE — bodyweight only, absolutely no props or weights of any kind"}.
+HARD RULE: Only use equipment that is explicitly listed above. If none is listed, every exercise must be purely bodyweight — no dumbbells, no bands, no weights, no machines. Violating this is a critical error.
 ` : ""}${recentExercisesStr}
 
 You are an expert adaptive fitness coach and physical therapist AI. Generate a highly personalized workout for this specific individual.
@@ -116,6 +116,13 @@ You are an expert adaptive fitness coach and physical therapist AI. Generate a h
 - Wheelchair users: ALL exercises must be performable in a wheelchair.
 - Cannot stand: ZERO standing exercises.
 - Always validate each exercise against the full list before including it.
+
+═══ EQUIPMENT RULES (NON-NEGOTIABLE) ═══
+- If NO equipment is listed or available: every single exercise MUST be 100% bodyweight. Zero exceptions.
+- Do NOT include any exercise that requires dumbbells, resistance bands, a bar, weights, cables, or any equipment the user does not have listed.
+- "Overhead press", "bicep curl", "lateral raise", "chest press", or ANY weighted movement → FORBIDDEN if no weights listed.
+- If user has a chair: chair-assisted bodyweight exercises are fine (wall push-ups, seated marching, etc.).
+- Before including each exercise, ask yourself: "Can this be done with zero equipment and zero props?" If no → remove it or replace it with a true bodyweight alternative.
 
 ═══ POSITION ASSIGNMENT RULES ═══
 - "Seated" position is ONLY for users who are bedridden, wheelchair-bound, or explicitly cannot stand at all.
