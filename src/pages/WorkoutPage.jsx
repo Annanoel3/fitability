@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Loader2, ChevronLeft, CheckCircle2, Circle, Shield, ChevronDown, ChevronUp, Trophy, Trash2, Archive, Volume2, VolumeX, Mic, MicOff } from "lucide-react";
+import { Loader2, ChevronLeft, CheckCircle2, Circle, Shield, ChevronDown, ChevronUp, Trophy, Trash2, Archive, Volume2, VolumeX, Mic, X } from "lucide-react";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 
 export default function WorkoutPage() {
@@ -17,20 +17,28 @@ export default function WorkoutPage() {
   const [finishing, setFinishing] = useState(false);
   const [done, setDone] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showAudioSetup, setShowAudioSetup] = useState(false);
+  const [noisyMode, setNoisyMode] = useState(false);
 
   const exercises = workoutData?.exercises || [];
 
   const handleNext = (currentIdx) => {
-    const nextIdx = currentIdx + 1;
+    const nextIdx = (currentIdx ?? -1) + 1;
     if (nextIdx < exercises.length) {
+      setCompletedExercises(prev => { const s = new Set(prev); if (currentIdx != null) s.add(currentIdx); return s; });
       setExpandedExercise(nextIdx);
-      // Mark current as done
-      setCompletedExercises(prev => { const s = new Set(prev); s.add(currentIdx); return s; });
     }
   };
 
-  const { audioMode, toggleAudioMode, speakExercise, stopAudio, speaking, listeningForVoice, voiceSupported } =
-    useWorkoutAudio({ exercises, onNext: handleNext });
+  const handleBack = (currentIdx) => {
+    const prevIdx = (currentIdx ?? 1) - 1;
+    if (prevIdx >= 0) {
+      setExpandedExercise(prevIdx);
+    }
+  };
+
+  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, stopAudio, speaking, listeningForVoice, voiceSupported } =
+    useWorkoutAudio({ exercises, onNext: handleNext, onBack: handleBack, noisyMode });
 
   useEffect(() => {
     loadTodayWorkout();
@@ -46,10 +54,7 @@ export default function WorkoutPage() {
   const loadTodayWorkout = async () => {
     const today = new Date().toISOString().split("T")[0];
     const workouts = await base44.entities.WorkoutPlan.filter({ date: today, archived: false });
-    if (workouts.length === 0) {
-      navigate("/");
-      return;
-    }
+    if (workouts.length === 0) { navigate("/"); return; }
     const w = workouts[0];
     setWorkout(w);
     if (w.completed) setDone(true);
@@ -58,15 +63,10 @@ export default function WorkoutPage() {
       const data = JSON.parse(w.workout_data || "{}");
       setWorkoutData(data);
       exList = data.exercises || [];
-      if (w.completed) {
-        setCompletedExercises(new Set(exList.map((_, i) => i)));
-      }
-    } catch (e) {
-      setWorkoutData({});
-    }
+      if (w.completed) setCompletedExercises(new Set(exList.map((_, i) => i)));
+    } catch (e) { setWorkoutData({}); }
     setLoading(false);
 
-    // Load all exercise images from cache up front
     if (exList.length > 0) {
       exList.forEach(async (ex, idx) => {
         try {
@@ -83,9 +83,15 @@ export default function WorkoutPage() {
             await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: url });
             setLoadingImages(prev => ({ ...prev, [idx]: false }));
           }
-        } catch (e) { /* silently skip */ }
+        } catch (e) {}
       });
     }
+  };
+
+  const handleStartAudio = () => {
+    setShowAudioSetup(false);
+    enableAudioMode();
+    speakWelcome(workout?.title || "today's workout");
   };
 
   const toggleExercise = (idx) => {
@@ -141,15 +147,56 @@ export default function WorkoutPage() {
           <h2 className="text-2xl font-heading font-bold text-foreground">Workout Complete!</h2>
           <p className="text-muted-foreground mt-2">Great job — {completedExercises.size} of {exercises.length} exercises done.</p>
         </div>
-        <Button onClick={() => navigate("/")} className="w-full max-w-xs h-12">
-          Back to Dashboard
-        </Button>
+        <Button onClick={() => navigate("/")} className="w-full max-w-xs h-12">Back to Dashboard</Button>
       </div>
     );
   }
 
   return (
     <div className="pb-28 md:pb-8">
+
+      {/* Audio Setup Modal */}
+      {showAudioSetup && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-card rounded-2xl border border-border w-full max-w-sm shadow-xl p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
+                  <Volume2 className="w-5 h-5 text-primary" />
+                </div>
+                <h2 className="font-heading font-bold text-lg">Audio Coaching</h2>
+              </div>
+              <button onClick={() => setShowAudioSetup(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              I'll read each exercise's instructions out loud as you go. {voiceSupported ? 'Say "next", "done", or "back" to navigate hands-free.' : 'Use the on-screen buttons to navigate.'}
+            </p>
+
+            {voiceSupported && (
+              <button
+                onClick={() => setNoisyMode(v => !v)}
+                className="w-full flex items-start gap-3 p-3 rounded-xl border-2 border-border hover:border-primary/40 transition-colors text-left"
+              >
+                <div className={`w-5 h-5 mt-0.5 rounded flex items-center justify-center border-2 flex-shrink-0 transition-colors ${noisyMode ? "bg-primary border-primary" : "border-muted-foreground"}`}>
+                  {noisyMode && <span className="text-white text-xs font-bold">✓</span>}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">I'm in a noisy environment</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Turn off voice commands — I'll tap the button to move on instead.</p>
+                </div>
+              </button>
+            )}
+
+            <Button onClick={handleStartAudio} className="w-full h-12">
+              Start Audio Coaching 🎧
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => navigate("/")} className="p-2 rounded-full hover:bg-muted text-muted-foreground">
@@ -160,32 +207,23 @@ export default function WorkoutPage() {
           <p className="text-sm text-muted-foreground">{workout?.total_duration_minutes} min · {workout?.difficulty_level}</p>
         </div>
         <div className="flex items-center gap-1">
-          {/* Audio mode toggle */}
           <button
-            onClick={toggleAudioMode}
+            onClick={() => audioMode ? disableAudioMode() : setShowAudioSetup(true)}
             title={audioMode ? "Turn off audio coaching" : "Turn on audio coaching"}
             className={`p-2 rounded-full transition-colors ${audioMode ? "bg-primary/15 text-primary" : "hover:bg-muted text-muted-foreground hover:text-foreground"}`}
           >
             {audioMode ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           </button>
-          <button
-            onClick={handleArchive}
-            title="Save to archive"
-            className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          >
+          <button onClick={handleArchive} title="Save to archive" className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
             <Archive className="w-5 h-5" />
           </button>
-          <button
-            onClick={() => setConfirmDelete(true)}
-            title="Delete workout"
-            className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-          >
+          <button onClick={() => setConfirmDelete(true)} title="Delete workout" className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
             <Trash2 className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* Audio mode banner */}
+      {/* Audio mode status banner */}
       {audioMode && (
         <div className="mb-4 bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 flex items-center gap-3">
           {speaking ? (
@@ -197,14 +235,11 @@ export default function WorkoutPage() {
           )}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">
-              {speaking ? "Reading instructions…" : listeningForVoice ? "Listening — say \"next\" or \"done\"" : "Audio coaching on"}
+              {speaking ? "Reading instructions…" : noisyMode ? "Audio coaching on — tap Next to advance" : listeningForVoice ? 'Listening — say "next", "done", or "back"' : "Audio coaching on"}
             </p>
-            {voiceSupported && !speaking && (
-              <p className="text-xs text-muted-foreground">Say "next" or "done" to advance</p>
-            )}
           </div>
-          <button onClick={toggleAudioMode} className="text-muted-foreground hover:text-foreground">
-            <VolumeX className="w-4 h-4" />
+          <button onClick={disableAudioMode} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
@@ -227,14 +262,9 @@ export default function WorkoutPage() {
       {/* Progress */}
       <div className="flex items-center gap-2 mb-5">
         <div className="flex-1 bg-muted rounded-full h-2">
-          <div
-            className="bg-primary rounded-full h-2 transition-all"
-            style={{ width: `${exercises.length ? (completedExercises.size / exercises.length) * 100 : 0}%` }}
-          />
+          <div className="bg-primary rounded-full h-2 transition-all" style={{ width: `${exercises.length ? (completedExercises.size / exercises.length) * 100 : 0}%` }} />
         </div>
-        <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">
-          {completedExercises.size}/{exercises.length}
-        </span>
+        <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">{completedExercises.size}/{exercises.length}</span>
       </div>
 
       {/* Warmup */}
@@ -242,9 +272,7 @@ export default function WorkoutPage() {
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
           <h3 className="font-semibold text-amber-800 text-sm mb-1">🌅 Warmup — {workoutData.warmup.name}</h3>
           <p className="text-xs text-amber-700">{workoutData.warmup.instructions}</p>
-          {workoutData.warmup.duration_minutes && (
-            <p className="text-xs text-amber-600 mt-1 font-medium">{workoutData.warmup.duration_minutes} min</p>
-          )}
+          {workoutData.warmup.duration_minutes && <p className="text-xs text-amber-600 mt-1 font-medium">{workoutData.warmup.duration_minutes} min</p>}
         </div>
       )}
 
@@ -254,21 +282,13 @@ export default function WorkoutPage() {
           const completed = completedExercises.has(idx);
           const expanded = expandedExercise === idx;
           return (
-            <div
-              key={idx}
-              className={`rounded-xl border-2 transition-all ${completed ? "border-emerald-300 bg-emerald-50" : expanded && audioMode ? "border-primary/50 bg-primary/5" : "border-border bg-card"}`}
-            >
+            <div key={idx} className={`rounded-xl border-2 transition-all ${completed ? "border-emerald-300 bg-emerald-50" : expanded && audioMode ? "border-primary/50 bg-primary/5" : "border-border bg-card"}`}>
               <div className="flex items-center gap-3 p-4">
                 <button onClick={() => toggleExercise(idx)} className="flex-shrink-0">
-                  {completed
-                    ? <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-                    : <Circle className="w-6 h-6 text-muted-foreground" />
-                  }
+                  {completed ? <CheckCircle2 className="w-6 h-6 text-emerald-600" /> : <Circle className="w-6 h-6 text-muted-foreground" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-semibold text-sm ${completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                    {ex.name}
-                  </p>
+                  <p className={`font-semibold text-sm ${completed ? "line-through text-muted-foreground" : "text-foreground"}`}>{ex.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {ex.sets && `${ex.sets} sets`}
                     {ex.sets && ex.reps && " · "}
@@ -277,17 +297,13 @@ export default function WorkoutPage() {
                     {ex.position && ` · ${ex.position}`}
                   </p>
                 </div>
-                <button
-                  onClick={() => setExpandedExercise(expanded ? null : idx)}
-                  className="p-1 text-muted-foreground"
-                >
+                <button onClick={() => setExpandedExercise(expanded ? null : idx)} className="p-1 text-muted-foreground">
                   {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
               </div>
 
               {expanded && (
                 <div className="px-4 pb-4 space-y-3 border-t border-border/50">
-                  {/* Exercise image */}
                   <div className="w-full h-48 rounded-xl overflow-hidden bg-muted flex items-center justify-center mt-3">
                     {loadingImages[idx] ? (
                       <div className="flex flex-col items-center gap-2">
@@ -299,17 +315,13 @@ export default function WorkoutPage() {
                     ) : null}
                   </div>
 
-                  {/* Audio speaking indicator */}
                   {audioMode && speaking && expandedExercise === idx && (
                     <div className="flex items-center gap-2 text-primary text-xs font-medium">
-                      <Volume2 className="w-4 h-4 animate-pulse" />
-                      Reading instructions…
+                      <Volume2 className="w-4 h-4 animate-pulse" /> Reading instructions…
                     </div>
                   )}
 
-                  {ex.description && (
-                    <p className="text-sm text-muted-foreground">{ex.description}</p>
-                  )}
+                  {ex.description && <p className="text-sm text-muted-foreground">{ex.description}</p>}
                   {ex.instructions && (
                     <div>
                       <p className="text-xs font-semibold text-foreground uppercase mb-1">Instructions</p>
@@ -318,9 +330,7 @@ export default function WorkoutPage() {
                   )}
                   {ex.muscles_used && ex.muscles_used.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
-                      {ex.muscles_used.map(m => (
-                        <span key={m} className="px-2 py-0.5 bg-secondary rounded-full text-xs">{m}</span>
-                      ))}
+                      {ex.muscles_used.map(m => <span key={m} className="px-2 py-0.5 bg-secondary rounded-full text-xs">{m}</span>)}
                     </div>
                   )}
                   {ex.safety_notes && (
@@ -330,11 +340,20 @@ export default function WorkoutPage() {
                     </div>
                   )}
 
-                  {/* Next exercise button in audio mode */}
-                  {audioMode && idx < exercises.length - 1 && (
-                    <Button variant="outline" size="sm" className="w-full mt-1" onClick={() => handleNext(idx)}>
-                      Next Exercise →
-                    </Button>
+                  {/* Audio nav buttons */}
+                  {audioMode && (
+                    <div className="flex gap-2 pt-1">
+                      {idx > 0 && (
+                        <Button variant="outline" size="sm" className="flex-1" onClick={() => handleBack(idx)}>
+                          ← Back
+                        </Button>
+                      )}
+                      {idx < exercises.length - 1 && (
+                        <Button size="sm" className="flex-1" onClick={() => handleNext(idx)}>
+                          Next →
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -348,19 +367,13 @@ export default function WorkoutPage() {
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
           <h3 className="font-semibold text-blue-800 text-sm mb-1">🧊 Cooldown — {workoutData.cooldown.name}</h3>
           <p className="text-xs text-blue-700">{workoutData.cooldown.instructions}</p>
-          {workoutData.cooldown.duration_minutes && (
-            <p className="text-xs text-blue-600 mt-1 font-medium">{workoutData.cooldown.duration_minutes} min</p>
-          )}
+          {workoutData.cooldown.duration_minutes && <p className="text-xs text-blue-600 mt-1 font-medium">{workoutData.cooldown.duration_minutes} min</p>}
         </div>
       )}
 
       {/* Finish button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border md:static md:border-0 md:p-0">
-        <Button
-          onClick={handleFinish}
-          disabled={finishing || completedExercises.size === 0}
-          className="w-full h-12 text-base"
-        >
+        <Button onClick={handleFinish} disabled={finishing || completedExercises.size === 0} className="w-full h-12 text-base">
           {finishing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
           {allDone ? "Complete Workout ✓" : `Finish (${completedExercises.size}/${exercises.length} done)`}
         </Button>

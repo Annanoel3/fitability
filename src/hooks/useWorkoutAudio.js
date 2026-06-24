@@ -3,10 +3,11 @@ import { base44 } from "@/api/base44Client";
 
 /**
  * Manages TTS audio playback and optional voice command recognition for workouts.
- * - Uses GenerateSpeech for high-quality audio (cached by exercise name).
- * - Uses Web Speech API for voice commands: "done", "next", "skip".
+ * - Uses GenerateSpeech for high-quality stored MP3s (cached by exercise name).
+ * - Uses Web Speech API for voice commands: "next", "done", "skip", "back".
+ * - noisyMode: skip mic entirely, user taps buttons manually.
  */
-export function useWorkoutAudio({ exercises, onNext, onDone }) {
+export function useWorkoutAudio({ exercises, onNext, onBack, noisyMode }) {
   const [audioMode, setAudioMode] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [listeningForVoice, setListeningForVoice] = useState(false);
@@ -15,8 +16,9 @@ export function useWorkoutAudio({ exercises, onNext, onDone }) {
   const audioRef = useRef(null);
   const recognitionRef = useRef(null);
   const activeIdxRef = useRef(null);
+  const noisyRef = useRef(noisyMode);
+  useEffect(() => { noisyRef.current = noisyMode; }, [noisyMode]);
 
-  // Stop any playing audio
   const stopAudio = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -25,37 +27,30 @@ export function useWorkoutAudio({ exercises, onNext, onDone }) {
     setSpeaking(false);
   }, []);
 
-  // Speak a text string — checks cache, generates if needed
-  const speak = useCallback(async (text, exerciseName) => {
+  const speak = useCallback(async (text, cacheKey) => {
     stopAudio();
     setSpeaking(true);
     try {
       let audioUrl = null;
 
-      // Check cache
-      if (exerciseName) {
-        const key = `audio_${exerciseName.toLowerCase().trim()}`;
-        const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: key });
-        if (cached.length > 0) {
-          audioUrl = cached[0].image_url;
-        }
+      if (cacheKey) {
+        const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: `audio_${cacheKey}` });
+        if (cached.length > 0) audioUrl = cached[0].image_url;
       }
 
-      // Generate if not cached
       if (!audioUrl) {
         const result = await base44.integrations.Core.GenerateSpeech({
           text,
-          voice: "river", // calm, neutral — best for fitness coaching
+          voice: "sunny", // energetic, upbeat — great for fitness coaching
         });
         audioUrl = result.url;
-        // Cache it
-        if (exerciseName) {
-          const key = `audio_${exerciseName.toLowerCase().trim()}`;
-          await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: audioUrl });
+        if (cacheKey) {
+          await base44.entities.ExerciseImage.create({ exercise_name_key: `audio_${cacheKey}`, image_url: audioUrl });
         }
       }
 
       const audio = new Audio(audioUrl);
+      audio.playbackRate = 1.15; // slightly faster — natural, not slow
       audioRef.current = audio;
       audio.onended = () => setSpeaking(false);
       audio.onerror = () => setSpeaking(false);
@@ -65,18 +60,24 @@ export function useWorkoutAudio({ exercises, onNext, onDone }) {
     }
   }, [stopAudio]);
 
-  // Speak instructions for a given exercise index
+  const speakWelcome = useCallback((workoutTitle) => {
+    const text = `Welcome to today's workout: ${workoutTitle}! I'll guide you through each exercise. When you're ready to move on, just say "next" or "done". Say "back" to repeat the previous exercise. Let's get started — expand the first exercise whenever you're ready!`;
+    return speak(text, `welcome_${workoutTitle}`);
+  }, [speak]);
+
   const speakExercise = useCallback(async (idx) => {
     if (!exercises || !exercises[idx]) return;
     const ex = exercises[idx];
     activeIdxRef.current = idx;
-    const text = `Exercise ${idx + 1}: ${ex.name}. ${ex.sets ? `${ex.sets} sets` : ""} ${ex.reps ? `of ${ex.reps} reps.` : ex.duration_seconds ? `for ${ex.duration_seconds} seconds.` : ""} ${ex.instructions || ex.description || ""}`;
+    const isLast = idx === exercises.length - 1;
+    const position = isLast ? "This is your last exercise. " : "";
+    const text = `Exercise ${idx + 1}: ${ex.name}. ${ex.sets ? `${ex.sets} sets` : ""} ${ex.reps ? `of ${ex.reps} reps.` : ex.duration_seconds ? `for ${ex.duration_seconds} seconds.` : ""} ${ex.instructions || ex.description || ""} ${position}`;
     await speak(text, ex.name);
   }, [exercises, speak]);
 
-  // Voice recognition setup
+  // Voice recognition
   const startListening = useCallback(() => {
-    if (!voiceSupported) return;
+    if (!voiceSupported || noisyRef.current) return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
@@ -85,15 +86,17 @@ export function useWorkoutAudio({ exercises, onNext, onDone }) {
 
     recognition.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-      if (transcript.includes("done") || transcript.includes("next") || transcript.includes("skip")) {
+      if (transcript.includes("next") || transcript.includes("done") || transcript.includes("skip")) {
         stopAudio();
         onNext(activeIdxRef.current);
+      } else if (transcript.includes("back") || transcript.includes("previous")) {
+        stopAudio();
+        onBack(activeIdxRef.current);
       }
     };
 
-    recognition.onerror = () => setListeningForVoice(false);
+    recognition.onerror = () => {};
     recognition.onend = () => {
-      // Restart if still in audio mode
       if (recognitionRef.current) {
         try { recognition.start(); } catch (e) {}
       }
@@ -104,7 +107,7 @@ export function useWorkoutAudio({ exercises, onNext, onDone }) {
       recognition.start();
       setListeningForVoice(true);
     } catch (e) {}
-  }, [voiceSupported, stopAudio, onNext]);
+  }, [voiceSupported, stopAudio, onNext, onBack]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
@@ -115,28 +118,25 @@ export function useWorkoutAudio({ exercises, onNext, onDone }) {
     setListeningForVoice(false);
   }, []);
 
-  // Toggle audio mode on/off
-  const toggleAudioMode = useCallback(() => {
-    setAudioMode(prev => {
-      if (prev) {
-        stopAudio();
-        stopListening();
-        return false;
-      }
-      return true;
-    });
+  const enableAudioMode = useCallback(() => {
+    setAudioMode(true);
+  }, []);
+
+  const disableAudioMode = useCallback(() => {
+    stopAudio();
+    stopListening();
+    setAudioMode(false);
   }, [stopAudio, stopListening]);
 
-  // When audio mode turns on, start voice listening
+  // Start/stop listening when audioMode or noisyMode changes
   useEffect(() => {
-    if (audioMode && voiceSupported) {
+    if (audioMode && !noisyMode && voiceSupported) {
       startListening();
     } else {
       stopListening();
     }
-  }, [audioMode, voiceSupported, startListening, stopListening]);
+  }, [audioMode, noisyMode, voiceSupported, startListening, stopListening]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopAudio();
@@ -146,8 +146,10 @@ export function useWorkoutAudio({ exercises, onNext, onDone }) {
 
   return {
     audioMode,
-    toggleAudioMode,
+    enableAudioMode,
+    disableAudioMode,
     speakExercise,
+    speakWelcome,
     stopAudio,
     speaking,
     listeningForVoice,
