@@ -5,13 +5,16 @@
     {
       "entity_name": "UserProfile",
       "allowed_operations": [
-        "read"
+        "read",
+        "update"
       ]
     },
     {
       "entity_name": "WorkoutPlan",
       "allowed_operations": [
-        "read"
+        "read",
+        "create",
+        "update"
       ]
     },
     {
@@ -37,6 +40,10 @@
       "allowed_operations": [
         "read"
       ]
+    },
+    {
+      "function_name": "generateWorkoutFromPreferences",
+      "description": "Generate a personalized workout based on user preferences and abilities"
     }
   ],
   "context_files": [],

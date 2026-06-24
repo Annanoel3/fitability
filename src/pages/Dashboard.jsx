@@ -23,8 +23,9 @@ export default function Dashboard() {
   }, []);
 
   const loadData = async () => {
-    // Track activity
-    await base44.functions.invoke('trackUserActivity', {});
+    // Track activity and capture timezone
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    await base44.functions.invoke('trackUserActivity', { timezone: tz });
 
     const profiles = await base44.entities.UserProfile.filter({});
     if (profiles.length === 0) {

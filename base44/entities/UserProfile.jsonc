@@ -149,6 +149,11 @@
       "type": "string",
       "format": "date-time",
       "description": "When weekly coach reminder was sent to active users"
+    },
+    "timezone": {
+      "type": "string",
+      "description": "User's timezone (IANA timezone string, e.g., America/Chicago)",
+      "default": "America/Chicago"
     }
   },
   "required": [

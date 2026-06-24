@@ -29,6 +29,12 @@ Deno.serve(async (req) => {
       const userEmail = allUsers.find(u => u.id === profile.created_by_id)?.email;
       if (!userEmail) continue;
 
+      // Check if it's a good time to send notifications for this user (9 AM in their timezone)
+      const userTz = profile.timezone || "America/Chicago";
+      if (!isNotificationTime(now, userTz)) {
+        continue; // Skip this user if it's not 9 AM in their timezone
+      }
+
       const lastActivity = profile.last_activity_date ? new Date(profile.last_activity_date) : null;
       const daysSinceActivity = lastActivity ? Math.floor((now - lastActivity) / (1000 * 60 * 60 * 24)) : 999;
 
@@ -158,6 +164,21 @@ function buildCoachReminderMessage(profile) {
   message += `Pop into Coach Chat anytime! 🚀`;
   
   return message;
+}
+
+function isNotificationTime(nowUTC, timezone) {
+  try {
+    // Get the user's local time in their timezone
+    const localTime = new Date(nowUTC.toLocaleString('en-US', { timeZone: timezone }));
+    const hour = localTime.getHours();
+    
+    // Send notifications between 9 AM and 10 AM user local time
+    return hour === 9;
+  } catch (e) {
+    // If timezone is invalid, default to true (send it)
+    console.warn(`Invalid timezone "${timezone}": ${e.message}`);
+    return true;
+  }
 }
 
 async function sendOneSignalNotification(appId, apiKey, userEmail, message, type) {
