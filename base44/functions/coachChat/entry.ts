@@ -19,7 +19,13 @@ Be warm, encouraging, and concise. Keep responses short and practical.
 When updating a workout plan:
 - Preserve the overall structure but modify specific exercises as requested
 - Always explain what you changed and why
-- Confirm the change was saved`;
+- Confirm the change was saved
+
+If a user asks you to do something that is clearly outside your capabilities (e.g. scheduling appointments, connecting to external devices, features that don't exist in the app, billing questions, account changes, etc.), you MUST:
+1. Call the notify_developer function with category="out_of_scope" and the user's request as the message
+2. Tell the user warmly: "That's a little beyond what I can do right now — but I've sent a quick note to my developer and they'll look into it!"
+
+If the user is just venting, giving feedback, or complaining (without asking you to do something specific), do NOT mention notifying anyone. Simply acknowledge them empathetically. But still call notify_developer silently with category="feedback".`;
 
 Deno.serve(async (req) => {
   try {
@@ -60,6 +66,22 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
 - Exercises: ${(workoutPlan.exercises || []).join(' | ')}
 - Safety notes: ${workoutPlan.safety_notes || 'None'}` : 'No active workout plan found.'}`;
 
+    const notifyTool = {
+      type: "function",
+      function: {
+        name: "notify_developer",
+        description: "Notify the developer when the user asks for something out of scope, or is giving feedback/complaints. Always call this silently — never tell the user about it for feedback, only for out-of-scope requests.",
+        parameters: {
+          type: "object",
+          required: ["message", "category"],
+          properties: {
+            message: { type: "string", description: "What the user said or asked for" },
+            category: { type: "string", enum: ["out_of_scope", "feedback"], description: "out_of_scope if the user asked for something the app can't do; feedback if they are venting or complaining" }
+          }
+        }
+      }
+    };
+
     const tools = workoutPlan ? [
       {
         type: "function",
@@ -90,8 +112,9 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
             }
           }
         }
-      }
-    ] : [];
+      },
+      notifyTool
+    ] : [notifyTool];
 
     const systemWithContext = SYSTEM_PROMPT + "\n\n" + contextBlock;
 
@@ -112,25 +135,48 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
     let reply = choice.message.content || "";
     let planUpdated = false;
 
-    // Handle tool call — update the workout plan
+    // Handle tool calls
     if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
-      const toolCall = choice.message.tool_calls[0];
-      if (toolCall.function.name === "update_workout_plan" && workoutPlan) {
-        const updates = JSON.parse(toolCall.function.arguments);
-        await base44.asServiceRole.entities.WorkoutPlan.update(workoutPlan.id, updates);
-        planUpdated = true;
+      for (const toolCall of choice.message.tool_calls) {
+        const args = JSON.parse(toolCall.function.arguments);
 
-        // Get a natural language follow-up from the model
-        const followUp = await openai.chat.completions.create({
-          model: "gpt-4o",
-          messages: [
-            ...chatMessages,
-            choice.message,
-            { role: "tool", tool_call_id: toolCall.id, content: "Plan updated successfully." }
-          ],
-          max_tokens: 300
-        });
-        reply = followUp.choices[0].message.content || "Done! I've updated your workout plan.";
+        if (toolCall.function.name === "update_workout_plan" && workoutPlan) {
+          await base44.asServiceRole.entities.WorkoutPlan.update(workoutPlan.id, args);
+          planUpdated = true;
+
+          const followUp = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              ...chatMessages,
+              choice.message,
+              { role: "tool", tool_call_id: toolCall.id, content: "Plan updated successfully." }
+            ],
+            max_tokens: 300
+          });
+          reply = followUp.choices[0].message.content || "Done! I've updated your workout plan.";
+
+        } else if (toolCall.function.name === "notify_developer") {
+          // Fire and forget — send email, don't block the response
+          base44.asServiceRole.integrations.Core.SendEmail({
+            to: "juliheaton@msn.com",
+            subject: `FitAbility Coach: ${args.category === "out_of_scope" ? "Feature Request / Out-of-Scope Ask" : "User Feedback"} from ${user.full_name || user.email}`,
+            body: `A user interaction requires your attention.\n\nUser: ${user.full_name || "Unknown"} (${user.email})\nCategory: ${args.category}\n\nMessage:\n${args.message}\n\n---\nSent automatically by the FitAbility Coach.`
+          }).catch(() => {});
+
+          // If out_of_scope, get a natural reply acknowledging it
+          if (args.category === "out_of_scope" && !reply) {
+            const followUp = await openai.chat.completions.create({
+              model: "gpt-4o",
+              messages: [
+                ...chatMessages,
+                choice.message,
+                { role: "tool", tool_call_id: toolCall.id, content: "Developer notified." }
+              ],
+              max_tokens: 150
+            });
+            reply = followUp.choices[0].message.content || "That's a little beyond what I can do right now — but I've sent a quick note to my developer and they'll look into it!";
+          }
+        }
       }
     }
 
