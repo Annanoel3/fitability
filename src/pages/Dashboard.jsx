@@ -105,7 +105,7 @@ ${preferences.workoutType ? `═══ USER'S WORKOUT PREFERENCES ═══
 Requested workout type: ${preferences.workoutType} — prioritize this style of exercise.
 Requested intensity: ${preferences.intensity} — match this energy level throughout.
 Available equipment: ${(preferences.equipment || []).join(", ") || "none — use bodyweight only"}.
-IMPORTANT: Only include exercises that use the listed equipment. If no equipment, all exercises must be bodyweight-only.
+IMPORTANT: Equipment is available as a supplement — use it where it enhances exercises, but the workout should NOT revolve around any single piece of equipment. Mix bodyweight and equipment-based movements naturally. If no equipment listed, use bodyweight only.
 ` : ""}${recentExercisesStr}
 
 You are an expert adaptive fitness coach and physical therapist AI. Generate a highly personalized workout for this specific individual.
@@ -159,7 +159,8 @@ Energy: ${(checkin || todayCheckin)?.energy || "Not checked in"}
 INSTRUCTIONS:
 Generate a complete daily workout including warmup, 3–6 main exercises, and cooldown.
 Each exercise must include: name, description, sets, reps or duration_seconds, step-by-step instructions, position, muscles_used, safety_notes.
-Title and description should feel personal — reference their actual goals and situation.`,
+Title and description should feel personal — reference their actual goals and situation.
+TITLE RULES: Keep it short, natural, and motivating (e.g. "Juli's Morning Strength Session", "Full-Body Power Workout"). Never include medical/clinical terms like "knee-respectful", "low-impact", "joint-friendly", "safe", or equipment names in the title. Just a clean, energizing workout name.`,
       response_json_schema: {
         type: "object",
         properties: {
