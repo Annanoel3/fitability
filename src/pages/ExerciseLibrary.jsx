@@ -40,7 +40,7 @@ export default function ExerciseLibrary() {
       : null;
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an expert adaptive fitness coach. Generate 15-20 of the BEST exercises for this specific person based on their profile.
+      prompt: `You are an expert adaptive fitness coach. Generate ALL exercises that are safe and doable for this specific person based on their profile.
 
 ═══ USER PROFILE ═══
 Name: ${profile.display_name || "User"}
@@ -63,12 +63,12 @@ Pain Areas:
 ${Object.entries(profile.pain_areas || {}).map(([area, level]) => `${area}: ${level}/10`).join(", ") || "None"}
 
 ═══ INSTRUCTIONS ═══
-Select the 15-20 most appropriate, safe, and effective exercises for THIS user.
+Generate a comprehensive list of ALL exercises that are safe and doable for THIS user.
 - Every exercise MUST be safe for their fitness mode and body limitations.
 - Avoid ANY exercise that could worsen their pain areas or disabilities.
 - Mix categories: warmup, strength, cardio, balance, flexibility, cooldown.
 - Include modifications they can use.
-- Prioritize their stated goals.
+- Include as many safe variations and options as possible.
 
 For each exercise provide: name, description, instructions (step by step), category, position, difficulty, muscles_used, equipment_needed, restrictions, modifications, default_sets, default_reps, default_duration_seconds`,
       response_json_schema: {
