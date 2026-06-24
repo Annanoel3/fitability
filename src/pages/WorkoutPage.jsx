@@ -19,8 +19,11 @@ export default function WorkoutPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showAudioSetup, setShowAudioSetup] = useState(false);
   const [noisyMode, setNoisyMode] = useState(false);
-  const [feedbackState, setFeedbackState] = useState(null); // null | "listening" | "processing" | "saved"
+  const [feedbackState, setFeedbackState] = useState(null); // null | "listening" | "processing" | "review" | "saving" | "saved"
   const [savedRating, setSavedRating] = useState(null);
+  const [reviewRating, setReviewRating] = useState(3);
+  const [reviewText, setReviewText] = useState("");
+  const [hoverRating, setHoverRating] = useState(0);
 
   const exercises = workoutData?.exercises || [];
 
@@ -107,15 +110,15 @@ export default function WorkoutPage() {
 
   const handleFinish = async () => {
     setFinishing(true);
-    stopListening(); // stop nav listening before feedback flow
+    stopListening();
     await base44.entities.WorkoutPlan.update(workout.id, {
       completed: true,
       completed_date: new Date().toISOString(),
       exercises_completed: completedExercises.size,
     });
 
-    if (audioMode) {
-      // Ask for voice feedback
+    if (audioMode && !noisyMode) {
+      // Voice feedback path: listen, then show review screen pre-populated
       setFeedbackState("listening");
       setFinishing(false);
       const transcript = await askForFeedback();
@@ -127,25 +130,40 @@ export default function WorkoutPage() {
             prompt: `A user just finished a workout and said: "${transcript}"\n\nExtract a star rating from 1-5 based on how positive they sound. Also extract a short cleaned-up summary of their feedback (1-2 sentences max).\n\nIf they say "one star", "terrible", "awful" → 1. "two stars", "bad", "not great" → 2. "okay", "alright", "fine", "three stars" → 3. "good", "great", "four stars" → 4. "amazing", "perfect", "loved it", "five stars" → 5. If unclear, use 3.`,
             response_json_schema: {
               type: "object",
-              properties: {
-                rating: { type: "number" },
-                summary: { type: "string" }
-              }
+              properties: { rating: { type: "number" }, summary: { type: "string" } }
             }
           });
           const rating = Math.min(5, Math.max(1, Math.round(parsed.rating || 3)));
-          await base44.entities.WorkoutPlan.update(workout.id, {
-            user_rating: rating,
-            user_feedback: parsed.summary || transcript,
-          });
-          setSavedRating(rating);
-        } catch (e) {}
+          setReviewRating(rating);
+          setReviewText(parsed.summary || transcript);
+        } catch (e) {
+          setReviewText(transcript);
+        }
       }
-      setFeedbackState("saved");
+      setFeedbackState("review");
+    } else {
+      // Text feedback path (noisy mode or voice not supported)
+      setReviewRating(3);
+      setReviewText("");
+      setFeedbackState("review");
+      setFinishing(false);
     }
+  };
 
+  const handleSaveFeedback = async () => {
+    setFeedbackState("saving");
+    await base44.entities.WorkoutPlan.update(workout.id, {
+      user_rating: reviewRating,
+      user_feedback: reviewText,
+    });
+    setSavedRating(reviewRating);
+    setFeedbackState("saved");
     setDone(true);
-    setFinishing(false);
+  };
+
+  const handleSkipFeedback = () => {
+    setFeedbackState("saved");
+    setDone(true);
   };
 
   const handleArchive = async () => {
@@ -166,6 +184,55 @@ export default function WorkoutPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (feedbackState === "review") {
+    const isVoicePath = audioMode && !noisyMode;
+    return (
+      <div className="flex flex-col items-center min-h-[60vh] gap-6 px-4 py-10 max-w-sm mx-auto w-full">
+        <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+          <Trophy className="w-8 h-8 text-emerald-600" />
+        </div>
+        <div className="text-center">
+          <h2 className="text-xl font-heading font-bold text-foreground">How did it go?</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isVoicePath ? "Here's what I heard — feel free to adjust." : "Rate your workout and leave a note."}
+          </p>
+        </div>
+
+        {/* Star rating */}
+        <div className="flex gap-2">
+          {[1,2,3,4,5].map(s => (
+            <button
+              key={s}
+              onClick={() => setReviewRating(s)}
+              onMouseEnter={() => setHoverRating(s)}
+              onMouseLeave={() => setHoverRating(0)}
+              className="focus:outline-none"
+            >
+              <Star className={`w-10 h-10 transition-colors ${s <= (hoverRating || reviewRating) ? "text-amber-400 fill-amber-400" : "text-muted-foreground"}`} />
+            </button>
+          ))}
+        </div>
+
+        {/* Text feedback */}
+        <textarea
+          className="w-full rounded-xl border border-border bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+          rows={3}
+          placeholder="Add a note about how it felt (optional)…"
+          value={reviewText}
+          onChange={e => setReviewText(e.target.value)}
+        />
+
+        <div className="flex gap-3 w-full">
+          <Button variant="outline" className="flex-1 h-11" onClick={handleSkipFeedback}>Skip</Button>
+          <Button className="flex-1 h-11" onClick={handleSaveFeedback} disabled={feedbackState === "saving"}>
+            {feedbackState === "saving" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+            Save & Finish
+          </Button>
+        </div>
       </div>
     );
   }
@@ -424,7 +491,7 @@ export default function WorkoutPage() {
         )}
         {feedbackState === "processing" && (
           <div className="flex items-center justify-center gap-2 mb-3 text-muted-foreground text-sm">
-            <Loader2 className="w-4 h-4 animate-spin" /> Saving your feedback…
+            <Loader2 className="w-4 h-4 animate-spin" /> Processing your feedback…
           </div>
         )}
         <Button
