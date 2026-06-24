@@ -27,6 +27,7 @@ import DeleteData from '@/pages/DeleteData';
 import DeleteAccount from '@/pages/DeleteAccount';
 import CoachChat from '@/pages/CoachChat';
 import FeedbackPage from '@/pages/FeedbackPage';
+import WorkoutPage from '@/pages/WorkoutPage';
 import AppLayout from '@/components/layout/AppLayout';
 import { initAdMob, maybeShowAdOnOpen } from '@/lib/admob';
 import OneSignalInit from '@/components/shared/OneSignalInit';
@@ -78,6 +79,7 @@ const AuthenticatedApp = () => {
             <Route path="/delete-data" element={<DeleteData />} />
             <Route path="/delete-account" element={<DeleteAccount />} />
             <Route path="/feedback" element={<FeedbackPage />} />
+            <Route path="/workout" element={<WorkoutPage />} />
           </Route>
         </Route>
 
