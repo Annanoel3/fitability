@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Loader2, ChevronLeft, CheckCircle2, Circle, Shield, ChevronDown, ChevronUp, Trophy } from "lucide-react";
+import { Loader2, ChevronLeft, CheckCircle2, Circle, Shield, ChevronDown, ChevronUp, Trophy, Trash2, Archive } from "lucide-react";
 
 export default function WorkoutPage() {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ export default function WorkoutPage() {
   const [loadingImages, setLoadingImages] = useState({});
   const [finishing, setFinishing] = useState(false);
   const [done, setDone] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     loadTodayWorkout();
@@ -34,7 +35,6 @@ export default function WorkoutPage() {
       const data = JSON.parse(w.workout_data || "{}");
       setWorkoutData(data);
       if (w.completed) {
-        // Mark all as completed if already done
         setCompletedExercises(new Set(data.exercises?.map((_, i) => i) || []));
       }
     } catch (e) {
@@ -47,12 +47,23 @@ export default function WorkoutPage() {
     if (exerciseImages[idx] || loadingImages[idx]) return;
     setLoadingImages(prev => ({ ...prev, [idx]: true }));
     try {
+      // Check shared cache first
+      const key = ex.name.toLowerCase().trim();
+      const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: key });
+      if (cached.length > 0) {
+        setExerciseImages(prev => ({ ...prev, [idx]: cached[0].image_url }));
+        setLoadingImages(prev => ({ ...prev, [idx]: false }));
+        return;
+      }
+      // Generate and cache
       const { url } = await base44.integrations.Core.GenerateImage({
         prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || "standing"}. ${ex.muscles_used?.length ? "Muscles worked: " + ex.muscles_used.slice(0, 3).join(", ") + "." : ""} Simple, clear diagram style, white background, no text.`
       });
       setExerciseImages(prev => ({ ...prev, [idx]: url }));
+      // Save to shared cache
+      await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: url });
     } catch (e) {
-      // silently fail — no image shown
+      // silently fail
     }
     setLoadingImages(prev => ({ ...prev, [idx]: false }));
   };
@@ -75,6 +86,16 @@ export default function WorkoutPage() {
     });
     setDone(true);
     setFinishing(false);
+  };
+
+  const handleArchive = async () => {
+    await base44.entities.WorkoutPlan.update(workout.id, { archived: true });
+    navigate("/");
+  };
+
+  const handleDelete = async () => {
+    await base44.entities.WorkoutPlan.delete(workout.id);
+    navigate("/");
   };
 
   const exercises = workoutData?.exercises || [];
@@ -106,17 +127,45 @@ export default function WorkoutPage() {
   }
 
   return (
-    <div className="pb-24 md:pb-8">
+    <div className="pb-28 md:pb-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => navigate("/")} className="p-2 rounded-full hover:bg-muted text-muted-foreground">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-xl font-heading font-bold text-foreground leading-tight">{workout?.title}</h1>
           <p className="text-sm text-muted-foreground">{workout?.total_duration_minutes} min · {workout?.difficulty_level}</p>
         </div>
+        {/* Archive / Delete */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleArchive}
+            title="Save to archive"
+            className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Archive className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setConfirmDelete(true)}
+            title="Delete workout"
+            className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+        </div>
       </div>
+
+      {/* Delete confirmation */}
+      {confirmDelete && (
+        <div className="mb-4 bg-destructive/10 border border-destructive/30 rounded-xl p-4 flex flex-col gap-3">
+          <p className="text-sm font-semibold text-destructive">Delete this workout? This cannot be undone.</p>
+          <div className="flex gap-2">
+            <Button variant="destructive" size="sm" onClick={handleDelete} className="flex-1">Yes, delete</Button>
+            <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)} className="flex-1">Cancel</Button>
+          </div>
+        </div>
+      )}
 
       {workout?.description && (
         <p className="text-sm text-muted-foreground mb-5 bg-muted/50 rounded-xl p-4">{workout.description}</p>
@@ -175,7 +224,14 @@ export default function WorkoutPage() {
                     {ex.position && ` · ${ex.position}`}
                   </p>
                 </div>
-                <button onClick={() => { const next = expanded ? null : idx; setExpandedExercise(next); if (next !== null) loadExerciseImage(idx, ex); }} className="p-1 text-muted-foreground">
+                <button
+                  onClick={() => {
+                    const next = expanded ? null : idx;
+                    setExpandedExercise(next);
+                    if (next !== null) loadExerciseImage(idx, ex);
+                  }}
+                  className="p-1 text-muted-foreground"
+                >
                   {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
               </div>
@@ -185,12 +241,13 @@ export default function WorkoutPage() {
                   {/* Exercise image */}
                   <div className="w-full h-48 rounded-xl overflow-hidden bg-muted flex items-center justify-center mt-3">
                     {loadingImages[idx] ? (
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Generating image...</span>
+                      </div>
                     ) : exerciseImages[idx] ? (
                       <img src={exerciseImages[idx]} alt={ex.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">No image</span>
-                    )}
+                    ) : null}
                   </div>
                   {ex.description && (
                     <p className="text-sm text-muted-foreground">{ex.description}</p>

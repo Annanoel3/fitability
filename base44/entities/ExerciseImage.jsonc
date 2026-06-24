@@ -1,0 +1,19 @@
+{
+  "name": "ExerciseImage",
+  "type": "object",
+  "properties": {
+    "exercise_name_key": {
+      "type": "string",
+      "description": "Normalized lowercase exercise name used as lookup key"
+    },
+    "image_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Generated image URL for this exercise"
+    }
+  },
+  "required": [
+    "exercise_name_key",
+    "image_url"
+  ]
+}
