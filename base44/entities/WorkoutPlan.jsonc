@@ -2,12 +2,15 @@
   "name": "WorkoutPlan",
   "type": "object",
   "rls": {
-    "enabled": true,
-    "rules": {
-      "create": "user",
-      "read": "owner",
-      "update": "owner",
-      "delete": "owner"
+    "create": true,
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
     }
   },
   "properties": {
@@ -107,6 +110,16 @@
     "archived": {
       "type": "boolean",
       "default": false
+    },
+    "user_rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "User star rating 1-5"
+    },
+    "user_feedback": {
+      "type": "string",
+      "description": "Raw voice or text feedback from user after workout"
     }
   },
   "required": [
