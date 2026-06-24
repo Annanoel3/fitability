@@ -169,13 +169,13 @@ export default function WorkoutPage() {
   const handleArchive = async () => {
     stopAudio();
     await base44.entities.WorkoutPlan.update(workout.id, { archived: true });
-    navigate("/");
+    window.location.href = "/";
   };
 
   const handleDelete = async () => {
     stopAudio();
     await base44.entities.WorkoutPlan.delete(workout.id);
-    navigate("/");
+    window.location.href = "/";
   };
 
   const allDone = exercises.length > 0 && completedExercises.size === exercises.length;
