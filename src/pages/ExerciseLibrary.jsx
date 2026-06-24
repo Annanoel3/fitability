@@ -97,7 +97,7 @@ For each exercise provide: name, description, instructions (step by step), categ
           }
         }
       },
-      model: "claude_sonnet_4_6"
+      model: "gpt_5_4"
     });
 
     if (result.exercises) {

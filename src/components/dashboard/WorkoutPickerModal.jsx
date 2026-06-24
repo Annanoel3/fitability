@@ -71,7 +71,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment =
           </button>
         </div>
 
-        <div className="overflow-y-auto flex-1 px-5 pb-5 space-y-5">
+        <div className="overflow-y-auto flex-1 px-5 pt-1 space-y-5">
           {/* Workout Type */}
           <div>
             <p className="text-sm font-semibold text-foreground mb-2">What type of workout? (choose one or more)</p>
@@ -149,6 +149,10 @@ export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment =
             </div>
           )}
 
+        </div>
+
+        {/* Sticky footer button */}
+        <div className="px-5 pb-5 pt-3 flex-shrink-0 border-t border-border">
           <Button
             onClick={handleConfirm}
             disabled={!canConfirm}

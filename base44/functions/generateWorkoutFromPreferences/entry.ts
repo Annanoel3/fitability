@@ -133,7 +133,7 @@ Each exercise must include: name, description, sets, reps/duration, step-by-step
           safety_review: { type: "string" }
         }
       },
-      model: "claude_sonnet_4_6"
+      model: "gpt_5_4"
     });
 
     const today = new Date().toISOString().split("T")[0];
