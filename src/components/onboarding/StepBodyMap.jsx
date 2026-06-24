@@ -73,7 +73,11 @@ export default function StepBodyMap({ data, onChange }) {
          {["front", "back"].map(v => (
            <button
              key={v}
-             onClick={() => setView(v)}
+             onClick={() => {
+               setView(v);
+               // Reset marked zones when switching views
+               onChange({ marked_zones: [] });
+             }}
              className={`px-10 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
                view === v
                  ? "bg-primary text-primary-foreground border-primary"
