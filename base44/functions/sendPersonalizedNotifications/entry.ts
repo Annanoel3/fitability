@@ -184,20 +184,19 @@ function isNotificationTime(nowUTC, timezone) {
 async function sendOneSignalNotification(appId, apiKey, userEmail, message, type) {
   const payload = {
     app_id: appId,
-    filters: [
-      { field: "email", value: userEmail }
-    ],
+    include_external_ids: [userEmail],
     headings: { en: "FitAbility" },
     contents: { en: message },
     priority: 10,
-    data: { notification_type: type }
+    data: { notification_type: type },
+    send_after: new Date().toISOString() // Ensure UTC timestamp
   };
 
   try {
     const resp = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
         "Authorization": `Basic ${apiKey}`
       },
       body: JSON.stringify(payload)
