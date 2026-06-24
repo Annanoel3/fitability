@@ -9,7 +9,6 @@ import {
 
 const NAV_ITEMS = [
   { path: "/", label: "Home", icon: Home },
-  { path: "/workout", label: "Workout", icon: Dumbbell },
   { path: "/coach", label: "Coach", icon: Bot },
   { path: "/exercises", label: "Library", icon: BookOpen },
   { path: "/progress", label: "Progress", icon: TrendingUp },
