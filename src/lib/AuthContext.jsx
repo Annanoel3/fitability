@@ -118,11 +118,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     
+    // Clear all cached entity data so no previous user's data leaks to the next session
+    import('@/lib/query-client').then(({ queryClientInstance }) => {
+      queryClientInstance.clear();
+    });
+
     if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
       base44.auth.logout(window.location.href);
     } else {
-      // Just remove the token without redirect
       base44.auth.logout();
     }
   };
