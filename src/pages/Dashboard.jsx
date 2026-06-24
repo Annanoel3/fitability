@@ -7,6 +7,7 @@ import StreakCard from "@/components/dashboard/StreakCard";
 import EmergencyBanner from "@/components/dashboard/EmergencyBanner";
 import { Dumbbell, Clock, Target, Sparkles, ChevronRight, Loader2, TrendingUp } from "lucide-react";
 import WorkoutPickerModal from "@/components/dashboard/WorkoutPickerModal";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
 
 // TAG VOCABULARY — shared between buildUserTags() and the tagExistingExercises backend function.
 // Exercise restriction_tags use these exact strings. User tags are generated here and matched against them.
@@ -199,6 +200,7 @@ export default function Dashboard() {
   const [emergency, setEmergency] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [showWorkoutPicker, setShowWorkoutPicker] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -215,6 +217,9 @@ export default function Dashboard() {
       return;
     }
     setProfile(profiles[0]);
+    if (profiles[0].onboarding_completed && !profiles[0].onboarding_tour_completed) {
+      setShowTour(true);
+    }
 
     const allWorkouts = await base44.entities.WorkoutPlan.filter({ archived: false }, "-date", 30);
     setWorkouts(allWorkouts);
@@ -500,6 +505,12 @@ Return the complete corrected workout in the same JSON structure.`,
 
   return (
     <div className="space-y-6 pb-20 md:pb-6">
+      {showTour && (
+        <OnboardingTour
+          profile={profile}
+          onComplete={() => setShowTour(false)}
+        />
+      )}
       {showWorkoutPicker && (
         <WorkoutPickerModal 
           onConfirm={handleWorkoutPickerConfirm}

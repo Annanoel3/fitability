@@ -1,8 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import OpenAI from 'npm:openai';
 
-const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
-
 const SYSTEM_PROMPT = `You are FitAbility Coach, a compassionate and expert adaptive fitness assistant. 
 Your job is to help users who have disabilities, chronic pain, or physical limitations get the most out of their workout plans safely.
 
@@ -38,11 +36,12 @@ If the user is just venting, giving feedback, or complaining (without asking you
 
 Deno.serve(async (req) => {
   try {
+    const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { messages, workoutPlanId } = await req.json();
+    const { messages, workoutPlanId, isWelcome, profileName } = await req.json();
 
     // Fetch user profile and relevant workout plan using service role
     const profiles = await base44.asServiceRole.entities.UserProfile.filter({ created_by_id: user.id });
@@ -58,21 +57,35 @@ Deno.serve(async (req) => {
       workoutPlan = plans[0] || null;
     }
 
+    // Handle welcome message for first coach visit
+    if (isWelcome) {
+      const name = profile?.display_name || profileName || 'there';
+      const conditions = (profile?.disabilities || []).join(', ') || 'none reported';
+      const goals = (profile?.goals || []).join(', ') || 'general fitness';
+      const reply = `Hi ${name}! 👋 I'm your FitAbility Coach — I'm here anytime you want to fine-tune your workouts, ask about an exercise, or just check in.\n\nI already know your profile, including your conditions (${conditions}) and your goals (${goals}), so I can personalize everything for you. **Anything you tell me here — like "make my workouts shorter" or "skip exercises that bother my knee" — I'll remember going forward.**\n\nWhat can I help you with today?`;
+      return Response.json({ reply, planUpdated: false });
+    }
+
+    const memoryBlock = profile?.coach_memory
+      ? `\n\nCOACH MEMORY (persistent preferences this user has stated in previous sessions — always honor these):\n${profile.coach_memory}`
+      : '';
+
     const contextBlock = `
 USER PROFILE:
 - Name: ${profile?.display_name || 'Unknown'}
-- Age: ${profile?.age || 'Unknown'}, Activity level: ${profile?.activity_level || 'Unknown'}
-- Fitness mode: ${profile?.fitness_mode || 'Standard'}
+- Age: ${profile?.age || 'Unknown'}, Sex: ${profile?.sex || 'Unknown'}, Weight: ${profile?.weight_lbs ? profile.weight_lbs + ' lbs' : 'Unknown'}
+- Activity level: ${profile?.activity_level || 'Unknown'}, Fitness mode: ${profile?.fitness_mode || 'Standard'}
 - Conditions/disabilities: ${(profile?.disabilities || []).join(', ') || 'None reported'}
 - Body limitations and injuries: ${(profile?.body_limitations || []).join(' | ') || 'None reported'}
 - Goals: ${(profile?.goals || []).join(', ') || 'Not set'}
+- Equipment: ${(profile?.equipment || []).join(', ') || 'Bodyweight only'}
+${memoryBlock}
 
 CURRENT WORKOUT PLAN:
 ${workoutPlan ? `- Title: ${workoutPlan.title}
 - Date: ${workoutPlan.date}
 - Difficulty: ${workoutPlan.difficulty_level}
 - Duration: ${workoutPlan.total_duration_minutes} minutes
-- Exercises: ${(workoutPlan.exercises || []).join(' | ')}
 - Safety notes: ${workoutPlan.safety_notes || 'None'}` : 'No active workout plan found.'}`;
 
     const notifyTool = {
@@ -189,7 +202,21 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
       }
     }
 
-    return Response.json({ reply, planUpdated });
+    // After each conversation, update coach memory with any new persistent preferences
+    let updatedMemory = profile?.coach_memory || '';
+    if (messages && messages.length >= 2) {
+      const memoryUpdate = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "Extract any new persistent user preferences or constraints from this conversation that should be remembered for future workouts. Examples: 'prefers shorter workouts', 'shoulder exercises bother them', 'wants more stretching'. If nothing new, return the existing memory unchanged. Return only the memory string, no explanation. Keep it under 300 characters." },
+          { role: "user", content: `Existing memory: ${updatedMemory || 'none'}\n\nNew conversation:\n${messages.map(m => m.role + ': ' + m.content).join('\n')}\nAssistant: ${reply}` }
+        ],
+        max_tokens: 150
+      });
+      updatedMemory = memoryUpdate.choices[0].message.content?.trim() || updatedMemory;
+    }
+
+    return Response.json({ reply, planUpdated, updatedMemory });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

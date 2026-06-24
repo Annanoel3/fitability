@@ -49,11 +49,45 @@ export default function CoachChat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [profile, setProfile] = useState(null);
   const messagesEndRef = useRef(null);
+  const hasWelcomed = useRef(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
+
+  useEffect(() => {
+    const init = async () => {
+      const profiles = await base44.entities.UserProfile.filter({});
+      if (profiles.length > 0) {
+        setProfile(profiles[0]);
+        // Auto-send welcome message on very first coach visit (no prior messages)
+        if (!hasWelcomed.current && messages.length === 0) {
+          hasWelcomed.current = true;
+          await sendWelcome(profiles[0]);
+        }
+      }
+    };
+    init();
+  }, []);
+
+  const sendWelcome = async (prof) => {
+    setSending(true);
+    try {
+      const res = await base44.functions.invoke("coachChat", {
+        messages: [],
+        isWelcome: true,
+        profileName: prof.display_name,
+      });
+      const { reply } = res.data;
+      setMessages([{ role: "assistant", content: reply }]);
+    } catch (e) {
+      setMessages([{ role: "assistant", content: `Hi ${prof?.display_name || "there"}! I'm your FitAbility Coach. I'm here to help adjust your workouts, answer questions, and keep you moving safely. What's on your mind?` }]);
+    } finally {
+      setSending(false);
+    }
+  };
 
   const sendMessage = async (text) => {
     const userText = text || input.trim();
@@ -69,7 +103,12 @@ export default function CoachChat() {
       const res = await base44.functions.invoke("coachChat", {
         messages: newMessages.map(m => ({ role: m.role, content: m.content })),
       });
-      const { reply, planUpdated } = res.data;
+      const { reply, planUpdated, updatedMemory } = res.data;
+      // Persist updated coach memory back to user profile
+      if (updatedMemory && profile?.id) {
+        await base44.entities.UserProfile.update(profile.id, { coach_memory: updatedMemory });
+        setProfile(prev => ({ ...prev, coach_memory: updatedMemory }));
+      }
       setMessages(prev => [...prev, { role: "assistant", content: reply, planUpdated }]);
     } catch (e) {
       setMessages(prev => [...prev, {

@@ -128,6 +128,15 @@
       "type": "number",
       "default": 0
     },
+    "onboarding_tour_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the post-onboarding guided tour has been completed"
+    },
+    "coach_memory": {
+      "type": "string",
+      "description": "Persistent memory string summarizing user preferences and requests for the AI coach"
+    },
     "last_activity_date": {
       "type": "string",
       "format": "date-time",
@@ -135,27 +144,23 @@
     },
     "last_inactivity_notification_3d": {
       "type": "string",
-      "format": "date-time",
-      "description": "When 3-day inactivity notification was sent"
+      "format": "date-time"
     },
     "last_inactivity_notification_5d": {
       "type": "string",
-      "format": "date-time",
-      "description": "When 5-day inactivity notification was sent"
+      "format": "date-time"
     },
     "last_inactivity_notification_weekly": {
       "type": "string",
-      "format": "date-time",
-      "description": "When weekly inactivity notification was sent"
+      "format": "date-time"
     },
     "last_coach_reminder_notification": {
       "type": "string",
-      "format": "date-time",
-      "description": "When weekly coach reminder was sent to active users"
+      "format": "date-time"
     },
     "timezone": {
       "type": "string",
-      "description": "User's timezone (IANA timezone string, e.g., America/Chicago)",
+      "description": "User's timezone (IANA timezone string)",
       "default": "America/Chicago"
     }
   },
