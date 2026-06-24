@@ -8,46 +8,51 @@ import EmergencyBanner from "@/components/dashboard/EmergencyBanner";
 import { Dumbbell, Clock, Target, Sparkles, ChevronRight, Loader2, TrendingUp } from "lucide-react";
 import WorkoutPickerModal from "@/components/dashboard/WorkoutPickerModal";
 
-// Maps a user profile to HARD restriction tags — only for severe/absolute limitations.
-// Mild/moderate pain is NOT included here; it's handled by the LLM prompt with nuance.
-// Hard filter = only things that would make an exercise genuinely dangerous or physically impossible.
+// Builds restriction tags used to pre-filter the exercise library.
+// Three tiers:
+//   ABSOLUTE (always filtered): physically impossible or medically dangerous movements
+//   SEVERE (pain 7+/10): filter out exercises that directly stress that joint/area
+//   MODERATE (pain 4-6/10): filter out exercises tagged for that area — LLM will substitute modified versions
+// Mild pain (1-3/10) is NOT filtered here — the LLM receives the score and modifies reps/form only
 function buildUserRestrictionTags(profile) {
   const tags = new Set();
   const p = profile;
 
-  // Fitness mode — these are absolute positional constraints
+  // ── ABSOLUTE: fitness mode / mobility ──
   if (p.fitness_mode === 'Wheelchair') { tags.add('cannot_stand'); tags.add('wheelchair_user'); }
   if (p.fitness_mode === 'Chair') { tags.add('seated_only'); }
-
-  // Activity level
   if (p.activity_level === 'Bedridden') { tags.add('bedridden'); tags.add('very_low_mobility'); }
+  if (p.current_abilities?.can_stand === false) tags.add('cannot_stand');
+  if (p.current_abilities?.can_walk === false) tags.add('cannot_stand');
 
-  // Body limitations — only add hard tags for EXPLICIT severe/absolute language
+  // ── ABSOLUTE: explicit physical impossibility from body_limitations ──
   const limitations = (p.body_limitations || []).join(' ').toLowerCase();
   if (limitations.includes('no leg') || limitations.includes('amputat') || limitations.includes('prosthetic')) tags.add('no_legs');
   if (limitations.includes('no arm')) tags.add('no_arms');
   if (limitations.includes('cannot stand') || limitations.includes("can't stand") || limitations.includes('unable to stand')) tags.add('cannot_stand');
-  if (limitations.includes('paralyz') || limitations.includes('paraplegia') || limitations.includes('paraplegic')) tags.add('cannot_stand');
-  if (limitations.includes('scoliosis')) tags.add('scoliosis');
-  if (limitations.includes('osteoporosis')) tags.add('osteoporosis');
-  if (limitations.includes('fracture') || limitations.includes('brittle bone')) tags.add('fracture_risk');
-  if (limitations.includes('vertigo') || limitations.includes('vestibular')) tags.add('vertigo');
+  if (limitations.includes('paralyz') || limitations.includes('paraplegia')) tags.add('cannot_stand');
 
-  // Disabilities — only absolute hard stops (conditions that make certain movements dangerous)
+  // ── ABSOLUTE: medical conditions with non-negotiable movement restrictions ──
   const disabilities = (p.disabilities || []).join(' ').toLowerCase();
   if (disabilities.includes('heart') || disabilities.includes('cardiac')) tags.add('heart_condition');
   if (disabilities.includes('copd') || disabilities.includes('emphysema')) tags.add('copd');
   if (disabilities.includes('epilepsy') || disabilities.includes('seizure')) tags.add('seizure_risk');
-  if (disabilities.includes('osteoporosis')) tags.add('osteoporosis');
   if (disabilities.includes('pregnancy')) tags.add('pregnancy');
-  if (disabilities.includes('vertigo') || disabilities.includes('vestibular')) tags.add('vertigo');
-  if (disabilities.includes('cerebral palsy')) tags.add('cerebral_palsy');
   if (disabilities.includes('paraplegia') || disabilities.includes('paraplegic')) tags.add('cannot_stand');
+  if (disabilities.includes('cerebral palsy')) tags.add('cerebral_palsy');
 
-  // Pain areas — only SEVERE pain (8+/10) triggers a hard restriction tag
-  // Mild-moderate pain (1-7) is intentionally left to the LLM to handle with modifications
+  // ── ABSOLUTE structural conditions (always dangerous regardless of pain level) ──
+  const allText = limitations + ' ' + disabilities;
+  if (allText.includes('osteoporosis')) tags.add('osteoporosis');
+  if (allText.includes('fracture') || allText.includes('brittle bone')) tags.add('fracture_risk');
+  if (allText.includes('scoliosis')) tags.add('scoliosis');
+  if (allText.includes('vertigo') || allText.includes('vestibular')) tags.add('vertigo');
+
+  // ── SEVERE/MODERATE pain: filter exercises that directly stress that area ──
+  // 7+/10 → hard filter (avoid all exercises tagged for that area)
+  // 4-6/10 → still filter tagged exercises, LLM will generate modified alternatives
   Object.entries(p.pain_areas || {}).forEach(([area, level]) => {
-    if (level >= 8) {
+    if (level >= 4) {
       const a = area.toLowerCase();
       if (a.includes('knee')) tags.add('knee_pain');
       if (a.includes('hip')) tags.add('hip_pain');
@@ -59,11 +64,24 @@ function buildUserRestrictionTags(profile) {
     }
   });
 
-  // Current abilities — explicit "cannot do" is a hard stop
-  if (p.current_abilities?.can_stand === false) tags.add('cannot_stand');
-  if (p.current_abilities?.can_walk === false) tags.add('cannot_stand');
+  // Body limitation keywords → moderate-severity tags (will filter library but LLM generates alternatives)
+  if (limitations.includes('knee')) tags.add('knee_pain');
+  if (limitations.includes('hip')) tags.add('hip_pain');
+  if (limitations.includes('back') || limitations.includes('lumbar') || limitations.includes('spine')) tags.add('back_pain');
+  if (limitations.includes('neck') || limitations.includes('cervical')) tags.add('neck_injury');
+  if (limitations.includes('shoulder') || limitations.includes('rotator')) tags.add('shoulder_injury');
+  if (limitations.includes('wrist') || limitations.includes('hand')) tags.add('wrist_injury');
+  if (limitations.includes('ankle') || limitations.includes('foot')) tags.add('ankle_pain');
+  if (limitations.includes('balance')) tags.add('balance_issues');
 
   return tags;
+}
+
+// Returns a pain severity tier string for the prompt
+function painTier(level) {
+  if (level <= 3) return `${level}/10 — MILD: keep exercises near this area, reduce impact and range only`;
+  if (level <= 6) return `${level}/10 — MODERATE: avoid exercises that load this joint heavily; use supported or reduced-ROM alternatives`;
+  return `${level}/10 — SEVERE: avoid exercises that directly stress this area; work surrounding muscles instead`;
 }
 
 export default function Dashboard() {
@@ -195,39 +213,34 @@ HARD RULE: Only use equipment that is explicitly listed above. If none is listed
 
 You are an expert adaptive fitness coach and physical therapist AI. Generate a highly personalized workout for this specific individual.
 
-═══ GRADUATED SEVERITY FRAMEWORK — READ THIS CAREFULLY ═══
-Pain and limitations exist on a spectrum. You must respond proportionally, not with a one-size-fits-all restriction.
+═══ TIERED WORKOUT RULES ═══
 
-PAIN LEVELS (use the Pain Areas scores):
-• 1–3/10 (Mild): Include exercises that work near that area BUT use gentle, low-impact, full range-of-motion movements. A note in safety_notes is enough. Do NOT avoid the area entirely.
-• 4–6/10 (Moderate): Modify the exercise — reduce range of motion, use a supported position, lower weight/reps. Avoid exercises that directly load or stress that joint at its limit. Still use the joint, just carefully.
-• 7–10/10 (Severe): Avoid exercises that directly stress that joint or region. Can still work surrounding muscles that don't aggravate it.
-• "Cannot do X" (in current_abilities): This is an absolute — never violate it.
+TIER 1 — FULL ABILITY (fitness_mode=Standard, no significant limitations):
+Generate standard fitness workouts. Standing, floor, full range of motion. Adjust only for age and goals.
 
-POSITION RULES — proportional to actual mobility:
-• fitness_mode = "Wheelchair" OR current_abilities.can_stand = false → ALL exercises must be wheelchair-seated. No standing. No floor. Zero exceptions.
-• fitness_mode = "Chair" → Prefer seated/chair-supported exercises but can include standing with support.
-• fitness_mode = "Standard" or "Recovery" → User CAN stand. Do NOT seat them just because they have knee pain, back pain, or arthritis. MODIFY the exercise instead. A person with mild knee pain doing standing heel raises is far better than treating them like they can't stand.
-• activity_level = "Bedridden" → bed/floor exercises only.
-• activity_level = "Mostly seated" or "Wheelchair user" → seated-first, but include some standing if can_stand is not false.
-• Everyone else → standing and floor exercises are appropriate; modify as needed for their pain level.
+TIER 2 — PARTIAL LIMITATIONS (has pain areas 1-6/10, body limitations, or conditions but CAN stand):
+The user can still stand and move. Do NOT give them a wheelchair or fully seated workout. Instead:
+• Pain 1-3/10 in an area → include exercises near that area, reduce impact and depth, note in safety_notes
+• Pain 4-6/10 in an area → avoid heavy loading of that joint, use supported or partial-ROM alternatives, still standing
+• Body limitation listed → work around it with modifications, not avoidance. A person with knee pain does standing calf raises, wall squats, and upper body work — not a bed routine.
+• Arthritis, fibromyalgia, chronic pain → gentle movement is therapeutic. Lower intensity, full participation.
+• Parkinson's, MS, stroke recovery → include balance and coordination focus. Mix seated and standing.
+• Heart condition, COPD → lower aerobic intensity, no breath-holding, still active movement.
 
-DISABILITY NUANCE:
-• Arthritis, fibromyalgia, chronic pain → gentle movement is BENEFICIAL, not harmful. Keep moving, reduce intensity.
-• Parkinson's, MS, stroke recovery → focus on balance, coordination, stability. Slower movements. Include seated options.
-• Heart condition, COPD → lower intensity, monitor breathlessness, no breath-holding. Aerobic is still good, just gentle.
-• Mild conditions (mild arthritis, slight back stiffness) → treat as a modification note, not a full ban on movement.
+TIER 3 — SEVERE / NON-AMBULATORY (fitness_mode=Wheelchair, cannot_stand=true, bedridden, or pain 7+/10 in a primary weight-bearing area):
+• fitness_mode=Wheelchair OR cannot_stand=true → ALL exercises must be wheelchair-seated. Zero standing. Zero floor.
+• activity_level=Bedridden → floor/bed exercises only.
+• Pain 7+/10 in knee/hip/ankle → no standing exercises that load that joint; seated or upper-body focus.
+• Pain 7+/10 in shoulder/wrist → no overhead or weight-bearing through that joint; lower body and core focus.
 
-═══ EQUIPMENT RULES (NON-NEGOTIABLE) ═══
-- Only use equipment explicitly listed above. No dumbbells, bands, or weights unless listed.
-- Chair and wall are always available and can be used freely for support and bodyweight exercises.
+ABSOLUTE RULES (apply to all tiers):
+• Wheelchair / cannot_stand: ZERO standing exercises.
+• Seizure risk: no inversions, no head-below-heart.
+• Pregnancy: no prone lying, no heavy abdominal compression.
+• Osteoporosis / fracture risk: no spinal flexion, no high-impact.
+• Equipment: only use what is listed. Chair and wall are always available.
 
-═══ CRITICAL ABSOLUTES (these override everything) ═══
-- Wheelchair users / cannot_stand: ZERO standing exercises, period.
-- Seizure risk: no inversions, no head-below-heart positions.
-- Pregnancy: no prone lying, no heavy abdominal work, no supine after first trimester.
-- Osteoporosis / fracture risk: no spinal flexion, no high-impact.
-- Bedridden: floor/bed only.
+Determine which tier this user falls into BEFORE selecting any exercises, then apply only the rules for that tier.
 
 ═══ FULL USER PROFILE ═══
 Name context: ${p.display_name || "User"}
@@ -245,14 +258,11 @@ Goals: ${(p.goals || []).join(", ") || "None specified"}
 Diagnosed Conditions & Disabilities:
 ${(p.disabilities || []).length > 0 ? (p.disabilities || []).map(d => `  • ${d}`).join("\n") : "  None listed"}
 
-Body Limitations (HARD CONSTRAINTS — no exceptions):
-${(p.body_limitations || []).length > 0 ? (p.body_limitations || []).map(l => `  ❌ ${l}`).join("\n") : "  None listed"}
+Body Limitations:
+${(p.body_limitations || []).length > 0 ? (p.body_limitations || []).map(l => `  • ${l}`).join("\n") : "  None listed"}
 
-Pain Areas (with severity 0–10 — use the graduated framework above):
-${Object.entries(p.pain_areas || {}).length > 0 ? Object.entries(p.pain_areas).map(([area, level]) => {
-  const severity = level <= 3 ? "MILD — modify gently" : level <= 6 ? "MODERATE — reduce load, support the joint" : "SEVERE — avoid direct stress on this area";
-  return `  • ${area}: ${level}/10 → ${severity}`;
-}).join("\n") : "  None reported"}
+Pain Areas (apply tiered rules above based on severity):
+${Object.entries(p.pain_areas || {}).length > 0 ? Object.entries(p.pain_areas).map(([area, level]) => `  • ${area}: ${painTier(level)}`).join("\n") : "  None reported"}
 
 Current Abilities:
 ${Object.entries(p.current_abilities || {}).map(([k, v]) => `  • ${k.replace(/_/g, " ")}: ${v ? "✅ Can do" : "❌ Cannot do"}`).join("\n") || "  Not assessed"}
@@ -270,7 +280,7 @@ Energy: ${(checkin || todayCheckin)?.energy || "Not checked in"}
 - Weight ${p.weight_lbs ? p.weight_lbs + " lbs" : "unknown"}: ${p.weight_lbs > 250 ? "Choose low-impact, joint-supportive exercises. Avoid high-impact jumps." : p.weight_lbs > 180 ? "Standard adaptive approach with weight awareness." : "Standard approach."}
 - If mood is "Bad" or energy is "Low"/"Exhausted": Reduce to 2–3 gentle exercises, shorter duration, no challenge.
 - If energy is "High" and mood is "Great"/"Good": Can include up to 6 exercises at full appropriate intensity.
-- REMINDER: Mild limitations = modifications, not restrictions. A person with mild knee pain should get a standing workout with knee-aware modifications — NOT a seated workout. Reserve seated/wheelchair workouts for people who genuinely cannot stand.
+
 
 INSTRUCTIONS:
 Generate a complete daily workout including warmup, 3–6 main exercises, and cooldown.
