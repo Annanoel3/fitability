@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { X, Dumbbell, Heart, Wind, Zap, Layers } from "lucide-react";
 
 const WORKOUT_TYPES = [
@@ -18,53 +17,19 @@ const INTENSITIES = [
   { id: "challenging", label: "Challenging", desc: "Push my limits safely" },
 ];
 
-const EQUIPMENT_OPTIONS = [
-  { id: "none", label: "No equipment", desc: "Bodyweight only — totally fine!" },
-  { id: "chair", label: "Chair", desc: "A sturdy chair or seat" },
-  { id: "resistance_bands", label: "Resistance bands", desc: "Light to heavy bands" },
-  { id: "dumbbells", label: "Dumbbells", desc: "Free weights" },
-  { id: "mat", label: "Exercise mat", desc: "Yoga or gym mat" },
-  { id: "wall", label: "Wall space", desc: "For support & balance" },
-  { id: "other", label: "Other", desc: "Type your own equipment" },
-];
-
-export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment = false }) {
+export default function WorkoutPickerModal({ onConfirm, onClose }) {
   const [types, setTypes] = useState([]);
   const [intensity, setIntensity] = useState(null);
-  const [equipment, setEquipment] = useState([]);
-  const [otherEquipment, setOtherEquipment] = useState("");
 
   const toggleType = (id) => {
     setTypes(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
   };
 
-  const toggleEquipment = (id) => {
-    if (id === "none") {
-      setEquipment(["none"]);
-      return;
-    }
-    setEquipment(prev => {
-      const without_none = prev.filter(e => e !== "none");
-      return without_none.includes(id)
-        ? without_none.filter(e => e !== id)
-        : [...without_none, id];
-    });
-  };
-
   const handleConfirm = () => {
-    const finalEquipment = equipment.includes("other") && otherEquipment.trim()
-      ? [...equipment.filter(e => e !== "other"), otherEquipment.trim()]
-      : equipment;
-    onConfirm({ 
-      workoutTypes: types, 
-      intensity,
-      ...(showEquipment && { equipment: finalEquipment })
-    });
+    onConfirm({ workoutTypes: types, intensity });
   };
 
-  const canConfirm = showEquipment 
-    ? types.length > 0 && intensity && equipment.length > 0 && (!equipment.includes("other") || otherEquipment.trim())
-    : types.length > 0 && intensity;
+  const canConfirm = types.length > 0 && intensity;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
@@ -130,38 +95,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose, showEquipment =
             </div>
           </div>
 
-          {showEquipment && (
-            <div>
-              <p className="text-sm font-semibold text-foreground mb-2">What equipment do you have?</p>
-              <div className="grid grid-cols-2 gap-2">
-                {EQUIPMENT_OPTIONS.map(e => {
-                  const selected = equipment.includes(e.id);
-                  return (
-                    <button
-                      key={e.id}
-                      onClick={() => toggleEquipment(e.id)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${
-                        selected
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-background hover:border-primary/40"
-                      }`}
-                    >
-                      <div className={`text-sm font-semibold ${selected ? "text-foreground" : "text-muted-foreground"}`}>{e.label}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{e.desc}</div>
-                    </button>
-                    );
-                    })}
-                    </div>
-                    {equipment.includes("other") && (
-                    <Input
-                    className="mt-2"
-                    placeholder="e.g. Pull-up bar, Kettlebell, Pool..."
-                    value={otherEquipment}
-                    onChange={e => setOtherEquipment(e.target.value)}
-                    />
-                    )}
-                    </div>
-                    )}
+
 
         </div>
 

@@ -13,6 +13,7 @@ import StepZoneConditions from "@/components/onboarding/StepZoneConditions";
 import StepAbilities from "@/components/onboarding/StepAbilities";
 import StepRiskFactors from "@/components/onboarding/StepRiskFactors";
 import StepVeteran from "@/components/onboarding/StepVeteran";
+import StepEquipment from "@/components/onboarding/StepEquipment";
 
 const STEPS = [
   { key: "veteran", label: "Veteran", component: StepVeteran },
@@ -23,6 +24,7 @@ const STEPS = [
   { key: "limitations", label: "Conditions", component: StepZoneConditions },
   { key: "abilities", label: "Abilities", component: StepAbilities },
   { key: "risk", label: "Risk Factors", component: StepRiskFactors },
+  { key: "equipment", label: "Equipment", component: StepEquipment },
 ];
 
 export default function Onboarding() {
@@ -70,6 +72,7 @@ export default function Onboarding() {
           is_veteran: profile.is_veteran,
           veteran_details: profile.veteran_details,
           fitness_mode: profile.fitness_mode,
+          equipment: profile.equipment || [],
         });
       }
       setLoading(false);
@@ -109,6 +112,7 @@ export default function Onboarding() {
       risk_factors: currentData.risk_factors || [],
       is_veteran: currentData.is_veteran || false,
       veteran_details: currentData.veteran_details || {},
+      equipment: currentData.equipment || [],
       onboarding_completed: false,
       onboarding_step: nextStep,
     };
@@ -164,6 +168,7 @@ export default function Onboarding() {
       risk_factors: data.risk_factors || [],
       is_veteran: data.is_veteran || false,
       veteran_details: data.veteran_details || {},
+      equipment: data.equipment || [],
       fitness_mode: fitnessMode,
       onboarding_completed: true,
       onboarding_step: STEPS.length

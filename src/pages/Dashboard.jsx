@@ -57,11 +57,10 @@ export default function Dashboard() {
 
   const handleWorkoutPickerConfirm = (preferences) => {
     setShowWorkoutPicker(false);
-    // Use first selected type if multiple, or "Mixed" if user selected that
     const workoutType = preferences.workoutTypes.includes("mixed") 
       ? "Mixed" 
       : preferences.workoutTypes[0];
-    handleGenerateWorkout(todayCheckin, { ...preferences, workoutType });
+    handleGenerateWorkout(todayCheckin, { ...preferences, workoutType, equipment: profile?.equipment || [] });
   };
 
   const handleGenerateWorkout = async (checkin, preferences = {}) => {
@@ -271,7 +270,6 @@ TITLE RULES: Keep it short, natural, and motivating (e.g. "Juli's Morning Streng
         <WorkoutPickerModal 
           onConfirm={handleWorkoutPickerConfirm}
           onClose={() => setShowWorkoutPicker(false)}
-          showEquipment={!profile?.equipment || profile.equipment.length === 0}
         />
       )}
       {/* Greeting */}
