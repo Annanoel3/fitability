@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     }
 
     const { offset = 0 } = await req.json().catch(() => ({}));
-    const BATCH = 20;
+    const BATCH = 10;
 
     // Get untagged exercises
     const all = await base44.asServiceRole.entities.Exercise.list('-created_date', 500);
@@ -61,7 +61,7 @@ Return a JSON array with one object per exercise (in same order), each with fiel
           }
         }
       },
-      model: 'claude_sonnet_4_6'
+      model: 'gpt_5_4'
     });
 
     console.log('Tagged result sample:', JSON.stringify(result?.tagged?.slice(0, 2)));
