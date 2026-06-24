@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Dumbbell, Loader2, Shield } from "lucide-react";
+import { Search, Dumbbell, Loader2, Shield, Plus, Trash2 } from "lucide-react";
+import CreateExerciseModal from "@/components/library/CreateExerciseModal";
 
 const CATEGORIES = ["All", "Warmup", "Strength", "Cardio", "Balance", "Flexibility", "Cooldown", "Breathing", "Recovery"];
 const POSITIONS = ["All", "Seated", "Standing", "Wheelchair", "Lying down"];
+const FILTERS = ["All", "Created by me", "Library"];
+const SORT_OPTIONS = ["Name", "Difficulty", "Category"];
+const MUSCLE_GROUPS = ["All", "Chest", "Back", "Shoulders", "Arms", "Forearms", "Wrists", "Core", "Abs", "Obliques", "Glutes", "Quads", "Hamstrings", "Calves", "Legs", "Full body"];
 
 // Must match buildUserTags() in Dashboard — same vocabulary
 function buildUserRestrictionTags(profile) {
@@ -116,7 +121,12 @@ export default function ExerciseLibrary() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [position, setPosition] = useState("All");
+  const [filter, setFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("Name");
+  const [muscleGroup, setMuscleGroup] = useState("All");
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [deleted, setDeleted] = useState(new Set());
 
   useEffect(() => {
     loadExercises();
@@ -134,15 +144,24 @@ export default function ExerciseLibrary() {
     ]);
     const userRestrictionTags = buildUserRestrictionTags(profile);
 
+    // Load deleted exercises for this user
+    const deletedRecs = await base44.entities.DeletedExercise.filter({});
+    const deletedSet = new Set(deletedRecs.map(d => d.exercise_id));
+    setDeleted(deletedSet);
+
     // Pull from database and filter by tags — no LLM needed
     const allExercises = await base44.entities.Exercise.list('-created_date', 500);
     const safe = allExercises.filter(ex => {
-      // Must not have any tag that matches user's restriction tags
-      const hasRestricted = (ex.restriction_tags || []).some(tag => userRestrictionTags.has(tag));
-      if (hasRestricted) return false;
-      // Must not require equipment the user doesn't have
-      const requiredEquip = (ex.equipment_tags || []);
-      if (requiredEquip.length > 0 && !requiredEquip.every(eq => userEquipment.has(eq))) return false;
+      // Skip deleted exercises
+      if (deletedSet.has(ex.id)) return false;
+      // Must not have any tag that matches user's restriction tags (for library exercises only)
+      if (!ex.is_custom) {
+        const hasRestricted = (ex.restriction_tags || []).some(tag => userRestrictionTags.has(tag));
+        if (hasRestricted) return false;
+        // Must not require equipment the user doesn't have
+        const requiredEquip = (ex.equipment_tags || []);
+        if (requiredEquip.length > 0 && !requiredEquip.every(eq => userEquipment.has(eq))) return false;
+      }
       return true;
     });
 
@@ -155,7 +174,20 @@ export default function ExerciseLibrary() {
         !ex.description?.toLowerCase().includes(search.toLowerCase())) return false;
     if (category !== "All" && ex.category !== category) return false;
     if (position !== "All" && ex.position !== position && ex.position !== "Any") return false;
+    if (filter === "Created by me" && !ex.is_custom) return false;
+    if (filter === "Library" && ex.is_custom) return false;
+    if (muscleGroup !== "All" && !(ex.muscles_used || []).some(m => m.toLowerCase() === muscleGroup.toLowerCase())) return false;
     return true;
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === "Name") return a.name.localeCompare(b.name);
+    if (sortBy === "Difficulty") {
+      const order = ["Beginner", "Easy", "Moderate", "Advanced"];
+      return order.indexOf(a.difficulty) - order.indexOf(b.difficulty);
+    }
+    if (sortBy === "Category") return a.category.localeCompare(b.category);
+    return 0;
   });
 
   const difficultyColor = {
@@ -163,6 +195,20 @@ export default function ExerciseLibrary() {
     "Easy": "bg-lime-100 text-lime-700",
     "Moderate": "bg-amber-100 text-amber-700",
     "Advanced": "bg-red-100 text-red-700"
+  };
+
+  const handleDelete = async (ex) => {
+    if (!confirm(`Delete "${ex.name}" from your library? It won't appear in future workouts.`)) return;
+    try {
+      await base44.entities.DeletedExercise.create({
+        exercise_id: ex.id,
+        exercise_name: ex.name
+      });
+      setDeleted(new Set([...deleted, ex.id]));
+      setSelectedExercise(null);
+    } catch (e) {
+      alert("Error deleting exercise: " + e.message);
+    }
   };
 
   if (loading) {
@@ -176,11 +222,23 @@ export default function ExerciseLibrary() {
 
   return (
     <div className="pb-20 md:pb-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-heading font-bold text-foreground">Exercise Library</h1>
-        <p className="text-muted-foreground mt-1">
-          {exercises.length} exercises safe for your profile.
-        </p>
+      {showCreateModal && (
+        <CreateExerciseModal 
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => { setShowCreateModal(false); loadExercises(); }}
+        />
+      )}
+
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-foreground">Exercise Library</h1>
+          <p className="text-muted-foreground mt-1">
+            {sorted.length} exercises available.
+          </p>
+        </div>
+        <Button onClick={() => setShowCreateModal(true)} className="gap-2">
+          <Plus className="w-4 h-4" /> Create Exercise
+        </Button>
       </div>
 
       {/* Filters */}
@@ -194,9 +252,9 @@ export default function ExerciseLibrary() {
             className="pl-10 h-12"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -204,11 +262,35 @@ export default function ExerciseLibrary() {
             </SelectContent>
           </Select>
           <Select value={position} onValueChange={setPosition}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {POSITIONS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FILTERS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={muscleGroup} onValueChange={setMuscleGroup}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MUSCLE_GROUPS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -216,7 +298,7 @@ export default function ExerciseLibrary() {
 
       {/* Exercise list */}
       <div className="space-y-3">
-        {filtered.map((ex, i) => (
+        {sorted.map((ex, i) => (
           <button
             key={ex.id || i}
             onClick={() => setSelectedExercise(selectedExercise?.id === ex.id ? null : ex)}
@@ -243,6 +325,15 @@ export default function ExerciseLibrary() {
             {selectedExercise?.id === ex.id && (
               <div className="mt-4 space-y-3 border-t border-border pt-4">
                 {ex.description && <p className="text-sm text-muted-foreground">{ex.description}</p>}
+
+                {ex.is_custom && (
+                  <button
+                    onClick={() => handleDelete(ex)}
+                    className="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3 h-3" /> Delete from library
+                  </button>
+                )}
 
                 {ex.instructions && (
                   <div>
@@ -286,7 +377,7 @@ export default function ExerciseLibrary() {
           </button>
         ))}
 
-        {filtered.length === 0 && !loading && (
+        {sorted.length === 0 && !loading && (
           <div className="text-center py-12 text-muted-foreground">
             <Dumbbell className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p>{exercises.length === 0 ? "No exercises in the library yet. Check back soon!" : "No exercises match your filters."}</p>

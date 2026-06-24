@@ -1,0 +1,54 @@
+{
+  "name": "SavedWorkout",
+  "type": "object",
+  "rls": {
+    "create": true,
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  },
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Workout title"
+    },
+    "description": {
+      "type": "string"
+    },
+    "plan_type": {
+      "type": "string",
+      "enum": [
+        "Custom"
+      ]
+    },
+    "exercises": {
+      "type": "string",
+      "description": "JSON stringified exercise list"
+    },
+    "total_duration_minutes": {
+      "type": "number"
+    },
+    "difficulty_level": {
+      "type": "string",
+      "enum": [
+        "Gentle",
+        "Easy",
+        "Moderate",
+        "Challenging"
+      ]
+    },
+    "workout_data": {
+      "type": "string",
+      "description": "Full JSON workout data"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

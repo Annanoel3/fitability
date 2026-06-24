@@ -275,6 +275,12 @@ export default function Dashboard() {
       ? `\n\nRECENTLY USED EXERCISES (avoid repeating these):\n${Array.from(recentExerciseNames).join(", ")}`
       : "";
 
+    // Fetch user's deleted exercises — they should NEVER appear in workouts
+    const deletedRecs = await base44.entities.DeletedExercise.filter({});
+    const deletedExercisesStr = deletedRecs.length > 0
+      ? `\n\nDELETED EXERCISES (ABSOLUTELY DO NOT INCLUDE THESE IN THE WORKOUT):\n${deletedRecs.map(d => d.exercise_name).join(", ")}`
+      : "";
+
     const p = profile;
     const heightFt = p.height_inches ? Math.floor(p.height_inches / 12) : null;
     const heightIn = p.height_inches ? p.height_inches % 12 : null;
@@ -368,7 +374,7 @@ INSTRUCTIONS:
 Generate a complete workout: warmup, 3–6 main exercises, cooldown.
 Each exercise: name, description, sets, reps or duration_seconds, step-by-step instructions, position, muscles_used, safety_notes.
 Title: short, natural, motivating. No clinical terms in the title.
-${recentExercisesStr}${libraryContext}`,
+${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
       response_json_schema: {
         type: "object",
         properties: {

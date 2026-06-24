@@ -1,0 +1,30 @@
+{
+  "name": "DeletedExercise",
+  "type": "object",
+  "rls": {
+    "create": true,
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  },
+  "properties": {
+    "exercise_id": {
+      "type": "string",
+      "description": "ID of the deleted exercise"
+    },
+    "exercise_name": {
+      "type": "string",
+      "description": "Name of the deleted exercise"
+    }
+  },
+  "required": [
+    "exercise_id",
+    "exercise_name"
+  ]
+}
