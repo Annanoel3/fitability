@@ -8,6 +8,77 @@ import EmergencyBanner from "@/components/dashboard/EmergencyBanner";
 import { Dumbbell, Clock, Target, Sparkles, ChevronRight, Loader2, TrendingUp } from "lucide-react";
 import WorkoutPickerModal from "@/components/dashboard/WorkoutPickerModal";
 
+// Maps a user profile to a set of restriction tags that match the Exercise entity's restriction_tags vocabulary
+function buildUserRestrictionTags(profile) {
+  const tags = new Set();
+  const p = profile;
+
+  // Fitness mode
+  if (p.fitness_mode === 'Wheelchair') { tags.add('cannot_stand'); tags.add('wheelchair_user'); }
+  if (p.fitness_mode === 'Chair') { tags.add('seated_only'); }
+
+  // Activity level
+  if (p.activity_level === 'Bedridden') { tags.add('bedridden'); tags.add('very_low_mobility'); }
+
+  // Body limitations (free text — do keyword matching)
+  const limitations = (p.body_limitations || []).join(' ').toLowerCase();
+  if (limitations.includes('knee')) tags.add('knee_pain');
+  if (limitations.includes('hip')) tags.add('hip_pain');
+  if (limitations.includes('back') || limitations.includes('lumbar') || limitations.includes('spine')) tags.add('back_pain');
+  if (limitations.includes('neck') || limitations.includes('cervical')) tags.add('neck_injury');
+  if (limitations.includes('shoulder') || limitations.includes('rotator')) tags.add('shoulder_injury');
+  if (limitations.includes('wrist') || limitations.includes('hand')) tags.add('wrist_injury');
+  if (limitations.includes('elbow') || limitations.includes('tennis elbow')) tags.add('elbow_injury');
+  if (limitations.includes('ankle') || limitations.includes('foot')) tags.add('ankle_pain');
+  if (limitations.includes('no leg') || limitations.includes('amputat') || limitations.includes('prosthetic')) tags.add('no_legs');
+  if (limitations.includes('no arm')) tags.add('no_arms');
+  if (limitations.includes('cannot stand') || limitations.includes("can't stand")) tags.add('cannot_stand');
+  if (limitations.includes('scoliosis')) tags.add('scoliosis');
+  if (limitations.includes('osteoporosis')) tags.add('osteoporosis');
+  if (limitations.includes('fracture') || limitations.includes('brittle')) tags.add('fracture_risk');
+  if (limitations.includes('balance')) tags.add('balance_issues');
+  if (limitations.includes('vertigo') || limitations.includes('vestibular')) tags.add('vertigo');
+
+  // Disabilities
+  const disabilities = (p.disabilities || []).join(' ').toLowerCase();
+  if (disabilities.includes('heart') || disabilities.includes('cardiac')) tags.add('heart_condition');
+  if (disabilities.includes('copd') || disabilities.includes('lung') || disabilities.includes('respiratory')) tags.add('copd');
+  if (disabilities.includes('parkinson')) tags.add('parkinsons');
+  if (disabilities.includes('multiple sclerosis') || disabilities.includes(' ms ')) tags.add('multiple_sclerosis');
+  if (disabilities.includes('stroke')) tags.add('stroke_recovery');
+  if (disabilities.includes('cerebral palsy')) tags.add('cerebral_palsy');
+  if (disabilities.includes('fibromyalgia')) tags.add('fibromyalgia');
+  if (disabilities.includes('chronic fatigue') || disabilities.includes('cfs')) tags.add('chronic_fatigue');
+  if (disabilities.includes('epilepsy') || disabilities.includes('seizure')) tags.add('seizure_risk');
+  if (disabilities.includes('osteoporosis')) tags.add('osteoporosis');
+  if (disabilities.includes('arthritis')) tags.add('arthritis');
+  if (disabilities.includes('rheumatoid')) tags.add('rheumatoid_arthritis');
+  if (disabilities.includes('diabetes')) tags.add('diabetes');
+  if (disabilities.includes('vertigo') || disabilities.includes('vestibular')) tags.add('vertigo');
+  if (disabilities.includes('pregnancy')) tags.add('pregnancy');
+  if (disabilities.includes('postpartum')) tags.add('postpartum');
+
+  // Pain areas with severity >= 5
+  Object.entries(p.pain_areas || {}).forEach(([area, level]) => {
+    if (level >= 5) {
+      const a = area.toLowerCase();
+      if (a.includes('knee')) tags.add('knee_pain');
+      if (a.includes('hip')) tags.add('hip_pain');
+      if (a.includes('back') || a.includes('lumbar')) tags.add('back_pain');
+      if (a.includes('neck')) tags.add('neck_injury');
+      if (a.includes('shoulder')) tags.add('shoulder_injury');
+      if (a.includes('wrist') || a.includes('hand')) tags.add('wrist_injury');
+      if (a.includes('ankle') || a.includes('foot')) tags.add('ankle_pain');
+    }
+  });
+
+  // Current abilities
+  if (p.current_abilities?.can_stand === false) tags.add('cannot_stand');
+  if (p.current_abilities?.can_walk === false) tags.add('cannot_stand');
+
+  return tags;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
@@ -50,7 +121,7 @@ export default function Dashboard() {
     setTodayCheckin(checkin);
     if (checkin.mood === "Severe pain") {
       setEmergency(true);
-    } else if (!profile.equipment) {
+    } else {
       setShowWorkoutPicker(true);
     }
   };
@@ -81,12 +152,35 @@ export default function Dashboard() {
         if (data.exercises && Array.isArray(data.exercises)) {
           data.exercises.forEach(ex => recentExerciseNames.add(ex.name));
         }
-      } catch (e) {
-        // Ignore parse errors
-      }
+      } catch (e) {}
     });
     const recentExercisesStr = recentExerciseNames.size > 0 
-      ? `\n\nRECENTLY USED EXERCISES (avoid these):\n${Array.from(recentExerciseNames).join(", ")}\n\nPick DIFFERENT exercises this time to provide variety.`
+      ? `\n\nRECENTLY USED EXERCISES (avoid repeating these):\n${Array.from(recentExerciseNames).join(", ")}`
+      : "";
+
+    // Build user restriction tags from profile to pre-filter the shared library
+    const userRestrictionTags = buildUserRestrictionTags(p);
+    const userEquipment = (preferences.equipment || p.equipment || []).map(e => e.toLowerCase().replace(/\s+/g, '_'));
+
+    // Pull candidate exercises from shared library — filter out restricted ones
+    let candidateExercises = [];
+    try {
+      const allExercises = await base44.entities.Exercise.list('-created_date', 300);
+      candidateExercises = allExercises.filter(ex => {
+        // Skip if any restriction tag matches user's conditions
+        const restricted = (ex.restriction_tags || []).some(tag => userRestrictionTags.has(tag));
+        if (restricted) return false;
+        // Skip if exercise requires equipment the user doesn't have
+        const requiredEquip = (ex.equipment_tags || []);
+        if (requiredEquip.length > 0 && !requiredEquip.every(eq => userEquipment.includes(eq))) return false;
+        // Skip recently used
+        if (recentExerciseNames.has(ex.name)) return false;
+        return true;
+      });
+    } catch (e) { /* library may be empty, LLM will generate from scratch */ }
+
+    const libraryContext = candidateExercises.length > 0
+      ? `\n\nSHARED EXERCISE LIBRARY — PRE-FILTERED FOR THIS USER:\nYou may draw exercises from this list (already verified safe for this user):\n${candidateExercises.slice(0, 60).map(ex => `• ${ex.name} [${ex.category}, ${ex.position}, ${ex.difficulty}]${ex.description ? ' — ' + ex.description.slice(0, 80) : ''}`).join('\n')}\n\nYou can use exercises from this list OR create new ones. Prefer the library for consistency.`
       : "";
 
     const p = profile;
@@ -173,7 +267,7 @@ INSTRUCTIONS:
 Generate a complete daily workout including warmup, 3–6 main exercises, and cooldown.
 Each exercise must include: name, description, sets, reps or duration_seconds, step-by-step instructions, position, muscles_used, safety_notes.
 Title and description should feel personal — reference their actual goals and situation.
-TITLE RULES: Keep it short, natural, and motivating (e.g. "Juli's Morning Strength Session", "Full-Body Power Workout"). Never include medical/clinical terms like "knee-respectful", "low-impact", "joint-friendly", "safe", or equipment names in the title. Just a clean, energizing workout name.`,
+TITLE RULES: Keep it short, natural, and motivating (e.g. "Juli's Morning Strength Session", "Full-Body Power Workout"). Never include medical/clinical terms like "knee-respectful", "low-impact", "joint-friendly", "safe", or equipment names in the title. Just a clean, energizing workout name.${libraryContext}${recentExercisesStr}`,
       response_json_schema: {
         type: "object",
         properties: {
