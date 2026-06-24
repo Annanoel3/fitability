@@ -311,6 +311,9 @@ export default function Dashboard() {
 
     const restrictionTagsList = Array.from(userRestrictionTags).join(', ') || 'none';
     const capabilityTagsList = Array.from(userCapabilityTags).join(', ') || 'none';
+    const coachMemoryBlock = p.coach_memory
+      ? `\n\n═══ COACH MEMORY — MANDATORY ═══\nThe user has previously told their coach these preferences. You MUST honor every item below — they are non-negotiable rules, not suggestions:\n${p.coach_memory}`
+      : '';
 
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `You are an expert adaptive fitness coach. Generate a personalized workout for this individual.
@@ -353,6 +356,7 @@ ${Object.entries(p.current_abilities || {}).map(([k, v]) => `  • ${k.replace(/
 Risk Factors: ${(p.risk_factors || []).join(', ') || 'None'}
 
 Today's check-in — Mood: ${(checkin || todayCheckin)?.mood || 'N/A'} | Energy: ${(checkin || todayCheckin)?.energy || 'N/A'}
+${coachMemoryBlock}
 
 PERSONALIZATION:
 - Tune reps, sets, duration, and intensity to match this specific person's activity level, weight, age, and today's energy.
@@ -414,7 +418,7 @@ ${recentExercisesStr}${libraryContext}`,
     // ── VALIDATION PASS: LLM checks the generated workout against the user's profile ──
     // This catches any exercise that slipped through that the user genuinely cannot do.
     const validation = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a physical therapist reviewing a generated workout for a specific patient. Your only job is to check whether any exercise in this workout is inappropriate for this person given their profile, and if so, replace it with a suitable alternative.
+      prompt: `You are a physical therapist reviewing a generated workout for a specific patient. Your only job is to check whether any exercise in this workout is inappropriate for this person given their profile or their stated coach preferences, and if so, replace it with a suitable alternative.
 
 PATIENT PROFILE:
 Age: ${p.age || 'Unknown'} | Sex: ${p.sex || 'Unknown'} | Weight: ${p.weight_lbs ? p.weight_lbs + ' lbs' : 'Unknown'} | BMI: ${bmi || 'Unknown'}
@@ -424,6 +428,7 @@ Body Limitations: ${(p.body_limitations || []).join(', ') || 'None'}
 Pain Areas: ${Object.entries(p.pain_areas || {}).map(([a, l]) => `${a}: ${l}/10`).join(', ') || 'None'}
 Current Abilities: ${Object.entries(p.current_abilities || {}).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v ? 'Yes' : 'No'}`).join(', ') || 'Not assessed'}
 Equipment: ${userEquipment.join(', ')}
+${p.coach_memory ? `\nCoach memory (also enforce these preferences during validation):\n${p.coach_memory}` : ''}
 
 GENERATED WORKOUT TO REVIEW:
 ${JSON.stringify({ exercises: result.exercises, warmup: result.warmup, cooldown: result.cooldown }, null, 2)}
