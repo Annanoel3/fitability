@@ -1,5 +1,6 @@
 import React from "react";
-import { Flame, Star } from "lucide-react";
+import { Flame, Star, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function StreakCard({ workouts }) {
   const today = new Date();
@@ -27,10 +28,13 @@ export default function StreakCard({ workouts }) {
   }).length;
 
   return (
-    <div className="bg-card rounded-2xl border border-border p-6">
+    <Link to="/progress" className="block bg-card rounded-2xl border border-border p-6 hover:border-primary/30 transition-colors">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-heading font-bold text-lg text-foreground">Your Progress</h3>
-        <Flame className="w-6 h-6 text-accent" />
+        <div className="flex items-center gap-1">
+          <Flame className="w-6 h-6 text-accent" />
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -50,6 +54,6 @@ export default function StreakCard({ workouts }) {
           <span>You completed movement {thisWeek} day{thisWeek !== 1 ? "s" : ""} this week. Keep going!</span>
         </div>
       )}
-    </div>
+    </Link>
   );
 }

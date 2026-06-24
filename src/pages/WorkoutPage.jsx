@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Loader2, ChevronLeft, CheckCircle2, Circle, Shield, ChevronDown, ChevronUp, Trophy, Trash2, Archive, Volume2, VolumeX, Mic, X, Star } from "lucide-react";
+import { Loader2, ChevronLeft, CheckCircle2, Circle, Shield, ChevronDown, ChevronUp, Trophy, Trash2, Archive, Volume2, VolumeX, Mic, X, Star, SkipForward, Pause, Play, Timer } from "lucide-react";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 
 export default function WorkoutPage() {
@@ -11,7 +11,10 @@ export default function WorkoutPage() {
   const [workoutData, setWorkoutData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [completedExercises, setCompletedExercises] = useState(new Set());
+  const [skippedExercises, setSkippedExercises] = useState(new Set());
   const [expandedExercise, setExpandedExercise] = useState(null);
+  const [paused, setPaused] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [exerciseImages, setExerciseImages] = useState({});
   const [loadingImages, setLoadingImages] = useState({});
   const [finishing, setFinishing] = useState(false);
@@ -29,25 +32,37 @@ export default function WorkoutPage() {
 
   const handleNext = (currentIdx) => {
     const nextIdx = (currentIdx ?? -1) + 1;
-    if (nextIdx < exercises.length) {
-      setCompletedExercises(prev => { const s = new Set(prev); if (currentIdx != null) s.add(currentIdx); return s; });
-      setExpandedExercise(nextIdx);
-    }
+    if (currentIdx != null) setCompletedExercises(prev => { const s = new Set(prev); s.add(currentIdx); return s; });
+    if (nextIdx < exercises.length) setExpandedExercise(nextIdx);
+  };
+
+  const handleSkip = (currentIdx) => {
+    if (currentIdx == null) return;
+    // Mark as skipped (not completed), move to next
+    setSkippedExercises(prev => { const s = new Set(prev); s.add(currentIdx); return s; });
+    setCompletedExercises(prev => { const s = new Set(prev); s.delete(currentIdx); return s; });
+    const nextIdx = currentIdx + 1;
+    if (nextIdx < exercises.length) setExpandedExercise(nextIdx);
   };
 
   const handleBack = (currentIdx) => {
     const prevIdx = (currentIdx ?? 1) - 1;
-    if (prevIdx >= 0) {
-      setExpandedExercise(prevIdx);
-    }
+    if (prevIdx >= 0) setExpandedExercise(prevIdx);
   };
 
   const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, askForFeedback, stopAudio, stopListening, speaking, listeningForVoice, listeningForFeedback, voiceSupported } =
-    useWorkoutAudio({ exercises, onNext: handleNext, onBack: handleBack, noisyMode });
+    useWorkoutAudio({ exercises, onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode });
 
   useEffect(() => {
     loadTodayWorkout();
   }, []);
+
+  // Elapsed timer — counts up while workout is active and not paused
+  useEffect(() => {
+    if (done || paused) return;
+    const interval = setInterval(() => setElapsedSeconds(s => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [done, paused]);
 
   // Auto-speak when expanded exercise changes (audio mode only)
   useEffect(() => {
@@ -108,13 +123,21 @@ export default function WorkoutPage() {
     });
   };
 
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
   const handleFinish = async () => {
     setFinishing(true);
     stopListening();
+    // Only count completed (not skipped) exercises
+    const trueCompleted = new Set([...completedExercises].filter(i => !skippedExercises.has(i)));
     await base44.entities.WorkoutPlan.update(workout.id, {
       completed: true,
       completed_date: new Date().toISOString(),
-      exercises_completed: completedExercises.size,
+      exercises_completed: trueCompleted.size,
     });
 
     if (audioMode && !noisyMode) {
@@ -345,7 +368,7 @@ export default function WorkoutPage() {
           )}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">
-              {speaking ? "Reading instructions…" : noisyMode ? "Audio coaching on — tap Next to advance" : listeningForVoice ? 'Listening — say "next", "done", or "back"' : "Audio coaching on"}
+              {speaking ? "Reading instructions…" : noisyMode ? "Audio coaching on — use buttons to navigate" : listeningForVoice ? 'Listening — say "next", "skip", or "back"' : "Audio coaching on"}
             </p>
           </div>
           <button onClick={disableAudioMode} className="text-muted-foreground hover:text-foreground flex-shrink-0">
@@ -369,12 +392,28 @@ export default function WorkoutPage() {
         <p className="text-sm text-muted-foreground mb-5 bg-muted/50 rounded-xl p-4">{workout.description}</p>
       )}
 
-      {/* Progress */}
-      <div className="flex items-center gap-2 mb-5">
-        <div className="flex-1 bg-muted rounded-full h-2">
-          <div className="bg-primary rounded-full h-2 transition-all" style={{ width: `${exercises.length ? (completedExercises.size / exercises.length) * 100 : 0}%` }} />
+      {/* Timer + Progress row */}
+      <div className="flex items-center gap-4 mb-5 bg-card border border-border rounded-xl px-4 py-3">
+        <div className="flex items-center gap-2 text-foreground">
+          <Timer className="w-5 h-5 text-primary flex-shrink-0" />
+          <span className="text-2xl font-bold font-mono text-primary">{formatTime(elapsedSeconds)}</span>
         </div>
-        <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">{completedExercises.size}/{exercises.length}</span>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-muted-foreground">Progress</span>
+            <span className="text-xs font-semibold text-foreground">{completedExercises.size}/{exercises.length}</span>
+          </div>
+          <div className="bg-muted rounded-full h-2">
+            <div className="bg-primary rounded-full h-2 transition-all" style={{ width: `${exercises.length ? (completedExercises.size / exercises.length) * 100 : 0}%` }} />
+          </div>
+        </div>
+        <button
+          onClick={() => { setPaused(p => !p); if (audioMode) paused ? null : stopAudio(); }}
+          className={`p-2 rounded-full transition-colors ${paused ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+          title={paused ? "Resume" : "Pause"}
+        >
+          {paused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
+        </button>
       </div>
 
       {/* Warmup */}
@@ -390,15 +429,16 @@ export default function WorkoutPage() {
       <div className="space-y-3 mb-4">
         {exercises.map((ex, idx) => {
           const completed = completedExercises.has(idx);
+          const skipped = skippedExercises.has(idx);
           const expanded = expandedExercise === idx;
           return (
-            <div key={idx} className={`rounded-xl border-2 transition-all ${completed ? "border-emerald-300 bg-emerald-50" : expanded && audioMode ? "border-primary/50 bg-primary/5" : "border-border bg-card"}`}>
+            <div key={idx} className={`rounded-xl border-2 transition-all ${skipped ? "border-amber-200 bg-amber-50/50 opacity-60" : completed ? "border-emerald-300 bg-emerald-50" : expanded ? "border-primary/50 bg-primary/5" : "border-border bg-card"}`}>
               <div className="flex items-center gap-3 p-4">
-                <button onClick={() => toggleExercise(idx)} className="flex-shrink-0">
-                  {completed ? <CheckCircle2 className="w-6 h-6 text-emerald-600" /> : <Circle className="w-6 h-6 text-muted-foreground" />}
+                <button onClick={() => !skipped && toggleExercise(idx)} className="flex-shrink-0">
+                  {skipped ? <SkipForward className="w-6 h-6 text-amber-500" /> : completed ? <CheckCircle2 className="w-6 h-6 text-emerald-600" /> : <Circle className="w-6 h-6 text-muted-foreground" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-semibold text-sm ${completed ? "line-through text-muted-foreground" : "text-foreground"}`}>{ex.name}</p>
+                  <p className={`font-semibold text-sm ${skipped ? "line-through text-amber-600" : completed ? "line-through text-muted-foreground" : "text-foreground"}`}>{ex.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {ex.sets && `${ex.sets} sets`}
                     {ex.sets && ex.reps && " · "}
@@ -450,21 +490,30 @@ export default function WorkoutPage() {
                     </div>
                   )}
 
-                  {/* Audio nav buttons */}
-                  {audioMode && (
-                    <div className="flex gap-2 pt-1">
-                      {idx > 0 && (
-                        <Button variant="outline" size="sm" className="flex-1" onClick={() => handleBack(idx)}>
-                          ← Back
-                        </Button>
-                      )}
-                      {idx < exercises.length - 1 && (
-                        <Button size="sm" className="flex-1" onClick={() => handleNext(idx)}>
-                          Next →
-                        </Button>
-                      )}
-                    </div>
-                  )}
+                  {/* Always-visible exercise controls */}
+                  <div className="flex gap-2 pt-2">
+                    {idx > 0 && (
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => handleBack(idx)}>
+                        ← Back
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-amber-600 border-amber-300 hover:bg-amber-50"
+                      onClick={() => handleSkip(idx)}
+                      title="Skip this exercise — won't count toward your progress"
+                    >
+                      <SkipForward className="w-3.5 h-3.5 mr-1" /> Skip
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleNext(idx)}
+                    >
+                      {idx < exercises.length - 1 ? "Done →" : "Finish ✓"}
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

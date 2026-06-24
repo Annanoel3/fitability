@@ -4,11 +4,11 @@ import { base44 } from "@/api/base44Client";
 /**
  * Manages TTS audio playback and optional voice command recognition for workouts.
  * - Uses GenerateSpeech for high-quality stored MP3s (cached by exercise name).
- * - Uses Web Speech API for voice commands: "next", "done", "skip", "back".
+ * - Uses Web Speech API for voice commands: "next"/"done" (completed), "skip" (skipped), "back".
  * - noisyMode: skip mic entirely, user taps buttons manually.
  * - Capacitor-safe: uses restart-on-end for continuous listening (handles WKWebView quirks).
  */
-export function useWorkoutAudio({ exercises, onNext, onBack, noisyMode }) {
+export function useWorkoutAudio({ exercises, onNext, onSkip, onBack, noisyMode }) {
   const [audioMode, setAudioMode] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [listeningForVoice, setListeningForVoice] = useState(false);
@@ -62,8 +62,8 @@ export function useWorkoutAudio({ exercises, onNext, onBack, noisyMode }) {
   }, [stopAudio]);
 
   const speakWelcome = useCallback((workoutTitle) => {
-    const text = `Welcome to today's workout: ${workoutTitle}! I'll guide you through each exercise. When you're ready to move on, just say "next" or "done". Say "back" to go to the previous exercise. Let's get started — expand the first exercise whenever you're ready!`;
-    return speak(text, `welcome_${workoutTitle}`);
+    const text = `Welcome to ${workoutTitle}! I'll read each exercise out loud as you go. Here's what you can say at any time: say "next" or "done" when you finish an exercise and want to move on — it will count as completed. Say "skip" if an exercise isn't right for you today — it won't count toward your progress and you won't see it again. Say "back" to go to the previous exercise. You can also use the on-screen buttons anytime. Let's get started!`;
+    return speak(text, null); // don't cache welcome — it should always be fresh
   }, [speak]);
 
   const speakExercise = useCallback(async (idx) => {
@@ -129,7 +129,10 @@ export function useWorkoutAudio({ exercises, onNext, onBack, noisyMode }) {
 
     recognition.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-      if (transcript.includes("next") || transcript.includes("done") || transcript.includes("skip")) {
+      if (transcript.includes("skip")) {
+        stopAudio();
+        onSkip(activeIdxRef.current);
+      } else if (transcript.includes("next") || transcript.includes("done")) {
         stopAudio();
         onNext(activeIdxRef.current);
       } else if (transcript.includes("back") || transcript.includes("previous")) {
