@@ -1,15 +1,6 @@
 {
   "name": "Exercise",
   "type": "object",
-  "rls": {
-    "enabled": true,
-    "rules": {
-      "create": "user",
-      "read": "owner",
-      "update": "owner",
-      "delete": "owner"
-    }
-  },
   "properties": {
     "name": {
       "type": "string"
@@ -59,22 +50,30 @@
         "type": "string"
       }
     },
-    "equipment_needed": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "restrictions": {
+    "equipment_tags": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Conditions where this exercise should NOT be used"
+      "description": "Equipment required. Empty array = bodyweight only. Values like: chair, dumbbells, resistance_bands, mat, wall"
+    },
+    "restriction_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Conditions/limitations that CONTRAINDICATE this exercise. E.g. knee_pain, back_pain, no_legs, vertigo, heart_condition, cannot_stand, wheelchair_user, scoliosis, shoulder_injury, wrist_injury, balance_issues, low_vision, epilepsy, osteoporosis, pregnancy"
+    },
+    "suitable_for_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Conditions this exercise is ESPECIALLY good for. E.g. wheelchair_user, low_mobility, chronic_pain, stroke_recovery, autism, anxiety, vertigo_safe, heart_safe, osteoporosis_safe, seated_only"
     },
     "modifications": {
       "type": "string",
-      "description": "Available modifications"
+      "description": "Available modifications for different ability levels"
     },
     "diagram_url": {
       "type": "string",
@@ -100,6 +99,9 @@
         "Caution",
         "Avoid"
       ]
+    },
+    "safety_notes": {
+      "type": "string"
     },
     "is_custom": {
       "type": "boolean",
