@@ -16,7 +16,6 @@ import ResetPassword from '@/pages/ResetPassword';
 
 import Onboarding from '@/pages/Onboarding';
 import Dashboard from '@/pages/Dashboard';
-import Workout from '@/pages/Workout';
 import ExerciseLibrary from '@/pages/ExerciseLibrary';
 import ProgressPage from '@/pages/ProgressPage';
 import SettingsPage from '@/pages/SettingsPage';
@@ -68,7 +67,6 @@ const AuthenticatedApp = () => {
 
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/workout" element={<Workout />} />
             <Route path="/exercises" element={<ExerciseLibrary />} />
             <Route path="/progress" element={<ProgressPage />} />
             <Route path="/coach" element={<CoachChat />} />

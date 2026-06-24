@@ -201,7 +201,6 @@ Title and description should feel personal — reference their actual goals and 
     });
 
     setGenerating(false);
-    navigate("/workout");
   };
 
   if (loading) {
