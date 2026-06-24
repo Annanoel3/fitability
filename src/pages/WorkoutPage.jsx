@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Loader2, ChevronLeft, CheckCircle2, Circle, Shield, ChevronDown, ChevronUp, Trophy, Trash2, Archive, Volume2, VolumeX, Mic, X } from "lucide-react";
+import { Loader2, ChevronLeft, CheckCircle2, Circle, Shield, ChevronDown, ChevronUp, Trophy, Trash2, Archive, Volume2, VolumeX, Mic, X, Star } from "lucide-react";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 
 export default function WorkoutPage() {
@@ -19,6 +19,8 @@ export default function WorkoutPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showAudioSetup, setShowAudioSetup] = useState(false);
   const [noisyMode, setNoisyMode] = useState(false);
+  const [feedbackState, setFeedbackState] = useState(null); // null | "listening" | "processing" | "saved"
+  const [savedRating, setSavedRating] = useState(null);
 
   const exercises = workoutData?.exercises || [];
 
@@ -37,7 +39,7 @@ export default function WorkoutPage() {
     }
   };
 
-  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, stopAudio, speaking, listeningForVoice, voiceSupported } =
+  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, askForFeedback, stopAudio, stopListening, speaking, listeningForVoice, listeningForFeedback, voiceSupported } =
     useWorkoutAudio({ exercises, onNext: handleNext, onBack: handleBack, noisyMode });
 
   useEffect(() => {
@@ -105,12 +107,43 @@ export default function WorkoutPage() {
 
   const handleFinish = async () => {
     setFinishing(true);
-    stopAudio();
+    stopListening(); // stop nav listening before feedback flow
     await base44.entities.WorkoutPlan.update(workout.id, {
       completed: true,
       completed_date: new Date().toISOString(),
       exercises_completed: completedExercises.size,
     });
+
+    if (audioMode) {
+      // Ask for voice feedback
+      setFeedbackState("listening");
+      setFinishing(false);
+      const transcript = await askForFeedback();
+
+      if (transcript) {
+        setFeedbackState("processing");
+        try {
+          const parsed = await base44.integrations.Core.InvokeLLM({
+            prompt: `A user just finished a workout and said: "${transcript}"\n\nExtract a star rating from 1-5 based on how positive they sound. Also extract a short cleaned-up summary of their feedback (1-2 sentences max).\n\nIf they say "one star", "terrible", "awful" → 1. "two stars", "bad", "not great" → 2. "okay", "alright", "fine", "three stars" → 3. "good", "great", "four stars" → 4. "amazing", "perfect", "loved it", "five stars" → 5. If unclear, use 3.`,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                rating: { type: "number" },
+                summary: { type: "string" }
+              }
+            }
+          });
+          const rating = Math.min(5, Math.max(1, Math.round(parsed.rating || 3)));
+          await base44.entities.WorkoutPlan.update(workout.id, {
+            user_rating: rating,
+            user_feedback: parsed.summary || transcript,
+          });
+          setSavedRating(rating);
+        } catch (e) {}
+      }
+      setFeedbackState("saved");
+    }
+
     setDone(true);
     setFinishing(false);
   };
@@ -147,6 +180,16 @@ export default function WorkoutPage() {
           <h2 className="text-2xl font-heading font-bold text-foreground">Workout Complete!</h2>
           <p className="text-muted-foreground mt-2">Great job — {completedExercises.size} of {exercises.length} exercises done.</p>
         </div>
+        {savedRating && (
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm text-muted-foreground">You rated this workout</p>
+            <div className="flex gap-1">
+              {[1,2,3,4,5].map(s => (
+                <Star key={s} className={`w-7 h-7 ${s <= savedRating ? "text-amber-400 fill-amber-400" : "text-muted-foreground"}`} />
+              ))}
+            </div>
+          </div>
+        )}
         <Button onClick={() => navigate("/")} className="w-full max-w-xs h-12">Back to Dashboard</Button>
       </div>
     );
@@ -373,7 +416,22 @@ export default function WorkoutPage() {
 
       {/* Finish button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border md:static md:border-0 md:p-0">
-        <Button onClick={handleFinish} disabled={finishing || completedExercises.size === 0} className="w-full h-12 text-base">
+        {feedbackState === "listening" && (
+          <div className="flex items-center justify-center gap-2 mb-3 text-primary text-sm font-medium">
+            <Mic className="w-4 h-4 animate-pulse" />
+            {listeningForFeedback ? "Listening for your feedback…" : "Getting ready…"}
+          </div>
+        )}
+        {feedbackState === "processing" && (
+          <div className="flex items-center justify-center gap-2 mb-3 text-muted-foreground text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" /> Saving your feedback…
+          </div>
+        )}
+        <Button
+          onClick={handleFinish}
+          disabled={finishing || completedExercises.size === 0 || feedbackState === "listening" || feedbackState === "processing"}
+          className="w-full h-12 text-base"
+        >
           {finishing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
           {allDone ? "Complete Workout ✓" : `Finish (${completedExercises.size}/${exercises.length} done)`}
         </Button>
