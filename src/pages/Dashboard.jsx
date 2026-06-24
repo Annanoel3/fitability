@@ -101,7 +101,7 @@ Weight: ${p.weight_lbs ? p.weight_lbs + " lbs" : "Not provided"}
 BMI (estimated): ${bmi || "Unknown"}
 Activity Level: ${p.activity_level || "Unknown"}
 Fitness Mode: ${p.fitness_mode || "Standard"}
-Veteran: ${p.is_veteran ? "Yes — may have combat/service injuries" : "No"}
+Veteran: ${p.is_veteran ? `Yes — may have combat/service injuries${p.veteran_details && Object.keys(p.veteran_details).length > 0 ? ` (${JSON.stringify(p.veteran_details)})` : ""}` : "No"}
 
 Goals: ${(p.goals || []).join(", ") || "None specified"}
 

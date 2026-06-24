@@ -231,6 +231,80 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Goals */}
+      <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+        <h2 className="font-heading font-semibold">Fitness Goals</h2>
+        <div className="space-y-2">
+          <div className="text-sm text-muted-foreground">
+            {(profile?.goals || []).length > 0 
+              ? `${(profile.goals || []).join(", ")}` 
+              : "No goals set yet — go to onboarding to add them"}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => navigate("/onboarding")}>
+            Update Goals
+          </Button>
+        </div>
+      </div>
+
+      {/* Disabilities & Conditions */}
+      <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+        <h2 className="font-heading font-semibold">Health Information</h2>
+        <div className="space-y-3">
+          <div>
+            <Label className="text-sm">Disabilities / Conditions</Label>
+            <div className="text-sm text-muted-foreground mt-2">
+              {(profile?.disabilities || []).length > 0 
+                ? (profile.disabilities || []).map((d, i) => <div key={i}>• {d}</div>)
+                : "None recorded"}
+            </div>
+          </div>
+          <div>
+            <Label className="text-sm">Body Limitations</Label>
+            <div className="text-sm text-muted-foreground mt-2">
+              {(profile?.body_limitations || []).length > 0 
+                ? (profile.body_limitations || []).map((b, i) => <div key={i}>• {b}</div>)
+                : "None recorded"}
+            </div>
+          </div>
+          <div>
+            <Label className="text-sm">Risk Factors</Label>
+            <div className="text-sm text-muted-foreground mt-2">
+              {(profile?.risk_factors || []).length > 0 
+                ? (profile.risk_factors || []).map((r, i) => <div key={i}>• {r}</div>)
+                : "None recorded"}
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => navigate("/onboarding")}>
+            Update Health Info
+          </Button>
+        </div>
+      </div>
+
+      {/* Activity Level */}
+      <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+        <h2 className="font-heading font-semibold">Physical Profile</h2>
+        <div>
+          <Label className="text-sm">Activity Level</Label>
+          <Select
+            value={profile?.activity_level || ""}
+            onValueChange={v => updateProfile({ activity_level: v })}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Bedridden">Bedridden</SelectItem>
+              <SelectItem value="Mostly seated">Mostly seated</SelectItem>
+              <SelectItem value="Wheelchair user">Wheelchair user</SelectItem>
+              <SelectItem value="Limited walking">Limited walking</SelectItem>
+              <SelectItem value="Light activity">Light activity</SelectItem>
+              <SelectItem value="Moderate activity">Moderate activity</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Equipment */}
       <EquipmentEditor profile={profile} onUpdate={setProfile} />
 
