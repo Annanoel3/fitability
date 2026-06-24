@@ -203,7 +203,7 @@ Title and description should feel personal — reference their actual goals and 
           safety_review: { type: "string" }
         }
       },
-      model: "claude_sonnet_4_6"
+      model: "gpt_5_4"
     });
 
     const workout = await base44.entities.WorkoutPlan.create({

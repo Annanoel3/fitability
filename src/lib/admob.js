@@ -30,45 +30,15 @@ function isUserActive() {
   return false;
 }
 
-function showCountdownOverlay(seconds) {
-  return new Promise((resolve) => {
-    const overlay = document.createElement('div');
-    overlay.id = 'admob-countdown-overlay';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:sans-serif;';
-    const msg = document.createElement('p');
-    msg.style.cssText = 'font-size:18px;margin-bottom:12px;opacity:0.85;';
-    msg.textContent = 'Ad loading in…';
-    const counter = document.createElement('div');
-    counter.style.cssText = 'font-size:52px;font-weight:700;line-height:1;';
-    counter.textContent = String(seconds);
-    overlay.appendChild(msg);
-    overlay.appendChild(counter);
-    document.body.appendChild(overlay);
-    let remaining = seconds;
-    const interval = setInterval(() => {
-      remaining -= 1;
-      counter.textContent = String(remaining);
-      if (remaining <= 0) { clearInterval(interval); resolve(); }
-    }, 1000);
-  });
-}
-
-function removeCountdownOverlay() {
-  const el = document.getElementById('admob-countdown-overlay');
-  if (el) el.remove();
-}
-
 export async function showInterstitialAd() {
   if (!isNative() || !getAdMob()) return false;
   if (isUserActive()) return false;
   try {
-    await showCountdownOverlay(5);
     await getAdMob().prepareInterstitial({ adId: AD_UNIT_ID, isTesting: false });
     await getAdMob().showInterstitial();
     return true;
   } catch (e) {
     console.error('[AdMob] interstitial failed:', e);
-    removeCountdownOverlay();
     return false;
   }
 }
