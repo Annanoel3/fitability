@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import OpenAI from 'npm:openai@4.67.3';
 
 const CATEGORIES = [
   { name: 'Amputee Rehabilitation', count: 30 },
@@ -27,9 +28,14 @@ Deno.serve(async (req) => {
     }
 
     const category = CATEGORIES[categoryIndex];
+    const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
 
-    const resp = await base44.integrations.Core.InvokeLLM({
-      prompt: `Generate a JSON array (NOT wrapped in object) of exactly ${category.count} unique adaptive fitness exercises for the category: "${category.name}".
+    const message = await openai.messages.create({
+      model: "claude-opus-4-1",
+      max_tokens: 4000,
+      messages: [{
+        role: "user",
+        content: `Generate a JSON array (NOT wrapped in object) of exactly ${category.count} unique adaptive fitness exercises for the category: "${category.name}".
 
 For the category, provide exercises across all difficulty levels (Beginner, Easy, Moderate, Advanced) and positions (Seated, Standing, Wheelchair, Lying down, Any) where appropriate.
 
@@ -49,12 +55,13 @@ FOR EACH EXERCISE INCLUDE:
 - default_duration_seconds (number or null)
 - safety_rating (Safe|Caution|Avoid)
 
-RESPOND ONLY WITH A VALID JSON ARRAY. NO MARKDOWN WRAPPING. Start with "[" and end with "]".`,
-      model: "claude_sonnet_4_6"
+RESPOND ONLY WITH A VALID JSON ARRAY. NO MARKDOWN WRAPPING. Start with "[" and end with "]".`
+      }]
     });
 
-    let respStr = typeof resp === 'string' ? resp : JSON.stringify(resp);
-    respStr = respStr.replace(/```json\n?|\n?```/g, '').replace(/^```\n?|\n?```$/g, '').trim();
+    const resp = message.content[0].type === 'text' ? message.content[0].text : '';
+
+    let respStr = resp.replace(/```json\n?|\n?```/g, '').replace(/^```\n?|\n?```$/g, '').trim();
     
     let exercises = JSON.parse(respStr);
     if (!Array.isArray(exercises)) exercises = [];
