@@ -35,13 +35,22 @@ Deno.serve(async (req) => {
 EXERCISES TO TAG:
 ${exerciseList}
 
-RESTRICTION_TAGS vocabulary (conditions that CONTRAINDICATE this exercise):
-knee_pain, knee_replacement, hip_pain, hip_replacement, back_pain, neck_injury, shoulder_injury, wrist_injury, elbow_injury, ankle_pain, cannot_stand, wheelchair_user, no_legs, no_arms, single_leg_amputation, vertigo, balance_issues, heart_condition, copd, breathing_difficulty, osteoporosis, fracture_risk, scoliosis, multiple_sclerosis, parkinsons, stroke_recovery, cerebral_palsy, paraplegia, fibromyalgia, chronic_fatigue, arthritis, rheumatoid_arthritis, high_bmi, pregnancy, postpartum, seizure_risk, no_high_impact, no_spinal_flexion, no_overhead_press, no_neck_flexion, no_head_inversion, heat_sensitive, pain_flares, immune_compromised, bedridden, very_low_mobility
+RESTRICTION_TAGS — use ONLY these exact strings. Tag an exercise if the condition CONTRAINDICATES it (i.e., someone with this condition should NOT do this exercise):
 
-SUITABLE_FOR_TAGS vocabulary (conditions this exercise HELPS):
-wheelchair_user, seated_only, low_mobility, bedridden, chronic_pain, heart_safe, vertigo_safe, osteoporosis_safe, balance_training, fall_prevention, stroke_recovery, autism, anxiety, depression, elderly, frailty, breathing_focused, pelvic_floor, postpartum, upper_body_only, lower_body_only, core_stability, grip_strength, coordination, proprioception, sensory_grounding, fatigue_management, pain_management, cardiac_rehab, pulmonary_rehab, neurological_rehab, general_fitness, standard, bone_density, joint_mobility
+MOBILITY: cannot_stand, wheelchair_user, no_legs, single_leg_amputation, no_arms, single_arm_amputation, no_bilateral_arms, paraplegia, very_low_mobility, bedridden
+JOINTS: knee_pain, knee_replacement, hip_pain, hip_replacement, back_pain, neck_injury, shoulder_injury, wrist_injury, elbow_injury, ankle_pain
+MOVEMENT RESTRICTIONS: no_high_impact, no_spinal_flexion, no_overhead_press, no_neck_flexion, no_head_inversion, balance_issues, no_bilateral_arms
+CARDIAC/PULMONARY: heart_condition, copd, breathing_difficulty
+BONE/STRUCTURAL: osteoporosis, fracture_risk, scoliosis
+NEUROLOGICAL: multiple_sclerosis, parkinsons, stroke_recovery, cerebral_palsy, seizure_risk, vertigo
+SYSTEMIC: fibromyalgia, chronic_fatigue, arthritis, rheumatoid_arthritis, high_bmi, pregnancy, heat_sensitive, immune_compromised, pain_flares
 
-EQUIPMENT_TAGS: exact equipment needed. Use: chair, mat, resistance_bands, dumbbells, wall, pillow, towel. Empty array = pure bodyweight.
+IMPORTANT: stroke_recovery as a restriction_tag means the exercise is UNSAFE for stroke patients. If an exercise is GOOD for stroke recovery, put stroke_recovery in suitable_for_tags instead, NOT restriction_tags.
+
+SUITABLE_FOR_TAGS — conditions this exercise is especially good for:
+wheelchair_user, seated_only, low_mobility, bedridden, chronic_pain, heart_safe, vertigo_safe, osteoporosis_safe, balance_training, fall_prevention, stroke_recovery, coordination, sensory_grounding, fatigue_management, breathing_focused, joint_mobility, upper_body_only, lower_body_only, core_stability, bone_density, neurological_rehab, pelvic_floor, pregnancy_safe, single_arm_amputation, single_leg_amputation
+
+EQUIPMENT_TAGS: exact equipment needed. Use ONLY: chair, mat, resistance_bands, dumbbells, wall, pillow, towel. Empty array = pure bodyweight (no equipment needed).
 
 Return a JSON array with one object per exercise (in same order), each with fields: name, restriction_tags (array), suitable_for_tags (array), equipment_tags (array).`,
       response_json_schema: {

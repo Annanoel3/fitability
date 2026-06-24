@@ -8,13 +8,13 @@ import EmergencyBanner from "@/components/dashboard/EmergencyBanner";
 import { Dumbbell, Clock, Target, Sparkles, ChevronRight, Loader2, TrendingUp } from "lucide-react";
 import WorkoutPickerModal from "@/components/dashboard/WorkoutPickerModal";
 
-// Generates granular capability/restriction tags from a user's full profile.
-// These tags are used to hard-filter the exercise library before the LLM ever sees it.
-// The goal: every tag represents a specific, real constraint — not a broad category.
-// The LLM's job is personalization within the already-safe pool, NOT safety reasoning.
+// TAG VOCABULARY — shared between buildUserTags() and the tagExistingExercises backend function.
+// Exercise restriction_tags use these exact strings. User tags are generated here and matched against them.
+// When adding a new tag here, also add it to the tagExistingExercises function vocabulary.
+
 function buildUserTags(profile) {
-  const restriction = new Set(); // exercises with ANY of these tags are excluded
-  const capability = new Set();  // exercises must have ALL required capability tags to be included (not used for filtering yet, but passed to LLM)
+  const restriction = new Set(); // exercises with ANY of these tags are excluded for this user
+  const capability = new Set();  // passed to LLM to guide exercise selection toward suitable exercises
   const p = profile;
   const limitations = (p.body_limitations || []).join(' ').toLowerCase();
   const disabilities = (p.disabilities || []).join(' ').toLowerCase();
@@ -22,15 +22,17 @@ function buildUserTags(profile) {
 
   // ── MOBILITY / POSITION ──
   if (p.fitness_mode === 'Wheelchair' || p.current_abilities?.can_stand === false) {
-    restriction.add('cannot_stand'); restriction.add('requires_standing');
+    restriction.add('cannot_stand'); restriction.add('wheelchair_user');
   }
-  if (p.current_abilities?.can_walk === false) restriction.add('requires_walking');
-  if (p.activity_level === 'Bedridden') { restriction.add('requires_standing'); restriction.add('requires_walking'); restriction.add('high_impact'); }
+  if (p.current_abilities?.can_walk === false) restriction.add('cannot_stand');
+  if (p.activity_level === 'Bedridden') {
+    restriction.add('cannot_stand'); restriction.add('no_high_impact'); restriction.add('very_low_mobility');
+  }
   if (allText.includes('paralyz') || allText.includes('paraplegia') || allText.includes('quadriplegia')) {
-    restriction.add('requires_standing'); restriction.add('requires_walking'); restriction.add('requires_lower_body');
+    restriction.add('cannot_stand'); restriction.add('paraplegia');
   }
 
-  // ── AMPUTATIONS / LIMB LOSS (granular — affects only relevant exercises) ──
+  // ── AMPUTATIONS / LIMB LOSS ──
   const leftLeg = limitations.includes('left leg') || limitations.includes('left lower');
   const rightLeg = limitations.includes('right leg') || limitations.includes('right lower');
   const bothLegs = limitations.includes('no leg') || limitations.includes('bilateral leg') || limitations.includes('double amputat') || (leftLeg && rightLeg);
@@ -38,141 +40,151 @@ function buildUserTags(profile) {
   const rightArm = limitations.includes('right arm') || limitations.includes('right upper') || limitations.includes('lost right');
   const bothArms = limitations.includes('no arm') || limitations.includes('bilateral arm') || (leftArm && rightArm);
 
-  if (bothLegs) { restriction.add('requires_legs'); restriction.add('requires_standing'); restriction.add('requires_walking'); }
-  else if (leftLeg || rightLeg) { restriction.add('requires_bilateral_legs'); restriction.add('high_impact'); }
-  if (bothArms) { restriction.add('requires_arms'); restriction.add('requires_upper_body'); }
-  else if (leftArm) { restriction.add('requires_bilateral_arms'); restriction.add('requires_left_arm'); }
-  else if (rightArm) { restriction.add('requires_bilateral_arms'); restriction.add('requires_right_arm'); }
-  // Generic arm/leg amputee fallback
-  if (!leftLeg && !rightLeg && !bothLegs && (limitations.includes('amputat') || limitations.includes('prosthetic')) && limitations.includes('leg')) {
-    restriction.add('requires_bilateral_legs');
+  if (bothLegs) { restriction.add('no_legs'); restriction.add('cannot_stand'); restriction.add('no_high_impact'); }
+  else if (leftLeg || rightLeg) { restriction.add('single_leg_amputation'); restriction.add('no_high_impact'); }
+  if (bothArms) { restriction.add('no_arms'); }
+  else if (leftArm) { restriction.add('single_arm_amputation'); restriction.add('no_bilateral_arms'); }
+  else if (rightArm) { restriction.add('single_arm_amputation'); restriction.add('no_bilateral_arms'); }
+  // Generic fallback
+  if (!bothLegs && !leftLeg && !rightLeg && (limitations.includes('amputat') || limitations.includes('prosthetic')) && limitations.includes('leg')) {
+    restriction.add('single_leg_amputation'); restriction.add('no_high_impact');
   }
-  if (!leftArm && !rightArm && !bothArms && (limitations.includes('amputat') || limitations.includes('prosthetic')) && limitations.includes('arm')) {
-    restriction.add('requires_bilateral_arms');
+  if (!bothArms && !leftArm && !rightArm && (limitations.includes('amputat') || limitations.includes('prosthetic')) && limitations.includes('arm')) {
+    restriction.add('single_arm_amputation'); restriction.add('no_bilateral_arms');
   }
 
   // ── JOINT PAIN — scaled by severity ──
-  // Pain 1-3: no hard filter, passes through, LLM notes it
+  // Pain 1-3: LLM handles via safety_notes, no hard filter
   // Pain 4-6: filter exercises that heavily load that joint
-  // Pain 7+:  filter all exercises that stress that area at all
+  // Pain 7+:  filter all exercises that stress that area
   Object.entries(p.pain_areas || {}).forEach(([area, level]) => {
     const a = area.toLowerCase();
     if (level >= 4) {
-      if (a.includes('knee')) restriction.add('heavy_knee_load');
-      if (a.includes('hip')) restriction.add('heavy_hip_load');
-      if (a.includes('back') || a.includes('lumbar')) restriction.add('heavy_spinal_load');
-      if (a.includes('neck') || a.includes('cervical')) restriction.add('neck_strain');
-      if (a.includes('shoulder')) restriction.add('heavy_shoulder_load');
-      if (a.includes('wrist') || a.includes('hand')) restriction.add('wrist_load');
-      if (a.includes('elbow')) restriction.add('elbow_load');
-      if (a.includes('ankle') || a.includes('foot')) restriction.add('ankle_load');
+      if (a.includes('knee')) restriction.add('knee_pain');
+      if (a.includes('hip')) restriction.add('hip_pain');
+      if (a.includes('back') || a.includes('lumbar')) restriction.add('back_pain');
+      if (a.includes('neck') || a.includes('cervical')) restriction.add('neck_injury');
+      if (a.includes('shoulder')) restriction.add('shoulder_injury');
+      if (a.includes('wrist') || a.includes('hand')) restriction.add('wrist_injury');
+      if (a.includes('elbow')) restriction.add('elbow_injury');
+      if (a.includes('ankle') || a.includes('foot')) restriction.add('ankle_pain');
     }
     if (level >= 7) {
-      if (a.includes('knee')) { restriction.add('knee_pain'); restriction.add('knee_bend'); }
-      if (a.includes('hip')) { restriction.add('hip_pain'); restriction.add('hip_flexion'); }
-      if (a.includes('back') || a.includes('lumbar')) { restriction.add('back_pain'); restriction.add('spinal_flexion'); }
-      if (a.includes('neck') || a.includes('cervical')) restriction.add('neck_pain');
-      if (a.includes('shoulder')) restriction.add('shoulder_pain');
-      if (a.includes('wrist') || a.includes('hand')) restriction.add('wrist_pain');
-      if (a.includes('ankle') || a.includes('foot')) { restriction.add('ankle_pain'); restriction.add('high_impact'); }
+      if (a.includes('knee')) restriction.add('knee_replacement'); // most restrictive knee tag
+      if (a.includes('hip')) restriction.add('hip_replacement');
+      if (a.includes('back') || a.includes('lumbar')) restriction.add('no_spinal_flexion');
+      if (a.includes('neck') || a.includes('cervical')) restriction.add('no_neck_flexion');
+      if (a.includes('shoulder')) restriction.add('no_overhead_press');
+      if (a.includes('ankle') || a.includes('foot')) restriction.add('no_high_impact');
     }
   });
 
-  // ── BODY LIMITATION KEYWORDS → joint-specific tags ──
-  if (limitations.includes('knee')) { restriction.add('heavy_knee_load'); if (limitations.includes('severe') || limitations.includes('replacement') || limitations.includes('surgery')) restriction.add('knee_bend'); }
-  if (limitations.includes('hip')) { restriction.add('heavy_hip_load'); if (limitations.includes('replacement') || limitations.includes('severe')) restriction.add('hip_flexion'); }
-  if (limitations.includes('back') || limitations.includes('lumbar') || limitations.includes('spine')) restriction.add('heavy_spinal_load');
-  if (limitations.includes('herniat') || limitations.includes('disc')) { restriction.add('spinal_flexion'); restriction.add('heavy_spinal_load'); }
-  if (limitations.includes('neck') || limitations.includes('cervical')) restriction.add('neck_strain');
-  if (limitations.includes('shoulder') || limitations.includes('rotator')) restriction.add('heavy_shoulder_load');
-  if (limitations.includes('wrist') || limitations.includes('carpal')) restriction.add('wrist_load');
-  if (limitations.includes('ankle')) restriction.add('ankle_load');
-  if (limitations.includes('balance') || limitations.includes('vestibular')) restriction.add('balance_intensive');
-  if (limitations.includes('scoliosis')) {
-    restriction.add('spinal_flexion');
-    if (limitations.includes('severe')) { restriction.add('heavy_spinal_load'); restriction.add('twisting'); }
+  // ── BODY LIMITATION KEYWORDS → joint tags ──
+  if (limitations.includes('knee')) {
+    restriction.add('knee_pain');
+    if (limitations.includes('replacement') || limitations.includes('severe') || limitations.includes('surgery')) restriction.add('knee_replacement');
   }
+  if (limitations.includes('hip')) {
+    restriction.add('hip_pain');
+    if (limitations.includes('replacement') || limitations.includes('severe')) restriction.add('hip_replacement');
+  }
+  if (limitations.includes('back') || limitations.includes('lumbar') || limitations.includes('spine')) restriction.add('back_pain');
+  if (limitations.includes('herniat') || limitations.includes('disc')) { restriction.add('back_pain'); restriction.add('no_spinal_flexion'); }
+  if (limitations.includes('neck') || limitations.includes('cervical')) restriction.add('neck_injury');
+  if (limitations.includes('shoulder') || limitations.includes('rotator')) restriction.add('shoulder_injury');
+  if (limitations.includes('wrist') || limitations.includes('carpal')) restriction.add('wrist_injury');
+  if (limitations.includes('ankle')) restriction.add('ankle_pain');
+  if (limitations.includes('balance')) restriction.add('balance_issues');
+  if (limitations.includes('scoliosis')) {
+    restriction.add('scoliosis');
+    if (limitations.includes('severe')) restriction.add('no_spinal_flexion');
+  }
+  if (limitations.includes('osteoporosis')) { restriction.add('osteoporosis'); restriction.add('no_spinal_flexion'); restriction.add('no_high_impact'); }
 
   // ── MEDICAL CONDITIONS ──
   if (disabilities.includes('heart') || disabilities.includes('cardiac') || disabilities.includes('cardiovascular')) {
-    restriction.add('high_intensity_cardio'); restriction.add('breath_holding'); restriction.add('high_impact');
+    restriction.add('heart_condition'); restriction.add('no_high_impact'); restriction.add('breathing_difficulty');
     capability.add('heart_safe');
   }
   if (disabilities.includes('copd') || disabilities.includes('emphysema') || disabilities.includes('pulmonary')) {
-    restriction.add('high_intensity_cardio'); restriction.add('breath_holding');
-    capability.add('breathing_focused');
+    restriction.add('copd'); restriction.add('breathing_difficulty');
+    capability.add('breathing_focused'); capability.add('heart_safe');
   }
   if (disabilities.includes('epilepsy') || disabilities.includes('seizure')) {
-    restriction.add('head_inversion'); restriction.add('head_below_heart');
-    capability.add('seizure_safe');
+    restriction.add('seizure_risk'); restriction.add('no_head_inversion');
+    capability.add('vertigo_safe');
   }
-  if (disabilities.includes('osteoporosis')) {
-    restriction.add('spinal_flexion'); restriction.add('high_impact'); restriction.add('twisting');
+  if (allText.includes('osteoporosis')) {
+    restriction.add('osteoporosis'); restriction.add('no_spinal_flexion'); restriction.add('no_high_impact');
     capability.add('osteoporosis_safe');
   }
   if (allText.includes('fracture') || allText.includes('brittle bone')) {
-    restriction.add('high_impact'); restriction.add('heavy_load');
+    restriction.add('fracture_risk'); restriction.add('no_high_impact');
   }
   if (disabilities.includes('vertigo') || disabilities.includes('vestibular')) {
-    restriction.add('head_inversion'); restriction.add('balance_intensive'); restriction.add('rapid_position_change');
+    restriction.add('vertigo'); restriction.add('balance_issues'); restriction.add('no_head_inversion');
     capability.add('vertigo_safe');
   }
   if (disabilities.includes('pregnancy')) {
-    restriction.add('prone_position'); restriction.add('heavy_abdominal'); restriction.add('supine_extended');
+    restriction.add('pregnancy'); restriction.add('no_spinal_flexion');
     capability.add('pregnancy_safe');
   }
   if (disabilities.includes('parkinson')) {
-    restriction.add('high_impact'); restriction.add('balance_intensive');
+    restriction.add('parkinsons'); restriction.add('no_high_impact');
     capability.add('balance_training'); capability.add('coordination');
   }
   if (disabilities.includes('multiple sclerosis') || disabilities.includes(' ms ') || disabilities.includes('ms,')) {
-    restriction.add('heat_intensive'); restriction.add('high_intensity_cardio');
+    restriction.add('multiple_sclerosis'); restriction.add('heat_sensitive');
     capability.add('fatigue_management');
   }
   if (disabilities.includes('fibromyalgia') || disabilities.includes('chronic fatigue') || disabilities.includes('cfs')) {
-    restriction.add('high_intensity_cardio'); restriction.add('heavy_load');
+    restriction.add('fibromyalgia'); restriction.add('chronic_fatigue');
     capability.add('fatigue_management'); capability.add('chronic_pain');
   }
   if (disabilities.includes('arthritis') || disabilities.includes('rheumatoid')) {
-    restriction.add('heavy_load'); restriction.add('high_impact');
+    restriction.add('arthritis'); restriction.add('no_high_impact');
     capability.add('joint_mobility'); capability.add('chronic_pain');
   }
+  if (disabilities.includes('rheumatoid')) restriction.add('rheumatoid_arthritis');
   if (disabilities.includes('stroke')) {
+    restriction.add('stroke_recovery'); // exercises tagged stroke_recovery are FOR this person, not against — LLM uses capability tags instead
     capability.add('stroke_recovery'); capability.add('coordination'); capability.add('balance_training');
   }
   if (disabilities.includes('cerebral palsy')) {
+    restriction.add('cerebral_palsy');
     capability.add('coordination'); capability.add('balance_training');
   }
   if (disabilities.includes('autism') || disabilities.includes('asd')) {
     capability.add('sensory_grounding');
   }
   if (disabilities.includes('diabetes')) {
-    capability.add('heart_safe'); // avoid extreme intensity spikes
+    capability.add('heart_safe');
   }
 
-  // ── BMI / WEIGHT — endurance and impact constraints ──
+  // ── BMI / WEIGHT ──
   const bmi = (p.weight_lbs && p.height_inches)
     ? (p.weight_lbs / (p.height_inches * p.height_inches)) * 703
     : null;
   if (bmi && bmi >= 35) {
-    restriction.add('high_impact'); restriction.add('high_intensity_cardio');
+    restriction.add('no_high_impact'); restriction.add('high_bmi');
     capability.add('low_mobility'); capability.add('fatigue_management');
   } else if (bmi && bmi >= 30) {
-    restriction.add('high_impact');
+    restriction.add('no_high_impact');
   }
 
-  // ── ACTIVITY LEVEL — endurance ceiling ──
+  // ── ACTIVITY LEVEL ──
   if (p.activity_level === 'Bedridden' || p.activity_level === 'Mostly seated') {
-    restriction.add('high_intensity_cardio'); restriction.add('high_impact');
+    restriction.add('no_high_impact'); restriction.add('very_low_mobility');
   }
 
   // ── RISK FACTORS ──
   (p.risk_factors || []).forEach(r => {
     const rf = r.toLowerCase();
-    if (rf.includes('fall')) restriction.add('high_fall_risk');
-    if (rf.includes('surgery') && (rf.includes('recent') || rf.includes('post'))) restriction.add('heavy_load');
-    if (rf.includes('pacemaker') || rf.includes('defibrillator')) { restriction.add('high_intensity_cardio'); restriction.add('electrical_hazard'); }
-    if (rf.includes('blood pressure') || rf.includes('hypertension')) restriction.add('breath_holding');
+    if (rf.includes('fall')) restriction.add('balance_issues');
+    if (rf.includes('surgery') && (rf.includes('recent') || rf.includes('post'))) restriction.add('fracture_risk');
+    if (rf.includes('pacemaker') || rf.includes('defibrillator')) { restriction.add('heart_condition'); restriction.add('breathing_difficulty'); }
+    if (rf.includes('blood pressure') || rf.includes('hypertension')) restriction.add('breathing_difficulty');
+    if (rf.includes('immune') || rf.includes('immunocompromised')) restriction.add('immune_compromised');
   });
 
   return { restriction, capability };
@@ -394,24 +406,72 @@ ${recentExercisesStr}${libraryContext}`,
       model: "gpt_5_4"
     });
 
+    // ── VALIDATION PASS: LLM checks the generated workout against the user's profile ──
+    // This catches any exercise that slipped through that the user genuinely cannot do.
+    const validation = await base44.integrations.Core.InvokeLLM({
+      prompt: `You are a physical therapist reviewing a generated workout for a specific patient. Your only job is to check whether any exercise in this workout is inappropriate for this person given their profile, and if so, replace it with a suitable alternative.
+
+PATIENT PROFILE:
+Age: ${p.age || 'Unknown'} | Sex: ${p.sex || 'Unknown'} | Weight: ${p.weight_lbs ? p.weight_lbs + ' lbs' : 'Unknown'} | BMI: ${bmi || 'Unknown'}
+Activity Level: ${p.activity_level || 'Unknown'} | Fitness Mode: ${p.fitness_mode || 'Standard'}
+Conditions: ${(p.disabilities || []).join(', ') || 'None'}
+Body Limitations: ${(p.body_limitations || []).join(', ') || 'None'}
+Pain Areas: ${Object.entries(p.pain_areas || {}).map(([a, l]) => `${a}: ${l}/10`).join(', ') || 'None'}
+Current Abilities: ${Object.entries(p.current_abilities || {}).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v ? 'Yes' : 'No'}`).join(', ') || 'Not assessed'}
+Equipment: ${userEquipment.join(', ')}
+
+GENERATED WORKOUT TO REVIEW:
+${JSON.stringify({ exercises: result.exercises, warmup: result.warmup, cooldown: result.cooldown }, null, 2)}
+
+REVIEW CHECKLIST — flag an exercise if:
+- It requires a body part this person doesn't have or cannot use
+- It requires standing/walking when the person cannot stand
+- It uses equipment not in their equipment list
+- It involves movement (high impact, spinal flexion, overhead press, etc.) that is explicitly unsafe given their conditions
+- The reps/sets/duration are wildly unrealistic given their activity level, weight, or energy today (mood: ${(checkin || todayCheckin)?.mood}, energy: ${(checkin || todayCheckin)?.energy})
+
+For each flagged exercise, replace it with a realistic alternative that this person CAN do. Keep the same structure. If nothing needs changing, return the workout unchanged.
+
+Return the complete corrected workout in the same JSON structure.`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          exercises: { type: "array", items: { type: "object", properties: { name: { type: "string" }, description: { type: "string" }, sets: { type: "number" }, reps: { type: "number" }, duration_seconds: { type: "number" }, instructions: { type: "string" }, position: { type: "string" }, muscles_used: { type: "array", items: { type: "string" } }, safety_notes: { type: "string" } } } },
+          warmup: { type: "object", properties: { name: { type: "string" }, duration_minutes: { type: "number" }, instructions: { type: "string" } } },
+          cooldown: { type: "object", properties: { name: { type: "string" }, duration_minutes: { type: "number" }, instructions: { type: "string" } } },
+          changes_made: { type: "array", items: { type: "string" } }
+        }
+      },
+      model: "gpt_5_4"
+    });
+
+    // Merge validated exercises back into result
+    const finalResult = {
+      ...result,
+      exercises: validation.exercises || result.exercises,
+      warmup: validation.warmup || result.warmup,
+      cooldown: validation.cooldown || result.cooldown,
+      safety_review: (result.safety_review || '') + (validation.changes_made?.length ? '\n\nValidation changes: ' + validation.changes_made.join('; ') : '')
+    };
+
     await base44.entities.WorkoutPlan.create({
-      title: result.title,
-      description: result.description,
+      title: finalResult.title,
+      description: finalResult.description,
       plan_type: "Daily",
       date: today,
-      total_duration_minutes: result.total_duration_minutes,
-      difficulty_level: result.difficulty_level,
+      total_duration_minutes: finalResult.total_duration_minutes,
+      difficulty_level: finalResult.difficulty_level,
       safety_validated: true,
-      safety_notes: result.safety_review,
+      safety_notes: finalResult.safety_review,
       pre_checkin_mood: (checkin || todayCheckin)?.mood,
       pre_checkin_energy: (checkin || todayCheckin)?.energy,
-      exercises_total: result.exercises?.length || 0,
-      workout_data: JSON.stringify(result)
+      exercises_total: finalResult.exercises?.length || 0,
+      workout_data: JSON.stringify(finalResult)
     });
 
     // Pre-generate exercise images in background (non-blocking)
-    if (result.exercises?.length) {
-      result.exercises.forEach(async (ex) => {
+    if (finalResult.exercises?.length) {
+      finalResult.exercises.forEach(async (ex) => {
         try {
           const key = ex.name.toLowerCase().trim();
           const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: key });
