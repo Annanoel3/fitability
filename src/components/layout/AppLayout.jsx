@@ -149,9 +149,13 @@ export default function AppLayout() {
           50% { transform: scale(1.1); }
         }
         ${window.fitabilityTourStep === "library" ? `
-        nav a:not([data-tour-library-nav]) {
-          pointer-events: none;
-          opacity: 0.4;
+        nav > div > a {
+          pointer-events: none !important;
+          opacity: 0.4 !important;
+        }
+        nav > div > a[data-tour-library-nav] {
+          pointer-events: auto !important;
+          opacity: 1 !important;
         }
         ` : ""}
         [data-tour-library-nav] {
