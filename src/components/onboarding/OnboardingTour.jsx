@@ -143,7 +143,12 @@ function SpotlightOverlay({ icon, title, message, navLabel, onNavigate }) {
       </div>
 
       {/* Bouncing arrow pointing down toward nav bar */}
-      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 pointer-events-auto flex flex-col items-center gap-1 animate-bounce">
+      <div className={`absolute bottom-20 pointer-events-auto flex flex-col items-center gap-1 animate-bounce ${
+        navLabel === "Coach" ? "left-[20%]" :
+        navLabel === "Library" ? "left-[40%]" :
+        navLabel === "Progress" ? "left-[80%]" :
+        "left-1/2 -translate-x-1/2"
+      }`}>
         <span className="text-white text-xs font-semibold drop-shadow">{navLabel}</span>
         <svg className="w-8 h-8 text-primary drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 20l-8-8h5V4h6v8h5l-8 8z" />
