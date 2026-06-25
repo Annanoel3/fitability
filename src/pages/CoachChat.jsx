@@ -217,8 +217,8 @@ export default function CoachChat() {
       {isTourCoachMessage && (
         <style>{`
           @keyframes button-pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(174, 104, 75, 0.7); }
+            50% { transform: scale(1.3); box-shadow: 0 0 0 10px rgba(174, 104, 75, 0); }
           }
           [data-tour-coach-send] {
             animation: button-pulse 1.5s ease-in-out infinite !important;
@@ -228,14 +228,14 @@ export default function CoachChat() {
       )}
 
       {/* Input */}
-      <div className={`px-4 py-1.5 border-t border-border bg-card rounded-b-2xl ${isTourCoachMessage ? "pointer-events-none" : ""}`}>
+      <div className={`px-4 py-1 border-t border-border bg-card rounded-b-2xl ${isTourCoachMessage ? "pointer-events-none" : ""}`}>
         <div className="flex gap-2">
           <Input
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Tell me how your workout is going…"
-            className="flex-1 rounded-xl"
+            className={`flex-1 rounded-xl ${isTourCoachMessage ? "text-foreground" : ""}`}
             disabled={sending || isTourCoachMessage}
             data-tour-coach-input
           />
