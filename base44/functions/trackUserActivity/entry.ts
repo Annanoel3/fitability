@@ -28,22 +28,40 @@ Deno.serve(async (req) => {
     let showAd = false;
     
     if (!isVeteran) {
-      // Non-veterans: ads on 2nd open, then once per day
+      // Non-veterans: ads on 2nd open, then up to 2 times per day max
       let appOpens = parseInt(localStorage.getItem('app_opens') || '0') + 1;
       localStorage.setItem('app_opens', appOpens.toString());
       
-      const lastAdDate = localStorage.getItem('last_ad_date');
-      if (appOpens === 2 || (appOpens > 2 && lastAdDate !== today)) {
+      let adsToday = parseInt(localStorage.getItem('ads_today') || '0');
+      const lastAdDateForDay = localStorage.getItem('last_ad_day');
+      
+      if (lastAdDateForDay !== today) {
+        adsToday = 0;
+        localStorage.setItem('last_ad_day', today);
+      }
+      
+      if ((appOpens === 2 || appOpens > 2) && adsToday < 2) {
         showAd = true;
-        localStorage.setItem('last_ad_date', today);
+        adsToday += 1;
+        localStorage.setItem('ads_today', adsToday.toString());
       }
     } else {
-      // Veterans: one ad every 3 opens
+      // Veterans: one ad every 3 opens, but max once per day
       let veteranOpens = parseInt(localStorage.getItem('veteran_opens') || '0') + 1;
       localStorage.setItem('veteran_opens', veteranOpens.toString());
       
-      if (veteranOpens % 3 === 0) {
+      let adsToday = parseInt(localStorage.getItem('veteran_ads_today') || '0');
+      const lastAdDateForDay = localStorage.getItem('veteran_last_ad_day');
+      
+      if (lastAdDateForDay !== today) {
+        adsToday = 0;
+        localStorage.setItem('veteran_last_ad_day', today);
+      }
+      
+      if (veteranOpens % 3 === 0 && adsToday < 1) {
         showAd = true;
+        adsToday += 1;
+        localStorage.setItem('veteran_ads_today', adsToday.toString());
       }
     }
 
