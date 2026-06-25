@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ function MessageBubble({ message, isTourCoachMessage }) {
 }
 
 export default function CoachChat() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -169,6 +171,7 @@ export default function CoachChat() {
         setTimeout(() => {
           setTourStep("library_exercise");
           window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "library_exercise" } }));
+          navigate("/exercises");
         }, 3000);
       }
     } catch (e) {
