@@ -6,6 +6,7 @@ import {
   Heart, Home, Dumbbell, BookOpen, TrendingUp,
   Settings, Menu, X, LogOut, Bot, Sun, Moon } from
 "lucide-react";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
 
 const NAV_ITEMS = [
 { path: "/", label: "Home", icon: Home },
@@ -19,7 +20,20 @@ export default function AppLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tourStep, setTourStep] = useState(window.fitabilityTourStep);
+  const [tourProfile, setTourProfile] = useState(null);
+  const [showTour, setShowTour] = useState(false);
   const { dark, toggle } = useTheme();
+
+  useEffect(() => {
+    const initTour = async () => {
+      const profiles = await base44.entities.UserProfile.filter({});
+      if (profiles.length > 0 && profiles[0].onboarding_completed && !profiles[0].onboarding_tour_completed) {
+        setTourProfile(profiles[0]);
+        setShowTour(true);
+      }
+    };
+    initTour();
+  }, []);
 
   useEffect(() => {
     const handleTourChange = (e) => {
@@ -161,6 +175,13 @@ export default function AppLayout() {
           })}
       </div>
       </nav>
+
+      {showTour && (
+        <OnboardingTour
+          profile={tourProfile}
+          onComplete={() => setShowTour(false)}
+        />
+      )}
 
       {/* Tour pulsing styles for library, progress and home */}
       <style key={tourStep}>{`

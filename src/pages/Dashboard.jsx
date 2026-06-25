@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import CheckInCard from "@/components/dashboard/CheckInCard";
 import StreakCard from "@/components/dashboard/StreakCard";
 import EmergencyBanner from "@/components/dashboard/EmergencyBanner";
-import { Dumbbell, Clock, Target, Sparkles, ChevronRight, Loader2, TrendingUp, Home } from "lucide-react";
+import { Dumbbell, Clock, Target, Sparkles, ChevronRight, Loader2, TrendingUp } from "lucide-react";
 import WorkoutPickerModal from "@/components/dashboard/WorkoutPickerModal";
-import OnboardingTour from "@/components/onboarding/OnboardingTour";
-
 // TAG VOCABULARY — shared between buildUserTags() and the tagExistingExercises backend function.
 // Exercise restriction_tags use these exact strings. User tags are generated here and matched against them.
 // When adding a new tag here, also add it to the tagExistingExercises function vocabulary.
@@ -200,23 +198,8 @@ export default function Dashboard() {
   const [emergency, setEmergency] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [showWorkoutPicker, setShowWorkoutPicker] = useState(false);
-  const [showTour, setShowTour] = useState(false);
-  const [tourStep, setTourStep] = useState(null);
-  const isTourHome = tourStep === "home_end";
-
   useEffect(() => {
     loadData();
-  }, []);
-
-  useEffect(() => {
-    const handleTourChange = (e) => {
-      setTourStep(e.detail.tourStep);
-    };
-    window.addEventListener("fitability-tour-step-change", handleTourChange);
-    if (window.fitabilityTourStep === "home_end") {
-      setTourStep("home_end");
-    }
-    return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
   }, []);
 
   const loadData = async () => {
@@ -230,9 +213,6 @@ export default function Dashboard() {
       return;
     }
     setProfile(profiles[0]);
-    if (profiles[0].onboarding_completed && !profiles[0].onboarding_tour_completed) {
-      setShowTour(true);
-    }
 
     const allWorkouts = await base44.entities.WorkoutPlan.filter({ archived: false }, "-date", 30);
     setWorkouts(allWorkouts);
@@ -529,43 +509,11 @@ Return the complete corrected workout in the same JSON structure.`,
 
   return (
     <div className="space-y-6 pb-20 md:pb-6">
-      {showTour && (
-        <OnboardingTour
-          profile={profile}
-          onComplete={() => setShowTour(false)}
-        />
-      )}
       {showWorkoutPicker && (
         <WorkoutPickerModal 
           onConfirm={handleWorkoutPickerConfirm}
           onClose={() => setShowWorkoutPicker(false)}
         />
-      )}
-      {isTourHome && (
-        <div className="fixed inset-0 z-[99] pointer-events-none flex items-center justify-center px-5">
-          <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-              <Home className="w-7 h-7 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-heading font-bold text-lg text-foreground">You've completed the tour!</h3>
-              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                Now you're all set to start your fitness journey. Create workouts, track your progress, and anytime you need help or have questions about your exercises—just visit the Coach. You've got this! 💪
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setTourStep(null);
-                // Mark tour as completed in profile
-                if (profile?.id) {
-                  base44.entities.UserProfile.update(profile.id, { onboarding_tour_completed: true });
-                }
-              }}
-              className="w-full bg-primary text-primary-foreground rounded-xl py-2.5 font-medium text-sm hover:bg-primary/90 transition-colors">
-              Let's Go!
-            </button>
-          </div>
-        </div>
       )}
       {/* Greeting */}
       <div>
