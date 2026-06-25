@@ -17,7 +17,7 @@ function MessageBubble({ message, isTourCoachMessage }) {
   let content = message.content;
 
   return (
-    <div className={`flex mb-2 ${isUser ? "justify-end" : "justify-start"} `}>
+    <div className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"} `}>
       {!isUser &&
       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2 flex-shrink-0 mt-1">
           <Bot className="w-4 h-4 text-primary" />
