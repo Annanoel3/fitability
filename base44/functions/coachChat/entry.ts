@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
       const name = profile?.display_name || profileName || 'there';
       const conditions = (profile?.disabilities || []).join(', ') || 'none reported';
       const goals = (profile?.goals || []).join(', ') || 'general fitness';
-      const reply = `Hi ${name}! 👋 I'm your FitAbility Coach — I'm here anytime you want to fine-tune your workouts, ask about an exercise, or just check in.\n\nI already know your profile, including your conditions (${conditions}) and your goals (${goals}), so I can personalize everything for you. **Anything you tell me here — like "make my workouts shorter" or "skip exercises that bother my knee" — I'll remember going forward.**\n\nWhat can I help you with today?`;
+      const reply = `Hi ${name}! 👋 I'm your FitAbility Coach. I can help you adjust and fine-tune your workouts, suggest modifications for exercises, answer fitness questions, and keep you moving safely.\n\nPlus, keep me updated on any changes to your health and conditions—whether things are improving, getting tougher, or anything else that affects your workouts. The better I understand you, the better I can support your fitness journey. I'll remember everything you tell me and personalize your plan accordingly.`;
       return Response.json({ reply, planUpdated: false });
     }
 
@@ -147,7 +147,7 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
     // For "Sounds good!" message, return a simple acknowledgment without questions
     if (isSoundsGoodMessage) {
       return Response.json({ 
-        reply: "Great! Come back anytime to adjust your plan or update FitAbility on your progress. You've got this! 💪",
+        reply: "Perfect! Keep me in the loop with how you're doing. Whether your conditions are improving, getting tougher, or anything changes that affects your workouts—just let me know and we'll adjust your plan. You've got this! 💪",
         planUpdated: false 
       });
     }

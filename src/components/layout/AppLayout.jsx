@@ -115,26 +115,52 @@ export default function AppLayout() {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border z-50">
-        <div className="flex items-center justify-between px-1 py-2">
-          {NAV_ITEMS.map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                data-tour-nav={item.label}
-                data-tour-library-nav={item.label === "Library" && window.fitabilityTourStep === "library" ? "true" : undefined}
-                className={`flex flex-col items-center gap-0.5 flex-1 py-1 rounded-lg text-xs ${
-                active ? "text-primary" : "text-muted-foreground"}`
-                }>
+      <div className="flex items-center justify-between px-1 py-2">
+        {NAV_ITEMS.map((item) => {
+          const active = location.pathname === item.path;
+          const isPulsingLibrary = item.label === "Library" && window.fitabilityTourStep === "library";
+          const isPulsingProgress = item.label === "Progress" && window.fitabilityTourStep === "progress";
+          const isPulsingHome = item.label === "Home" && window.fitabilityTourStep === "home_end";
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              data-tour-nav={item.label}
+              data-tour-library-nav={isPulsingLibrary ? "true" : undefined}
+              data-tour-progress-nav={isPulsingProgress ? "true" : undefined}
+              data-tour-home-nav={isPulsingHome ? "true" : undefined}
+              className={`flex flex-col items-center gap-0.5 flex-1 py-1 rounded-lg text-xs ${
+              active ? "text-primary" : "text-muted-foreground"}`
+              }>
 
-                <item.icon className="w-5 h-5" />
-                <span className="text-[10px] leading-tight">{item.label}</span>
-              </Link>);
+              <item.icon className="w-5 h-5" />
+              <span className="text-[10px] leading-tight">{item.label}</span>
+            </Link>);
 
-          })}
-        </div>
+        })}
+      </div>
       </nav>
+
+      {/* Tour pulsing styles for progress and home */}
+      {(window.fitabilityTourStep === "progress" || window.fitabilityTourStep === "home_end") &&
+      <style>{`
+        @keyframes icon-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+        [data-tour-progress-nav] {
+          animation: icon-pulse 1.5s ease-in-out infinite !important;
+          color: hsl(var(--primary)) !important;
+        }
+        [data-tour-home-nav] {
+          animation: icon-pulse 1.5s ease-in-out infinite !important;
+          color: hsl(var(--primary)) !important;
+        }
+        nav [data-tour-nav]:not([data-tour-progress-nav]):not([data-tour-home-nav]) {
+          color: hsl(var(--muted-foreground)) !important;
+        }
+      `}</style>
+      }
     </div>);
 
 }

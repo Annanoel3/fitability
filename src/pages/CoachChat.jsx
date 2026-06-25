@@ -91,12 +91,17 @@ export default function CoachChat() {
     init();
   }, []);
 
-  // Pre-fill message during coach message tour step
+  // Pre-fill message and disable input during coach message tour step
   useEffect(() => {
     if (isTourCoachMessage) {
       setInput("Sounds good!");
     }
   }, [isTourCoachMessage]);
+
+  // Auto-disable send button during coach message step
+  const sendButtonDisabled = () => {
+    return !input.trim() || sending || (isTourCoachMessage && input !== "Sounds good!");
+  };
 
   const sendWelcome = async (prof) => {
     setSending(true);
@@ -286,7 +291,7 @@ export default function CoachChat() {
           
           <Button
             onClick={() => sendMessage()}
-            disabled={!input.trim() || sending || !isTourCoachMessage ? false : false}
+            disabled={sendButtonDisabled()}
             size="icon"
             className="rounded-xl my-2"
             style={isTourCoachMessage ? { pointerEvents: "auto" } : {}}

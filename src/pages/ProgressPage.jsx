@@ -15,9 +15,25 @@ export default function ProgressPage() {
   const [showLogForm, setShowLogForm] = useState(false);
   const [logData, setLogData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [tourStep, setTourStep] = useState(null);
+  const isTourProgress = tourStep === "progress";
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  useEffect(() => {
+    const handleTourChange = (e) => {
+      setTourStep(e.detail.tourStep);
+      if (e.detail.tourStep === "progress") {
+        setShowLogForm(false); // Reset form for tour
+      }
+    };
+    window.addEventListener("fitability-tour-step-change", handleTourChange);
+    if (window.fitabilityTourStep === "progress") {
+      setTourStep("progress");
+    }
+    return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
   }, []);
 
   const loadData = async () => {
@@ -42,6 +58,14 @@ export default function ProgressPage() {
     setShowLogForm(false);
     setLogData({});
     setSaving(false);
+
+    // Advance tour after saving
+    if (isTourProgress) {
+      setTimeout(() => {
+        setTourStep("home_end");
+        window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "home_end" } }));
+      }, 500);
+    }
   };
 
   if (loading) {
@@ -80,12 +104,32 @@ export default function ProgressPage() {
 
   return (
     <div className="pb-20 md:pb-6 space-y-6">
+      {isTourProgress && (
+        <div className="fixed inset-0 z-[99] pointer-events-none flex items-center justify-center px-5">
+          <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+              <TrendingUp className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-lg text-foreground">Track Your Progress</h3>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                Click the "Log Progress" button to record how you're doing—your mood, pain levels, and progress metrics help me understand your journey.
+              </p>
+            </div>
+            <button
+              onClick={() => {}}
+              className="w-full bg-primary text-primary-foreground rounded-xl py-2.5 font-medium text-sm hover:bg-primary/90 transition-colors">
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold text-foreground">Progress</h1>
           <p className="text-muted-foreground mt-1">Track your journey over time.</p>
         </div>
-        <Button onClick={() => setShowLogForm(!showLogForm)} variant="outline" size="sm">
+        <Button onClick={() => setShowLogForm(!showLogForm)} variant="outline" size="sm" data-tour-log-button={isTourProgress ? "true" : undefined}>
           Log Progress
         </Button>
       </div>
