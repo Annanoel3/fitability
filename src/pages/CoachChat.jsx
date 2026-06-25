@@ -167,8 +167,8 @@ export default function CoachChat() {
       // Auto-advance tour when user sends "Sounds good!" during coach message step
       if (isTourCoachMessage && userText.toLowerCase().includes("sounds good")) {
         setTimeout(() => {
-          setTourStep("library");
-          window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "library" } }));
+          setTourStep("library_exercise");
+          window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "library_exercise" } }));
         }, 3000);
       }
     } catch (e) {
