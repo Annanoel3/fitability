@@ -4,7 +4,8 @@ import { Loader2, TrendingUp, Dumbbell, Calendar, Activity } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import ProgressLogForm from "@/components/progress/ProgressLogForm";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function ProgressPage() {
   const [painLogs, setPainLogs] = useState([]);
@@ -31,9 +32,16 @@ export default function ProgressPage() {
     setLoading(false);
   };
 
-  const handleLogSave = async () => {
+  const saveProgress = async () => {
+    setSaving(true);
+    await base44.entities.ProgressLog.create({
+      date: new Date().toISOString().split("T")[0],
+      ...logData
+    });
     await loadData();
     setShowLogForm(false);
+    setLogData({});
+    setSaving(false);
   };
 
   if (loading) {
@@ -77,17 +85,37 @@ export default function ProgressPage() {
           <h1 className="text-2xl font-heading font-bold text-foreground">Progress</h1>
           <p className="text-muted-foreground mt-1">Track your journey over time.</p>
         </div>
-        <Button onClick={() => setShowLogForm(!showLogForm)} variant="outline" size="sm" data-tour-log-btn>
+        <Button onClick={() => setShowLogForm(!showLogForm)} variant="outline" size="sm">
           Log Progress
         </Button>
       </div>
 
       {showLogForm && (
-        <ProgressLogForm
-          onSave={handleLogSave}
-          onCancel={() => setShowLogForm(false)}
-          saving={saving}
-        />
+        <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+          <h3 className="font-heading font-semibold">Log Today's Progress</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm">Weight (lbs)</Label>
+              <Input type="number" value={logData.weight_lbs || ""} onChange={e => setLogData(p => ({ ...p, weight_lbs: parseFloat(e.target.value) || undefined }))} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm">Steps</Label>
+              <Input type="number" value={logData.steps || ""} onChange={e => setLogData(p => ({ ...p, steps: parseInt(e.target.value) || undefined }))} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm">Mobility (0-10)</Label>
+              <Input type="number" min={0} max={10} value={logData.mobility_score || ""} onChange={e => setLogData(p => ({ ...p, mobility_score: parseInt(e.target.value) || undefined }))} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm">Balance (0-10)</Label>
+              <Input type="number" min={0} max={10} value={logData.balance_score || ""} onChange={e => setLogData(p => ({ ...p, balance_score: parseInt(e.target.value) || undefined }))} className="mt-1" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={saveProgress} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+            <Button variant="ghost" onClick={() => setShowLogForm(false)}>Cancel</Button>
+          </div>
+        </div>
       )}
 
       {/* Summary cards */}
