@@ -169,7 +169,7 @@ export default function CoachChat() {
         setTimeout(() => {
           setTourStep("library");
           window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "library" } }));
-        }, 500);
+        }, 3000);
       }
     } catch (e) {
       setMessages((prev) => [...prev, {
