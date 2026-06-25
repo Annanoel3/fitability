@@ -233,6 +233,10 @@ export default function CoachChat() {
           [data-tour-coach-input]::placeholder {
             color: hsl(var(--foreground)) !important;
           }
+          [data-tour-coach-input]::selection {
+            background: hsl(var(--primary)) !important;
+            color: hsl(var(--primary-foreground)) !important;
+          }
         `}</style>
       }
 
