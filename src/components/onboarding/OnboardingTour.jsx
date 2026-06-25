@@ -114,37 +114,28 @@ export default function OnboardingTour({ profile, onComplete }) {
   return null;
 }
 
-function SpotlightOverlay({ icon, title, message, navLabel }) {
+function SpotlightOverlay({ icon, title, message }) {
   return (
-    <div className="fixed inset-0 z-[100] pointer-events-none">
-      {/* Dark overlay covering everything except bottom nav */}
-      <div className="absolute inset-0 bottom-20 bg-black/70 pointer-events-auto" />
-
-      {/* Centered instruction card */}
-      <div className="absolute inset-0 flex items-center justify-center px-5 pointer-events-auto">
-        <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-6 shadow-2xl text-center space-y-4">
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            {icon}
-          </div>
-          <div>
-            <h3 className="font-heading font-bold text-lg text-foreground">{title}</h3>
-            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{message}</p>
-          </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-5 pointer-events-none">
+      <style>{`
+        @keyframes pulse-scale {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.2); }
+        }
+        .animate-pulse-scale {
+          animation: pulse-scale 2s ease-in-out infinite;
+        }
+      `}</style>
+      
+      <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse-scale">
+          {icon}
+        </div>
+        <div>
+          <h3 className="font-heading font-bold text-lg text-foreground">{title}</h3>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{message}</p>
         </div>
       </div>
-
-       {/* Bouncing arrow pointing down toward nav bar */}
-       <div className={`absolute bottom-24 pointer-events-none flex flex-col items-center gap-1 animate-bounce ${
-         navLabel === "Coach" ? "left-[12%]" :
-         navLabel === "Library" ? "left-1/2 -translate-x-1/2" :
-         navLabel === "Progress" ? "right-[12%]" :
-         "left-1/2 -translate-x-1/2"
-       }`}>
-         <span className="text-white text-xs font-semibold drop-shadow">{navLabel}</span>
-         <svg className="w-8 h-8 text-primary drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
-           <path d="M12 20l-8-8h5V4h6v8h5l-8 8z" />
-         </svg>
-       </div>
     </div>
   );
 }
