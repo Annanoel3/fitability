@@ -70,9 +70,11 @@ export default function CoachChat() {
   };
 
   useEffect(() => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 0);
+    if (messages.length > 1) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 0);
+    }
   }, [messages]);
 
   useEffect(() => {
