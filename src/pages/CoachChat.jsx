@@ -58,7 +58,10 @@ export default function CoachChat() {
   const isTourCoachMessage = tourStep === "coach_message";
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const parent = messagesEndRef.current?.parentElement;
+    if (parent) {
+      parent.scrollTop = parent.scrollHeight;
+    }
   }, [messages, sending]);
 
   useEffect(() => {
