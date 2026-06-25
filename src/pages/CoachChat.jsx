@@ -220,9 +220,9 @@ export default function CoachChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="px-4 py-3 border-t border-border bg-card rounded-b-2xl">
-        {isTourCoachMessage && (
+      {/* Tour overlay */}
+      {isTourCoachMessage && (
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
           <style>{`
             @keyframes button-pulse {
               0%, 100% { transform: scale(1); }
@@ -230,9 +230,25 @@ export default function CoachChat() {
             }
             [data-tour-coach-send] {
               animation: button-pulse 1.5s ease-in-out infinite;
+              pointer-events: auto;
             }
           `}</style>
-        )}
+          <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+              <Bot className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-lg text-foreground">Great! Now say hello</h3>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                Send "Sounds good!" to confirm you're ready to start.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Input */}
+      <div className="px-4 py-2 border-t border-border bg-card rounded-b-2xl">
         <div className="flex gap-2">
           <Input
             value={input}
@@ -253,7 +269,7 @@ export default function CoachChat() {
             <Send className="w-4 h-4" />
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground text-center mt-2">
+        <p className="text-xs text-muted-foreground text-center mt-1 pb-1">
           Not medical advice. Always consult your healthcare provider.
         </p>
       </div>
