@@ -120,10 +120,17 @@ function SpotlightOverlay({ icon, title, message, navLabel }) {
       <style>{`
         @keyframes pulse-scale {
           0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.3); }
+          50% { transform: scale(1.5); }
         }
         [data-tour-nav="${navLabel}"] svg {
           animation: pulse-scale 1.5s ease-in-out infinite;
+          color: hsl(var(--primary));
+        }
+        [data-tour-nav] {
+          pointer-events: none;
+        }
+        [data-tour-nav="${navLabel}"] {
+          pointer-events: auto;
         }
       `}</style>
       
