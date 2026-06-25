@@ -50,12 +50,23 @@ export default function CoachChat() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [onboardingTourActive, setOnboardingTourActive] = useState(false);
   const messagesEndRef = useRef(null);
   const hasWelcomed = useRef(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
+
+  useEffect(() => {
+    // Listen for tour events
+    const handleTourSend = (e) => {
+      setOnboardingTourActive(true);
+      setInput(e.detail.message);
+    };
+    window.addEventListener("fitability-coach-tour-send", handleTourSend);
+    return () => window.removeEventListener("fitability-coach-tour-send", handleTourSend);
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -98,6 +109,14 @@ export default function CoachChat() {
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setSending(true);
+
+    // If on onboarding tour, dispatch event after a delay
+    if (onboardingTourActive) {
+      setTimeout(() => {
+        window.dispatchEvent(new Event("fitability-coach-message-sent"));
+        setOnboardingTourActive(false);
+      }, 500);
+    }
 
     try {
       const res = await base44.functions.invoke("coachChat", {

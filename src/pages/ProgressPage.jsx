@@ -42,6 +42,8 @@ export default function ProgressPage() {
     setShowLogForm(false);
     setLogData({});
     setSaving(false);
+    // Dispatch tour event if onboarding tour is active
+    window.dispatchEvent(new Event("fitability-progress-logged"));
   };
 
   if (loading) {
@@ -85,7 +87,7 @@ export default function ProgressPage() {
           <h1 className="text-2xl font-heading font-bold text-foreground">Progress</h1>
           <p className="text-muted-foreground mt-1">Track your journey over time.</p>
         </div>
-        <Button onClick={() => setShowLogForm(!showLogForm)} variant="outline" size="sm">
+        <Button onClick={() => setShowLogForm(!showLogForm)} variant="outline" size="sm" data-tour-log-btn>
           Log Progress
         </Button>
       </div>

@@ -190,6 +190,14 @@ export default function ExerciseLibrary() {
     return 0;
   });
 
+  // Dispatch tour event when sorting changes
+  const handleSort = (newSort) => {
+    setSortBy(newSort);
+    setTimeout(() => {
+      window.dispatchEvent(new Event("fitability-library-sorted"));
+    }, 300);
+  };
+
   const difficultyColor = {
     "Beginner": "bg-emerald-100 text-emerald-700",
     "Easy": "bg-lime-100 text-lime-700",
@@ -285,7 +293,7 @@ export default function ExerciseLibrary() {
               {MUSCLE_GROUPS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select value={sortBy} onValueChange={handleSort} data-tour-filter>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
