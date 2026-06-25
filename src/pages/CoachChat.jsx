@@ -89,12 +89,12 @@ export default function CoachChat() {
     init();
   }, []);
 
-  // Pre-fill message and disable editing during tour
+  // Pre-fill message during coach message tour step
   useEffect(() => {
-    if (isTourCoachMessage && input === "" && messages.length > 0) {
+    if (isTourCoachMessage) {
       setInput("Sounds good!");
     }
-  }, [isTourCoachMessage, messages.length]);
+  }, [isTourCoachMessage]);
 
   const sendWelcome = async (prof) => {
     setSending(true);
@@ -226,8 +226,8 @@ export default function CoachChat() {
               50% { transform: scale(1.1); }
             }
             [data-tour-coach-send] {
-              animation: button-pulse 1.5s ease-in-out infinite;
-              pointer-events: auto;
+              animation: button-pulse 1.5s ease-in-out infinite !important;
+              pointer-events: auto !important;
             }
           `}</style>
           <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
