@@ -240,31 +240,11 @@ export default function OnboardingTour({ profile, onComplete }) {
 }
 
 // Spotlight: dims all nav items except the one the user needs to tap
-function NavSpotlight({ navLabel, icon, title, message }) {
+// AppLayout handles all pointer-events / opacity / pulse via its own <style> block.
+// This component just shows the instructional card — it must NOT block the bottom nav.
+function NavSpotlight({ icon, title, message }) {
   return (
-    <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
-      <style>{`
-        @keyframes nav-pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.2); }
-        }
-        [data-tour-nav] {
-          pointer-events: none !important;
-          opacity: 0.35 !important;
-        }
-        [data-tour-nav="${navLabel}"] {
-          pointer-events: auto !important;
-          opacity: 1 !important;
-          color: hsl(var(--primary)) !important;
-        }
-        [data-tour-nav="${navLabel}"] svg {
-          animation: nav-pulse 1.2s ease-in-out infinite;
-          color: hsl(var(--primary));
-        }
-        [data-tour-nav="${navLabel}"] span {
-          color: hsl(var(--primary));
-        }
-      `}</style>
+    <div className="fixed inset-0 z-[99] pointer-events-none flex items-center justify-center px-5 pb-24">
       <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
           {icon}
