@@ -228,9 +228,11 @@ export default function CoachChat() {
           </div>
         }
 
-        {messages.map((msg, i) =>
-        <MessageBubble key={i} message={msg} isTourCoachMessage={isTourCoachMessage} />
-        )}
+        <div className="flex flex-col gap-3">
+          {messages.map((msg, i) =>
+          <MessageBubble key={i} message={msg} isTourCoachMessage={isTourCoachMessage} />
+          )}
+        </div>
 
 
         <div ref={messagesEndRef} />
