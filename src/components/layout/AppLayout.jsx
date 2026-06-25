@@ -128,9 +128,9 @@ export default function AppLayout() {
       <div className="flex items-center justify-between px-1 py-3">
         {NAV_ITEMS.map((item) => {
             const active = location.pathname === item.path;
-            const isPulsingLibrary = item.label === "Library" && window.fitabilityTourStep === "library";
-            const isPulsingProgress = item.label === "Progress" && window.fitabilityTourStep === "progress";
-            const isPulsingHome = item.label === "Home" && window.fitabilityTourStep === "home_end";
+            const isPulsingLibrary = item.label === "Library" && tourStep === "library";
+            const isPulsingProgress = item.label === "Progress" && tourStep === "progress";
+            const isPulsingHome = item.label === "Home" && tourStep === "home_end";
             return (
               <Link
                 key={item.path}
