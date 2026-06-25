@@ -250,6 +250,21 @@ export default function ExerciseLibrary() {
 
   return (
     <div className="pb-20 md:pb-6">
+      {tourStep === "library" && (
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+          <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+              <BookOpen className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-lg text-foreground">Check the Library</h3>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                Let's explore the exercise library to find movements that work for your fitness needs.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       {isTourLibrarySort && (
          <style>{`
            @keyframes button-pulse {
