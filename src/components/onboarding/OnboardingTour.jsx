@@ -119,18 +119,19 @@ function SpotlightOverlay({ icon, title, message, navLabel }) {
     <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
       <style>{`
         @keyframes pulse-scale {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.5); }
-        }
-        [data-tour-nav="${navLabel}"] svg {
-          animation: pulse-scale 1.5s ease-in-out infinite;
-          color: hsl(var(--primary));
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px hsl(var(--primary))); }
+          50% { transform: scale(1.5); filter: drop-shadow(0 0 12px hsl(var(--primary))); }
         }
         [data-tour-nav] {
+          color: hsl(var(--muted-foreground)) !important;
           pointer-events: none;
         }
         [data-tour-nav="${navLabel}"] {
+          color: hsl(var(--primary)) !important;
           pointer-events: auto;
+        }
+        [data-tour-nav="${navLabel}"] svg {
+          animation: pulse-scale 1.5s ease-in-out infinite;
         }
       `}</style>
       
