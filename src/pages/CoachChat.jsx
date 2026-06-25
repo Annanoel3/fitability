@@ -268,12 +268,15 @@ export default function CoachChat() {
           [data-tour-library-nav] {
             animation: icon-pulse 1.5s ease-in-out infinite !important;
             color: hsl(var(--primary)) !important;
+          }
+          nav {
+            pointer-events: none;
+          }
+          [data-tour-library-nav] {
             pointer-events: auto !important;
           }
           nav [data-tour-nav]:not([data-tour-library-nav]) {
-            pointer-events: none !important;
-            color: hsl(var(--muted-foreground)) !important;
-            opacity: 0.5;
+            opacity: 0.4;
           }
         `}</style>
       }
@@ -296,7 +299,7 @@ export default function CoachChat() {
 
       {/* Input */}
       <div className={`fixed bottom-16 left-0 right-0 border-t border-border bg-card px-4 py-2 ${isTourCoachMessage || tourStep === "library" ? "pointer-events-none" : ""}`}>
-        <div className="flex gap-2 items-end">
+        <div className="flex gap-2 items-center">
           <textarea
             ref={textareaRef}
             value={input}
