@@ -172,7 +172,7 @@ export default function CoachChat() {
   return (
     <div className="flex flex-col h-full max-w-2xl mx-auto overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card rounded-t-2xl">
+      <div className="flex items-center gap-3 px-4 border-b border-border bg-card rounded-t-2xl">
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
           <Bot className="w-5 h-5 text-primary" />
         </div>
