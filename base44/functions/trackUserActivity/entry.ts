@@ -20,52 +20,7 @@ Deno.serve(async (req) => {
       await base44.entities.UserProfile.update(profiles[0].id, updateData);
     }
 
-    // Determine if ad should show based on veteran status and app opens
-    const today = new Date().toISOString().split('T')[0];
-    const profile = profiles[0];
-    const isVeteran = profile?.is_veteran === true;
-    
-    let showAd = false;
-    
-    if (!isVeteran) {
-      // Non-veterans: ads on 2nd open, then up to 2 times per day max
-      let appOpens = parseInt(localStorage.getItem('app_opens') || '0') + 1;
-      localStorage.setItem('app_opens', appOpens.toString());
-      
-      let adsToday = parseInt(localStorage.getItem('ads_today') || '0');
-      const lastAdDateForDay = localStorage.getItem('last_ad_day');
-      
-      if (lastAdDateForDay !== today) {
-        adsToday = 0;
-        localStorage.setItem('last_ad_day', today);
-      }
-      
-      if ((appOpens === 2 || appOpens > 2) && adsToday < 2) {
-        showAd = true;
-        adsToday += 1;
-        localStorage.setItem('ads_today', adsToday.toString());
-      }
-    } else {
-      // Veterans: one ad every 3 opens, but max once per day
-      let veteranOpens = parseInt(localStorage.getItem('veteran_opens') || '0') + 1;
-      localStorage.setItem('veteran_opens', veteranOpens.toString());
-      
-      let adsToday = parseInt(localStorage.getItem('veteran_ads_today') || '0');
-      const lastAdDateForDay = localStorage.getItem('veteran_last_ad_day');
-      
-      if (lastAdDateForDay !== today) {
-        adsToday = 0;
-        localStorage.setItem('veteran_last_ad_day', today);
-      }
-      
-      if (veteranOpens % 3 === 0 && adsToday < 1) {
-        showAd = true;
-        adsToday += 1;
-        localStorage.setItem('veteran_ads_today', adsToday.toString());
-      }
-    }
-
-    return Response.json({ success: true, showAd });
+    return Response.json({ success: true });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
