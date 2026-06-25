@@ -214,35 +214,21 @@ export default function CoachChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Tour overlay */}
       {isTourCoachMessage && (
-        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
-          <style>{`
-            @keyframes button-pulse {
-              0%, 100% { transform: scale(1); }
-              50% { transform: scale(1.1); }
-            }
-            [data-tour-coach-send] {
-              animation: button-pulse 1.5s ease-in-out infinite !important;
-              pointer-events: auto !important;
-            }
-          `}</style>
-          <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-              <Bot className="w-7 h-7 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-heading font-bold text-lg text-foreground">Great! Now say hello</h3>
-              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                Send "Sounds good!" to confirm you're ready to start.
-              </p>
-            </div>
-          </div>
-        </div>
+        <style>{`
+          @keyframes button-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+          }
+          [data-tour-coach-send] {
+            animation: button-pulse 1.5s ease-in-out infinite !important;
+            pointer-events: auto !important;
+          }
+        `}</style>
       )}
 
       {/* Input */}
-      <div className="px-4 py-1.5 border-t border-border bg-card rounded-b-2xl">
+      <div className={`px-4 py-1.5 border-t border-border bg-card rounded-b-2xl ${isTourCoachMessage ? "pointer-events-none" : ""}`}>
         <div className="flex gap-2">
           <Input
             value={input}
@@ -250,14 +236,15 @@ export default function CoachChat() {
             onKeyDown={handleKeyDown}
             placeholder="Tell me how your workout is going…"
             className="flex-1 rounded-xl"
-            disabled={sending}
+            disabled={sending || isTourCoachMessage}
             data-tour-coach-input
           />
           <Button
             onClick={() => sendMessage()}
-            disabled={!input.trim() || sending}
+            disabled={!input.trim() || sending || !isTourCoachMessage ? false : false}
             size="icon"
             className="rounded-xl"
+            style={isTourCoachMessage ? { pointerEvents: "auto" } : {}}
             data-tour-coach-send={isTourCoachMessage ? "true" : undefined}
           >
             <Send className="w-4 h-4" />
