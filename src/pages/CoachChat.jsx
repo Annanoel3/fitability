@@ -54,8 +54,17 @@ export default function CoachChat() {
   const [profile, setProfile] = useState(null);
   const [tourStep, setTourStep] = useState(null);
   const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
   const hasWelcomed = useRef(false);
   const isTourCoachMessage = tourStep === "coach_message";
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+    }
+  };
 
   useEffect(() => {
     setTimeout(() => {
@@ -279,21 +288,23 @@ export default function CoachChat() {
 
       {/* Input */}
       <div className={`fixed bottom-16 left-0 right-0 border-t border-border bg-card px-4 py-2 ${isTourCoachMessage ? "pointer-events-none" : ""}`}>
-        <div className="flex gap-2">
-          <Input
+        <div className="flex gap-2 items-end">
+          <textarea
+            ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Tell me how your workout is going…"
-            className={`flex-1 rounded-xl py-1 my-2 ${isTourCoachMessage ? "text-foreground" : ""}`}
+            className={`flex-1 rounded-xl px-3 py-2 my-2 border border-input bg-transparent resize-none overflow-hidden ${isTourCoachMessage ? "text-foreground" : ""}`}
             disabled={sending || isTourCoachMessage}
-            data-tour-coach-input />
+            data-tour-coach-input
+            style={{ minHeight: '2.25rem', fontFamily: 'inherit', fontSize: 'inherit' }} />
           
           <Button
             onClick={() => sendMessage()}
             disabled={sendButtonDisabled()}
             size="icon"
-            className="rounded-xl my-2"
+            className="rounded-xl my-2 flex-shrink-0"
             style={isTourCoachMessage ? { pointerEvents: "auto" } : {}}
             data-tour-coach-send={isTourCoachMessage ? "true" : undefined}>
             
