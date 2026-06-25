@@ -190,6 +190,16 @@ function SpotlightOverlay({ icon, title, message, navLabel }) {
 }
 
 function CoachMessageOverlay({ onAdvance }) {
+  useEffect(() => {
+    const handleTourChange = (e) => {
+      if (e.detail.tourStep === "library") {
+        onAdvance();
+      }
+    };
+    window.addEventListener("fitability-tour-step-change", handleTourChange);
+    return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
+  }, []);
+
   return (
     <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
       <style>{`
