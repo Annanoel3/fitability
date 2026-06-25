@@ -6,45 +6,45 @@ import { Send, Bot, Loader2, CheckCircle2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 const SUGGESTIONS = [
-  "Today's workout feels too hard for me",
-  "My shoulder is hurting, can we adjust?",
-  "Make today's workout easier please",
-  "What exercises can I do for bad knees?",
-];
+"Today's workout feels too hard for me",
+"My shoulder is hurting, can we adjust?",
+"Make today's workout easier please",
+"What exercises can I do for bad knees?"];
+
 
 function MessageBubble({ message, isTourCoachMessage }) {
   const isUser = message.role === "user";
   let content = message.content;
-  
+
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
-      {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2 flex-shrink-0 mt-1">
+      {!isUser &&
+      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2 flex-shrink-0 mt-1">
           <Bot className="w-4 h-4 text-primary" />
         </div>
-      )}
+      }
       <div
         className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
-          isUser
-            ? "bg-primary text-primary-foreground rounded-tr-sm"
-            : "bg-card border border-border rounded-tl-sm"
-        }`}
-      >
-        {isUser ? (
-          <p>{message.content}</p>
-        ) : (
-          <ReactMarkdown className="prose prose-sm max-w-none [&>p]:mb-2 [&>ul]:pl-4 [&>ul]:list-disc [&>ol]:pl-4 [&>ol]:list-decimal">
+        isUser ?
+        "bg-primary text-primary-foreground rounded-tr-sm" :
+        "bg-card border border-border rounded-tl-sm"}`
+        }>
+        
+        {isUser ?
+        <p>{message.content}</p> :
+
+        <ReactMarkdown className="prose prose-sm max-w-none [&>p]:mb-2 [&>ul]:pl-4 [&>ul]:list-disc [&>ol]:pl-4 [&>ol]:list-decimal">
             {content}
           </ReactMarkdown>
-        )}
-        {message.planUpdated && (
-          <div className="flex items-center gap-1.5 mt-2 text-xs text-primary font-medium">
+        }
+        {message.planUpdated &&
+        <div className="flex items-center gap-1.5 mt-2 text-xs text-primary font-medium">
             <CheckCircle2 className="w-3.5 h-3.5" /> Workout plan updated
           </div>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 export default function CoachChat() {
@@ -105,7 +105,7 @@ export default function CoachChat() {
       const res = await base44.functions.invoke("coachChat", {
         messages: [],
         isWelcome: true,
-        profileName: prof.display_name,
+        profileName: prof.display_name
       });
       const { reply } = res.data;
       // Remove any "What can I help..." text from the reply
@@ -136,15 +136,15 @@ export default function CoachChat() {
 
     try {
       const res = await base44.functions.invoke("coachChat", {
-        messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+        messages: newMessages.map((m) => ({ role: m.role, content: m.content }))
       });
       const { reply, planUpdated, updatedMemory } = res.data;
       // Persist updated coach memory back to user profile
       if (updatedMemory && profile?.id) {
         await base44.entities.UserProfile.update(profile.id, { coach_memory: updatedMemory });
-        setProfile(prev => ({ ...prev, coach_memory: updatedMemory }));
+        setProfile((prev) => ({ ...prev, coach_memory: updatedMemory }));
       }
-      setMessages(prev => [...prev, { role: "assistant", content: reply, planUpdated }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: reply, planUpdated }]);
 
       // Auto-advance tour when user sends "Sounds good!" during coach message step
       if (isTourCoachMessage && userText.toLowerCase().includes("sounds good")) {
@@ -153,7 +153,7 @@ export default function CoachChat() {
         }, 500);
       }
     } catch (e) {
-      setMessages(prev => [...prev, {
+      setMessages((prev) => [...prev, {
         role: "assistant",
         content: "Sorry, I'm having trouble right now. Please try again in a moment."
       }]);
@@ -172,7 +172,7 @@ export default function CoachChat() {
   return (
     <div className="flex flex-col h-full max-w-2xl mx-auto overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card rounded-t-2xl">
+      <div className="flex items-center gap-3 px-4 border-b border-border bg-card rounded-t-2xl">
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
           <Bot className="w-5 h-5 text-primary" />
         </div>
@@ -184,8 +184,8 @@ export default function CoachChat() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-8">
+        {messages.length === 0 &&
+        <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-8">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
               <Bot className="w-8 h-8 text-primary" />
             </div>
@@ -196,29 +196,29 @@ export default function CoachChat() {
               </p>
             </div>
             <div className="flex flex-col gap-2 w-full max-w-xs mt-2">
-              {SUGGESTIONS.map(s => (
-                <button
-                  key={s}
-                  onClick={() => sendMessage(s)}
-                  className="text-left text-sm px-4 py-2.5 rounded-xl border border-border hover:border-primary/40 hover:bg-secondary transition-all"
-                >
+              {SUGGESTIONS.map((s) =>
+            <button
+              key={s}
+              onClick={() => sendMessage(s)}
+              className="text-left text-sm px-4 py-2.5 rounded-xl border border-border hover:border-primary/40 hover:bg-secondary transition-all">
+              
                   {s}
                 </button>
-              ))}
+            )}
             </div>
           </div>
-        )}
+        }
 
-        {messages.map((msg, i) => (
-          <MessageBubble key={i} message={msg} isTourCoachMessage={isTourCoachMessage} />
-        ))}
+        {messages.map((msg, i) =>
+        <MessageBubble key={i} message={msg} isTourCoachMessage={isTourCoachMessage} />
+        )}
 
 
         <div ref={messagesEndRef} />
       </div>
 
-      {isTourCoachMessage && (
-        <style>{`
+      {isTourCoachMessage &&
+      <style>{`
           @keyframes button-pulse {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(174, 104, 75, 0.7); }
             50% { transform: scale(1.3); box-shadow: 0 0 0 10px rgba(174, 104, 75, 0); }
@@ -234,32 +234,32 @@ export default function CoachChat() {
             color: hsl(var(--foreground)) !important;
           }
         `}</style>
-      )}
+      }
 
       {/* Input */}
-      <div className={`px-4 py-2 border-t border-border bg-card rounded-b-2xl flex-shrink-0 ${isTourCoachMessage ? "pointer-events-none" : ""}`}>
+      <div className={`px-4 border-t border-border bg-card rounded-b-2xl flex-shrink-0 ${isTourCoachMessage ? "pointer-events-none" : ""}`}>
         <div className="flex gap-2">
           <Input
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Tell me how your workout is going…"
             className={`flex-1 rounded-xl ${isTourCoachMessage ? "text-foreground" : ""}`}
             disabled={sending || isTourCoachMessage}
-            data-tour-coach-input
-          />
+            data-tour-coach-input />
+          
           <Button
             onClick={() => sendMessage()}
             disabled={!input.trim() || sending || !isTourCoachMessage ? false : false}
             size="icon"
             className="rounded-xl"
             style={isTourCoachMessage ? { pointerEvents: "auto" } : {}}
-            data-tour-coach-send={isTourCoachMessage ? "true" : undefined}
-          >
+            data-tour-coach-send={isTourCoachMessage ? "true" : undefined}>
+            
             <Send className="w-4 h-4" />
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
