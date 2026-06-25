@@ -284,7 +284,7 @@ export default function CoachChat() {
       }
 
       {tourStep === "library" &&
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+      <div className="fixed inset-0 z-20 pointer-events-none flex items-center justify-center px-5">
         <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <BookOpen className="w-7 h-7 text-primary" />
