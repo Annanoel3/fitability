@@ -14,11 +14,7 @@ const SUGGESTIONS = [
 
 function MessageBubble({ message, isTourCoachMessage }) {
   const isUser = message.role === "user";
-  // Remove "What can I help you with today?" when in tour
   let content = message.content;
-  if (isTourCoachMessage && !isUser && content.includes("What can I help you with today?")) {
-    content = content.replace(/\s*What can I help you with today\?.*$/i, "").trim();
-  }
   
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
@@ -109,9 +105,11 @@ export default function CoachChat() {
         profileName: prof.display_name,
       });
       const { reply } = res.data;
-      setMessages([{ role: "assistant", content: reply }]);
+      // Remove any "What can I help..." text from the reply
+      const cleanReply = reply.replace(/\s*What can I help you with today\?.*$/i, "").trim();
+      setMessages([{ role: "assistant", content: cleanReply }]);
     } catch (e) {
-      setMessages([{ role: "assistant", content: `Hi ${prof?.display_name || "there"}! I'm your FitAbility Coach. I'm here to help adjust your workouts, answer questions, and keep you moving safely. What's on your mind?` }]);
+      setMessages([{ role: "assistant", content: `Hi ${prof?.display_name || "there"}! I'm your FitAbility Coach. I'm here to help adjust your workouts, answer questions, and keep you moving safely.` }]);
     } finally {
       setSending(false);
     }
@@ -138,9 +136,9 @@ export default function CoachChat() {
         setProfile(prev => ({ ...prev, coach_memory: updatedMemory }));
       }
       setMessages(prev => [...prev, { role: "assistant", content: reply, planUpdated }]);
-      
-      // Advance tour if in coach message step
-      if (isTourCoachMessage) {
+
+      // Auto-advance tour when user sends "Sounds good!" during coach message step
+      if (isTourCoachMessage && userText.toLowerCase().includes("sounds good")) {
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "library" } }));
         }, 500);
@@ -206,16 +204,16 @@ export default function CoachChat() {
           <MessageBubble key={i} message={msg} isTourCoachMessage={isTourCoachMessage} />
         ))}
 
-        {sending && (
-          <div className="flex justify-start mb-4">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2 flex-shrink-0">
-              <Bot className="w-4 h-4 text-primary" />
-            </div>
-            <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-3">
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-            </div>
-          </div>
-        )}
+        {sending && !isTourCoachMessage && (
+           <div className="flex justify-start mb-4">
+             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2 flex-shrink-0">
+               <Bot className="w-4 h-4 text-primary" />
+             </div>
+             <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-3">
+               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+             </div>
+           </div>
+         )}
         <div ref={messagesEndRef} />
       </div>
 
