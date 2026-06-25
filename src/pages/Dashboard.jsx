@@ -501,6 +501,7 @@ Return the complete corrected workout in the same JSON structure.`,
     }
 
     setGenerating(false);
+    navigate("/workout");
   };
 
   if (loading) {
