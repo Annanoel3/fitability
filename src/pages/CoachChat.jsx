@@ -253,7 +253,7 @@ export default function CoachChat() {
             onKeyDown={handleKeyDown}
             placeholder="Tell me how your workout is going…"
             className="flex-1 rounded-xl"
-            disabled={sending || isTourCoachMessage}
+            disabled={sending}
             data-tour-coach-input
           />
           <Button
