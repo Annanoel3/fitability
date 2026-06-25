@@ -148,6 +148,14 @@ export default function AppLayout() {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
         }
+        ${window.fitabilityTourStep === "library" ? `
+        nav {
+          pointer-events: none;
+        }
+        [data-tour-library-nav] {
+          pointer-events: auto !important;
+        }
+        ` : ""}
         [data-tour-library-nav] {
           animation: icon-pulse 1.5s ease-in-out infinite !important;
           color: hsl(var(--primary)) !important;
