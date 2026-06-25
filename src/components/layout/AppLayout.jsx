@@ -122,6 +122,7 @@ export default function AppLayout() {
               <Link
                 key={item.path}
                 to={item.path}
+                data-tour-nav={item.label}
                 className={`flex flex-col items-center gap-0.5 flex-1 py-1 rounded-lg text-xs ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}

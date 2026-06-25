@@ -88,7 +88,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     return <SpotlightOverlay
       icon={<Bot className="w-7 h-7 text-primary" />}
       title="Meet your Coach"
-      message="Your AI fitness coach remembers your preferences and adjusts workouts going forward. Tap Coach now to meet them!"
+      message="Your AI fitness coach remembers your preferences and adjusts workouts going forward. Tap Coach to meet them!"
       navLabel="Coach"
     />;
   }
@@ -97,7 +97,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     return <SpotlightOverlay
       icon={<BookOpen className="w-7 h-7 text-primary" />}
       title="Explore the Library"
-      message="Browse every exercise filtered specifically for your abilities. Tap Library to check it out."
+      message="Browse every exercise filtered specifically for your abilities. Tap Library to explore."
       navLabel="Library"
     />;
   }
@@ -114,26 +114,32 @@ export default function OnboardingTour({ profile, onComplete }) {
   return null;
 }
 
-function SpotlightOverlay({ icon, title, message }) {
+function SpotlightOverlay({ icon, title, message, navLabel }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-5 pointer-events-none">
+    <div className="fixed inset-0 z-[100] pointer-events-none">
       <style>{`
         @keyframes pulse-scale {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.3); opacity: 0.8; }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.3); }
         }
-        .pulse-icon {
+        [data-tour-nav="${navLabel}"] svg {
           animation: pulse-scale 1.5s ease-in-out infinite;
         }
       `}</style>
       
-      <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto pulse-icon">
-          {icon}
-        </div>
-        <div>
-          <h3 className="font-heading font-bold text-lg text-foreground">{title}</h3>
-          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{message}</p>
+      {/* Dark overlay covering everything */}
+      <div className="absolute inset-0 bg-black/70 pointer-events-auto" />
+      
+      {/* Centered instruction card */}
+      <div className="absolute inset-0 flex items-center justify-center px-5 pointer-events-auto">
+        <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            {icon}
+          </div>
+          <div>
+            <h3 className="font-heading font-bold text-lg text-foreground">{title}</h3>
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{message}</p>
+          </div>
         </div>
       </div>
     </div>
