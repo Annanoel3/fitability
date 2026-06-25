@@ -142,9 +142,8 @@ export default function CoachChat() {
       // Advance tour if in coach message step
       if (isTourCoachMessage) {
         setTimeout(() => {
-          setTourStep("library");
-          window.dispatchEvent(new CustomEvent("fitability-tour-advance", { detail: { nextStep: "library" } }));
-        }, 1000);
+          window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "library" } }));
+        }, 500);
       }
     } catch (e) {
       setMessages(prev => [...prev, {
@@ -248,7 +247,7 @@ export default function CoachChat() {
       )}
 
       {/* Input */}
-      <div className="px-4 py-2 border-t border-border bg-card rounded-b-2xl">
+      <div className="px-4 py-3 border-t border-border bg-card rounded-b-2xl">
         <div className="flex gap-2">
           <Input
             value={input}
@@ -269,9 +268,6 @@ export default function CoachChat() {
             <Send className="w-4 h-4" />
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground text-center mt-1 pb-1">
-          Not medical advice. Always consult your healthcare provider.
-        </p>
       </div>
     </div>
   );
