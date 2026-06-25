@@ -202,7 +202,7 @@ export default function CoachChat() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 bg-background my-1" style={{ marginTop: '7.5rem', paddingBottom: `${140 + textareaHeight}px` }}>
+      <div className="flex-1 overflow-y-auto px-4 bg-background" style={{ marginTop: '7.5rem', paddingBottom: `${140 + textareaHeight}px` }}>
         {messages.length === 0 &&
         <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-8">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
