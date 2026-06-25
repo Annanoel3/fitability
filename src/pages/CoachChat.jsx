@@ -297,6 +297,12 @@ export default function CoachChat() {
               Let's explore the exercise library to find movements that work for your fitness needs.
             </p>
           </div>
+          <button
+            onClick={() => navigate("/exercises")}
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm"
+          >
+            Go to Library
+          </button>
         </div>
       </div>
       }
