@@ -117,8 +117,8 @@ export default function OnboardingTour({ profile, onComplete }) {
 function SpotlightOverlay({ icon, title, message, navLabel }) {
   return (
     <div className="fixed inset-0 z-[100] pointer-events-none">
-      {/* Dark overlay covering everything */}
-      <div className="absolute inset-0 bg-black/70 pointer-events-auto" />
+      {/* Dark overlay covering everything except bottom nav */}
+      <div className="absolute inset-0 bottom-20 bg-black/70 pointer-events-auto" />
 
       {/* Centered instruction card */}
       <div className="absolute inset-0 flex items-center justify-center px-5 pointer-events-auto">
@@ -133,18 +133,18 @@ function SpotlightOverlay({ icon, title, message, navLabel }) {
         </div>
       </div>
 
-      {/* Bouncing arrow pointing down toward nav bar */}
-      <div className={`absolute bottom-20 pointer-events-auto flex flex-col items-center gap-1 animate-bounce ${
-        navLabel === "Coach" ? "left-[20%]" :
-        navLabel === "Library" ? "left-[40%]" :
-        navLabel === "Progress" ? "left-[80%]" :
-        "left-1/2 -translate-x-1/2"
-      }`}>
-        <span className="text-white text-xs font-semibold drop-shadow">{navLabel}</span>
-        <svg className="w-8 h-8 text-primary drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 20l-8-8h5V4h6v8h5l-8 8z" />
-        </svg>
-      </div>
+       {/* Bouncing arrow pointing down toward nav bar */}
+       <div className={`absolute bottom-24 pointer-events-none flex flex-col items-center gap-1 animate-bounce ${
+         navLabel === "Coach" ? "left-[12%]" :
+         navLabel === "Library" ? "left-1/2 -translate-x-1/2" :
+         navLabel === "Progress" ? "right-[12%]" :
+         "left-1/2 -translate-x-1/2"
+       }`}>
+         <span className="text-white text-xs font-semibold drop-shadow">{navLabel}</span>
+         <svg className="w-8 h-8 text-primary drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+           <path d="M12 20l-8-8h5V4h6v8h5l-8 8z" />
+         </svg>
+       </div>
     </div>
   );
 }
