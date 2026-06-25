@@ -116,7 +116,7 @@ export default function OnboardingTour({ profile, onComplete }) {
 
 function SpotlightOverlay({ icon, title, message, navLabel }) {
   return (
-    <div className="fixed inset-0 z-[100] pointer-events-none">
+    <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
       <style>{`
         @keyframes pulse-scale {
           0%, 100% { transform: scale(1); }
@@ -127,19 +127,14 @@ function SpotlightOverlay({ icon, title, message, navLabel }) {
         }
       `}</style>
       
-      {/* Dark overlay covering everything */}
-      <div className="absolute inset-0 bg-black/70 pointer-events-auto" />
-      
-      {/* Centered instruction card */}
-      <div className="absolute inset-0 flex items-center justify-center px-5 pointer-events-auto">
-        <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            {icon}
-          </div>
-          <div>
-            <h3 className="font-heading font-bold text-lg text-foreground">{title}</h3>
-            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{message}</p>
-          </div>
+      {/* Centered instruction card - only this is clickable */}
+      <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+          {icon}
+        </div>
+        <div>
+          <h3 className="font-heading font-bold text-lg text-foreground">{title}</h3>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{message}</p>
         </div>
       </div>
     </div>
