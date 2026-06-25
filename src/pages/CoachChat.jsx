@@ -188,7 +188,7 @@ export default function CoachChat() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 bg-background">
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-32 bg-background">
         {messages.length === 0 &&
         <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-8">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
