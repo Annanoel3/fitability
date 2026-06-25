@@ -37,6 +37,8 @@ const ZONES = [
 export default function StepBodyMap({ data, onChange }) {
   const [view, setView] = useState("front");
   const marked = data.marked_zones || [];
+  const frontMarked = data.front_marked_zones || [];
+  const backMarked = data.back_marked_zones || [];
   const toggleRef = useRef(null);
 
   useEffect(() => {
@@ -46,10 +48,20 @@ export default function StepBodyMap({ data, onChange }) {
   }, []);
 
   const toggle = (id) => {
-    const next = marked.includes(id)
-      ? marked.filter(z => z !== id)
-      : [...marked, id];
-    onChange({ marked_zones: next });
+    const currentViewMarked = view === "front" ? frontMarked : backMarked;
+    const nextViewMarked = currentViewMarked.includes(id)
+      ? currentViewMarked.filter(z => z !== id)
+      : [...currentViewMarked, id];
+
+    const nextFrontMarked = view === "front" ? nextViewMarked : frontMarked;
+    const nextBackMarked = view === "back" ? nextViewMarked : backMarked;
+    const nextAllMarked = [...new Set([...nextFrontMarked, ...nextBackMarked])];
+
+    onChange({
+      marked_zones: nextAllMarked,
+      front_marked_zones: nextFrontMarked,
+      back_marked_zones: nextBackMarked,
+    });
   };
 
   const visibleZones = ZONES.filter(z => view === "front" ? z.front !== null : z.back !== null);
@@ -73,11 +85,7 @@ export default function StepBodyMap({ data, onChange }) {
          {["front", "back"].map(v => (
            <button
              key={v}
-             onClick={() => {
-               setView(v);
-               // Reset marked zones when switching views (keep pain areas)
-               onChange({ marked_zones: [] });
-             }}
+             onClick={() => setView(v)}
              className={`px-10 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
                view === v
                  ? "bg-primary text-primary-foreground border-primary"
@@ -99,7 +107,8 @@ export default function StepBodyMap({ data, onChange }) {
           />
           {visibleZones.map(zone => {
             const pos = view === "front" ? zone.front : zone.back;
-            const isMarked = marked.includes(zone.id);
+            const currentViewMarked = view === "front" ? frontMarked : backMarked;
+            const isMarked = currentViewMarked.includes(zone.id);
             return (
               <button
                 key={zone.id}
