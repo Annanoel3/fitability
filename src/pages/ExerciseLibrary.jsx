@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -127,6 +127,7 @@ export default function ExerciseLibrary() {
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleted, setDeleted] = useState(new Set());
+  const firstExerciseRef = React.useRef(null);
 
   useEffect(() => {
     loadExercises();
@@ -321,10 +322,18 @@ export default function ExerciseLibrary() {
         {sorted.map((ex, i) => (
           <button
             key={ex.id || i}
+            ref={i === 0 ? firstExerciseRef : null}
             onClick={() => {
               setSelectedExercise(selectedExercise?.id !== ex.id ? ex : null);
               if (i === 0 && window.fitabilityTourStep === "library_exercise") {
-                window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "first_exercise_clicked" }));
+                // Scroll to the card, then after it expands scroll again, then advance tour
+                setTimeout(() => {
+                  firstExerciseRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 100);
+                setTimeout(() => {
+                  firstExerciseRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "first_exercise_clicked" }));
+                }, 3200);
               }
             }}
             data-tour-first-exercise={i === 0 && window.fitabilityTourStep === "library_exercise" ? "true" : undefined}

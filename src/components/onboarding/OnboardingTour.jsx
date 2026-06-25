@@ -132,10 +132,9 @@ export default function OnboardingTour({ profile, onComplete }) {
   if (tourStep === "library") {
     return (
       <NavSpotlight
-        navLabel="Library"
         icon={<BookOpen className="w-7 h-7 text-primary" />}
-        title="Explore the Library"
-        message="Every exercise here is filtered for your specific abilities and equipment. Tap Library below to explore!"
+        title="Your Exercise Library"
+        message="Browse exercises filtered for your abilities, and create your own custom exercises too! Tap Library below to explore."
       />
     );
   }

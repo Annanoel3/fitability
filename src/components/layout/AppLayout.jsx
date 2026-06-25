@@ -186,13 +186,14 @@ export default function AppLayout() {
       {/* Tour pulsing styles for library, progress and home */}
       <style key={tourStep}>{`
         @keyframes icon-pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
+          0%   { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.6); border-radius: 12px; }
+          50%  { transform: scale(1.45); box-shadow: 0 0 0 14px hsl(var(--primary) / 0);  border-radius: 12px; }
+          100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.6); border-radius: 12px; }
         }
         ${["coach", "library", "progress", "home_end"].includes(tourStep) ? `
         nav > div > a {
           pointer-events: none !important;
-          opacity: 0.4 !important;
+          opacity: 0.35 !important;
         }
         nav > div > a[data-tour-coach-nav],
         nav > div > a[data-tour-library-nav],
@@ -203,20 +204,28 @@ export default function AppLayout() {
         }
         ` : ""}
         [data-tour-coach-nav] {
-          animation: ${tourStep === "coach" ? "icon-pulse 1.5s ease-in-out infinite" : "none"} !important;
+          animation: ${tourStep === "coach" ? "icon-pulse 1.1s ease-in-out infinite" : "none"} !important;
           color: ${tourStep === "coach" ? "hsl(var(--primary))" : "inherit"} !important;
+          background: ${tourStep === "coach" ? "hsl(var(--primary) / 0.15)" : "transparent"} !important;
+          border-radius: 12px !important;
         }
         [data-tour-library-nav] {
-          animation: ${tourStep === "library" ? "icon-pulse 1.5s ease-in-out infinite" : "none"} !important;
+          animation: ${tourStep === "library" ? "icon-pulse 1.1s ease-in-out infinite" : "none"} !important;
           color: ${tourStep === "library" ? "hsl(var(--primary))" : "inherit"} !important;
+          background: ${tourStep === "library" ? "hsl(var(--primary) / 0.15)" : "transparent"} !important;
+          border-radius: 12px !important;
         }
         [data-tour-progress-nav] {
-          animation: ${tourStep === "progress" ? "icon-pulse 1.5s ease-in-out infinite" : "none"} !important;
+          animation: ${tourStep === "progress" ? "icon-pulse 1.1s ease-in-out infinite" : "none"} !important;
           color: ${tourStep === "progress" ? "hsl(var(--primary))" : "inherit"} !important;
+          background: ${tourStep === "progress" ? "hsl(var(--primary) / 0.15)" : "transparent"} !important;
+          border-radius: 12px !important;
         }
         [data-tour-home-nav] {
-          animation: ${tourStep === "home_end" ? "icon-pulse 1.5s ease-in-out infinite" : "none"} !important;
+          animation: ${tourStep === "home_end" ? "icon-pulse 1.1s ease-in-out infinite" : "none"} !important;
           color: ${tourStep === "home_end" ? "hsl(var(--primary))" : "inherit"} !important;
+          background: ${tourStep === "home_end" ? "hsl(var(--primary) / 0.15)" : "transparent"} !important;
+          border-radius: 12px !important;
         }
       `}</style>
     </div>);
