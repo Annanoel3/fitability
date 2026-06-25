@@ -217,15 +217,11 @@ export default function CoachChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {(isTourCoachMessage || tourStep === "library") &&
+      {isTourCoachMessage &&
       <style>{`
           @keyframes button-pulse {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(174, 104, 75, 0.7); }
             50% { transform: scale(1.3); box-shadow: 0 0 0 10px rgba(174, 104, 75, 0); }
-          }
-          @keyframes icon-pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
           }
           [data-tour-coach-send] {
             animation: button-pulse 1.5s ease-in-out infinite !important;
@@ -241,8 +237,21 @@ export default function CoachChat() {
             background: hsl(var(--primary)) !important;
             color: hsl(var(--primary-foreground)) !important;
           }
+        `}</style>
+      }
+
+      {tourStep === "library" &&
+      <style>{`
+          @keyframes icon-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+          }
           [data-tour-library-nav] {
             animation: icon-pulse 1.5s ease-in-out infinite !important;
+            color: hsl(var(--primary)) !important;
+          }
+          nav [data-tour-nav]:not([data-tour-library-nav]) {
+            color: hsl(var(--muted-foreground)) !important;
           }
         `}</style>
       }
