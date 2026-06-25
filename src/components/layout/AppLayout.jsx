@@ -157,47 +157,27 @@ export default function AppLayout() {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
         }
-        ${tourStep === "library" ? `
         nav > div > a {
-          pointer-events: none !important;
-          opacity: 0.4 !important;
+          pointer-events: ${tourStep === "library" || tourStep === "progress" || tourStep === "home_end" ? "none" : "auto"} !important;
+          opacity: ${tourStep === "library" || tourStep === "progress" || tourStep === "home_end" ? "0.4" : "1"} !important;
         }
-        nav > div > a[data-tour-library-nav] {
-          pointer-events: auto !important;
-          opacity: 1 !important;
-        }
-        ` : ""}
-        ${tourStep === "progress" ? `
-        nav > div > a {
-          pointer-events: none !important;
-          opacity: 0.4 !important;
-        }
-        nav > div > a[data-tour-progress-nav] {
-          pointer-events: auto !important;
-          opacity: 1 !important;
-        }
-        ` : ""}
-        ${tourStep === "home_end" ? `
-        nav > div > a {
-          pointer-events: none !important;
-          opacity: 0.4 !important;
-        }
+        nav > div > a[data-tour-library-nav],
+        nav > div > a[data-tour-progress-nav],
         nav > div > a[data-tour-home-nav] {
           pointer-events: auto !important;
           opacity: 1 !important;
         }
-        ` : ""}
         [data-tour-library-nav] {
-          animation: icon-pulse 1.5s ease-in-out infinite !important;
-          color: hsl(var(--primary)) !important;
+          animation: ${tourStep === "library" ? "icon-pulse 1.5s ease-in-out infinite" : "none"} !important;
+          color: ${tourStep === "library" ? "hsl(var(--primary))" : "inherit"} !important;
         }
         [data-tour-progress-nav] {
-          animation: icon-pulse 1.5s ease-in-out infinite !important;
-          color: hsl(var(--primary)) !important;
+          animation: ${tourStep === "progress" ? "icon-pulse 1.5s ease-in-out infinite" : "none"} !important;
+          color: ${tourStep === "progress" ? "hsl(var(--primary))" : "inherit"} !important;
         }
         [data-tour-home-nav] {
-          animation: icon-pulse 1.5s ease-in-out infinite !important;
-          color: hsl(var(--primary)) !important;
+          animation: ${tourStep === "home_end" ? "icon-pulse 1.5s ease-in-out infinite" : "none"} !important;
+          color: ${tourStep === "home_end" ? "hsl(var(--primary))" : "inherit"} !important;
         }
       `}</style>
     </div>);
