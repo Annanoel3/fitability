@@ -167,9 +167,9 @@ export default function CoachChat() {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto">
+    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)] max-w-2xl mx-auto pb-0">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card rounded-t-2xl flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card rounded-t-2xl">
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
           <Bot className="w-5 h-5 text-primary" />
         </div>
@@ -180,7 +180,7 @@ export default function CoachChat() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 bg-background">
+      <div className="flex-1 overflow-y-auto px-4 py-4 bg-background">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-8">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -234,7 +234,7 @@ export default function CoachChat() {
       )}
 
       {/* Input */}
-      <div className={`px-4 py-1.5 border-t border-border bg-card rounded-b-2xl flex-shrink-0 ${isTourCoachMessage ? "pointer-events-none" : ""}`}>
+      <div className={`px-4 py-2 border-t border-border bg-card rounded-b-2xl flex-shrink-0 ${isTourCoachMessage ? "pointer-events-none" : ""}`}>
         <div className="flex gap-2">
           <Input
             value={input}
