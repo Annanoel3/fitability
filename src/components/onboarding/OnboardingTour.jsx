@@ -90,8 +90,6 @@ export default function OnboardingTour({ profile, onComplete }) {
       title="Meet your Coach"
       message="Your AI fitness coach remembers your preferences and adjusts workouts going forward. Tap Coach now to meet them!"
       navLabel="Coach"
-      navPath="/coach"
-      onNavigate={() => navigate("/coach")}
     />;
   }
 
@@ -101,8 +99,6 @@ export default function OnboardingTour({ profile, onComplete }) {
       title="Explore the Library"
       message="Browse every exercise filtered specifically for your abilities. Tap Library to check it out."
       navLabel="Library"
-      navPath="/exercises"
-      onNavigate={() => navigate("/exercises")}
     />;
   }
 
@@ -112,15 +108,13 @@ export default function OnboardingTour({ profile, onComplete }) {
       title="Track Your Progress"
       message="Watch your strength, mobility, and consistency grow over time. Tap Progress to see your dashboard."
       navLabel="Progress"
-      navPath="/progress"
-      onNavigate={() => navigate("/progress")}
     />;
   }
 
   return null;
 }
 
-function SpotlightOverlay({ icon, title, message, navLabel, onNavigate }) {
+function SpotlightOverlay({ icon, title, message, navLabel }) {
   return (
     <div className="fixed inset-0 z-[100] pointer-events-none">
       {/* Dark overlay covering everything */}
@@ -136,9 +130,6 @@ function SpotlightOverlay({ icon, title, message, navLabel, onNavigate }) {
             <h3 className="font-heading font-bold text-lg text-foreground">{title}</h3>
             <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{message}</p>
           </div>
-          <Button className="w-full gap-2" onClick={onNavigate}>
-            Go to {navLabel} <ArrowRight className="w-4 h-4" />
-          </Button>
         </div>
       </div>
 
