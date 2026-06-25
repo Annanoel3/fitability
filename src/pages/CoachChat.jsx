@@ -53,6 +53,7 @@ export default function CoachChat() {
   const [sending, setSending] = useState(false);
   const [profile, setProfile] = useState(null);
   const [tourStep, setTourStep] = useState(null);
+  const [textareaHeight, setTextareaHeight] = useState(36);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const hasWelcomed = useRef(false);
@@ -62,7 +63,9 @@ export default function CoachChat() {
     setInput(e.target.value);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+      const newHeight = Math.min(textareaRef.current.scrollHeight, 120);
+      textareaRef.current.style.height = newHeight + 'px';
+      setTextareaHeight(newHeight);
     }
   };
 
@@ -197,7 +200,7 @@ export default function CoachChat() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 pt-20 pb-32 bg-background mt-14">
+      <div className="flex-1 overflow-y-auto px-4 pt-20 bg-background mt-14" style={{ paddingBottom: `${140 + textareaHeight}px` }}>
         {messages.length === 0 &&
         <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-8">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
