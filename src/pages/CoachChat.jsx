@@ -204,16 +204,7 @@ export default function CoachChat() {
           <MessageBubble key={i} message={msg} isTourCoachMessage={isTourCoachMessage} />
         ))}
 
-        {sending && !isTourCoachMessage && (
-           <div className="flex justify-start mb-4">
-             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2 flex-shrink-0">
-               <Bot className="w-4 h-4 text-primary" />
-             </div>
-             <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-3">
-               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-             </div>
-           </div>
-         )}
+
         <div ref={messagesEndRef} />
       </div>
 
