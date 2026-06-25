@@ -43,7 +43,11 @@ Deno.serve(async (req) => {
 
     const { messages, workoutPlanId, isWelcome, profileName } = await req.json();
 
-    // Fetch user profile and relevant workout plan using service role
+     // Check if user just sent "Sounds good!" (onboarding tour acknowledgment)
+     const lastUserMessage = messages && messages.length > 0 ? messages[messages.length - 1]?.content?.toLowerCase() : '';
+     const isSoundsGoodMessage = lastUserMessage.includes('sounds good');
+
+     // Fetch user profile and relevant workout plan using service role
     const profiles = await base44.asServiceRole.entities.UserProfile.filter({ created_by_id: user.id });
     const profile = profiles[0] || null;
 
@@ -139,6 +143,14 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
     ] : [notifyTool];
 
     const systemWithContext = SYSTEM_PROMPT + "\n\n" + contextBlock;
+
+    // For "Sounds good!" message, return a simple acknowledgment without questions
+    if (isSoundsGoodMessage) {
+      return Response.json({ 
+        reply: "Great! Come back anytime to adjust your plan or update FitAbility on your progress. You've got this! 💪",
+        planUpdated: false 
+      });
+    }
 
     const chatMessages = [
       { role: "system", content: systemWithContext },
