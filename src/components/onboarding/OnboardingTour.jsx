@@ -148,8 +148,8 @@ export default function OnboardingTour({ profile, onComplete }) {
       <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-20">
         <style>{`
           @keyframes exercise-pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.25); }
-            50% { transform: scale(1.02); box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.35); }
+            50%       { transform: scale(1.06); box-shadow: 0 0 0 14px hsl(var(--primary) / 0); }
           }
           [data-tour-first-exercise="true"] {
             animation: exercise-pulse 1.5s ease-in-out infinite !important;
