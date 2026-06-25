@@ -244,7 +244,7 @@ export default function CoachChat() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Tell me how your workout is going…"
-            className={`flex-1 rounded-xl ${isTourCoachMessage ? "text-foreground" : ""}`}
+            className={`flex-1 rounded-xl py-1 my-2 ${isTourCoachMessage ? "text-foreground" : ""}`}
             disabled={sending || isTourCoachMessage}
             data-tour-coach-input />
           
