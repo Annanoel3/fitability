@@ -197,7 +197,7 @@ export default function CoachChat() {
         </div>
         <div>
           <div className="font-heading font-semibold text-sm">FitAbility Coach</div>
-          <div className="text-xs text-muted-foreground">Powered by GPT-4o · Your adaptive fitness assistant</div>
+          <div className="text-xs text-muted-foreground">Your adaptive fitness assistant</div>
         </div>
       </div>
 
