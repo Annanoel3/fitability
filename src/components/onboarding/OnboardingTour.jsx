@@ -251,11 +251,14 @@ function SortButtonOverlay({ onAdvance }) {
           <BookOpen className="w-7 h-7 text-primary" />
         </div>
         <div>
-          <h3 className="font-heading font-bold text-lg text-foreground">Filter your exercises</h3>
+          <h3 className="font-heading font-bold text-lg text-foreground">Your Exercise Library</h3>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-            Tap one of the sorting buttons above to filter exercises by difficulty, category, or position.
+            Browse exercises filtered for your specific abilities. Use the dropdowns to sort and filter by category, position, or difficulty.
           </p>
         </div>
+        <Button className="w-full h-11 gap-2" onClick={onAdvance}>
+          Next <ArrowRight className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );
