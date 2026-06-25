@@ -48,11 +48,20 @@ export default function AppLayout() {
           <nav className="hidden md:flex items-center gap-1">
             {NAV_ITEMS.map((item) => {
               const active = location.pathname === item.path;
+              const tourActive = ["coach", "coach_message", "library", "progress", "home_end"].includes(tourStep);
+              const isAllowed =
+                (item.label === "Coach" && (tourStep === "coach" || tourStep === "coach_message")) ||
+                (item.label === "Library" && tourStep === "library") ||
+                (item.label === "Progress" && tourStep === "progress") ||
+                (item.label === "Home" && tourStep === "home_end");
+              const locked = tourActive && !isAllowed;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
+                  onClick={locked ? (e) => e.preventDefault() : undefined}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  locked ? "opacity-40 cursor-not-allowed" :
                   active ?
                   "bg-primary text-primary-foreground" :
                   "text-muted-foreground hover:text-foreground hover:bg-muted"}`
@@ -128,6 +137,7 @@ export default function AppLayout() {
       <div className="flex items-center justify-between px-1 py-3">
         {NAV_ITEMS.map((item) => {
             const active = location.pathname === item.path;
+            const isPulsingCoach = item.label === "Coach" && (tourStep === "coach" || tourStep === "coach_message");
             const isPulsingLibrary = item.label === "Library" && tourStep === "library";
             const isPulsingProgress = item.label === "Progress" && tourStep === "progress";
             const isPulsingHome = item.label === "Home" && tourStep === "home_end";
@@ -136,6 +146,7 @@ export default function AppLayout() {
                 key={item.path}
                 to={item.path}
                 data-tour-nav={item.label}
+                data-tour-coach-nav={isPulsingCoach ? "true" : undefined}
                 data-tour-library-nav={isPulsingLibrary ? "true" : undefined}
                 data-tour-progress-nav={isPulsingProgress ? "true" : undefined}
                 data-tour-home-nav={isPulsingHome ? "true" : undefined}
@@ -157,15 +168,22 @@ export default function AppLayout() {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
         }
+        ${["coach", "coach_message", "library", "progress", "home_end"].includes(tourStep) ? `
         nav > div > a {
-          pointer-events: ${tourStep === "library" || tourStep === "progress" || tourStep === "home_end" ? "none" : "auto"} !important;
-          opacity: ${tourStep === "library" || tourStep === "progress" || tourStep === "home_end" ? "0.4" : "1"} !important;
+          pointer-events: none !important;
+          opacity: 0.4 !important;
         }
+        nav > div > a[data-tour-coach-nav],
         nav > div > a[data-tour-library-nav],
         nav > div > a[data-tour-progress-nav],
         nav > div > a[data-tour-home-nav] {
           pointer-events: auto !important;
           opacity: 1 !important;
+        }
+        ` : ""}
+        [data-tour-coach-nav] {
+          animation: ${tourStep === "coach" ? "icon-pulse 1.5s ease-in-out infinite" : "none"} !important;
+          color: ${tourStep === "coach" ? "hsl(var(--primary))" : "inherit"} !important;
         }
         [data-tour-library-nav] {
           animation: ${tourStep === "library" ? "icon-pulse 1.5s ease-in-out infinite" : "none"} !important;
