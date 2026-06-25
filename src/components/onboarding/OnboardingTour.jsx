@@ -145,7 +145,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   // ── LIBRARY EXERCISE — pulse first exercise card, wait for tap ──
   if (tourStep === "library_exercise") {
     return (
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-32">
+      <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-20">
         <style>{`
           @keyframes exercise-pulse {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.25); }
@@ -165,7 +165,7 @@ export default function OnboardingTour({ profile, onComplete }) {
           <div>
             <h3 className="font-heading font-bold text-base text-foreground">Your Exercise Library</h3>
             <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-              Tap the first exercise above to see its details and modifications.
+              Scroll down and tap the first exercise to see its details and modifications.
             </p>
           </div>
         </div>
