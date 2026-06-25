@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Dumbbell, Loader2, Shield, Plus, Trash2 } from "lucide-react";
+import { Search, Dumbbell, Loader2, Shield, Plus, Trash2, BookOpen } from "lucide-react";
 import CreateExerciseModal from "@/components/library/CreateExerciseModal";
 
 const CATEGORIES = ["All", "Warmup", "Strength", "Cardio", "Balance", "Flexibility", "Cooldown", "Breathing", "Recovery"];
@@ -127,9 +127,25 @@ export default function ExerciseLibrary() {
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleted, setDeleted] = useState(new Set());
+  const [tourStep, setTourStep] = useState(null);
+  const isTourLibrarySort = tourStep === "library_sort";
 
   useEffect(() => {
     loadExercises();
+  }, []);
+
+  useEffect(() => {
+    const handleTourChange = (e) => {
+      setTourStep(e.detail.tourStep);
+      if (e.detail.tourStep === "library_sort") {
+        setSortBy("Name"); // Reset to default so they can click any button
+      }
+    };
+    window.addEventListener("fitability-tour-step-change", handleTourChange);
+    if (window.fitabilityTourStep) {
+      setTourStep(window.fitabilityTourStep);
+    }
+    return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
   }, []);
 
   const loadExercises = async () => {
@@ -222,6 +238,32 @@ export default function ExerciseLibrary() {
 
   return (
     <div className="pb-20 md:pb-6">
+      {isTourLibrarySort && (
+        <style>{`
+          @keyframes button-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+          [data-tour-sort-button] {
+            animation: button-pulse 1.5s ease-in-out infinite;
+          }
+        `}</style>
+      )}
+      {isTourLibrarySort && (
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+          <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+              <BookOpen className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-lg text-foreground">Filter your exercises</h3>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                Tap one of the sorting buttons above to filter exercises by difficulty, category, or position.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       {showCreateModal && (
         <CreateExerciseModal 
           onClose={() => setShowCreateModal(false)}
@@ -285,8 +327,16 @@ export default function ExerciseLibrary() {
               {MUSCLE_GROUPS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger>
+          <Select value={sortBy} onValueChange={(val) => {
+            setSortBy(val);
+            if (isTourLibrarySort) {
+              setTimeout(() => {
+                setTourStep("progress");
+                window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "progress" } }));
+              }, 500);
+            }
+          }}>
+            <SelectTrigger data-tour-sort-button={isTourLibrarySort ? "true" : undefined}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

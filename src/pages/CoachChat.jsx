@@ -50,12 +50,27 @@ export default function CoachChat() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [tourStep, setTourStep] = useState(null);
   const messagesEndRef = useRef(null);
   const hasWelcomed = useRef(false);
+  const isTourCoachMessage = tourStep === "coach_message";
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
+
+  useEffect(() => {
+    // Listen for tour step changes
+    const handleTourChange = (e) => {
+      setTourStep(e.detail.tourStep);
+    };
+    window.addEventListener("fitability-tour-step-change", handleTourChange);
+    // Set initial tour step if already active
+    if (window.fitabilityTourStep) {
+      setTourStep(window.fitabilityTourStep);
+    }
+    return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -71,6 +86,13 @@ export default function CoachChat() {
     };
     init();
   }, []);
+
+  // Pre-fill message during tour
+  useEffect(() => {
+    if (isTourCoachMessage && input === "") {
+      setInput("Sounds good!");
+    }
+  }, [isTourCoachMessage]);
 
   const sendWelcome = async (prof) => {
     setSending(true);
@@ -110,6 +132,14 @@ export default function CoachChat() {
         setProfile(prev => ({ ...prev, coach_memory: updatedMemory }));
       }
       setMessages(prev => [...prev, { role: "assistant", content: reply, planUpdated }]);
+      
+      // Advance tour if in coach message step
+      if (isTourCoachMessage) {
+        setTimeout(() => {
+          setTourStep("library");
+          window.dispatchEvent(new CustomEvent("fitability-tour-advance", { detail: { nextStep: "library" } }));
+        }, 1000);
+      }
     } catch (e) {
       setMessages(prev => [...prev, {
         role: "assistant",
@@ -186,20 +216,33 @@ export default function CoachChat() {
 
       {/* Input */}
       <div className="px-4 py-3 border-t border-border bg-card rounded-b-2xl">
+        {isTourCoachMessage && (
+          <style>{`
+            @keyframes button-pulse {
+              0%, 100% { transform: scale(1); }
+              50% { transform: scale(1.1); }
+            }
+            [data-tour-coach-send] {
+              animation: button-pulse 1.5s ease-in-out infinite;
+            }
+          `}</style>
+        )}
         <div className="flex gap-2">
           <Input
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={e => !isTourCoachMessage && setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Tell me how your workout is going…"
             className="flex-1 rounded-xl"
             disabled={sending}
+            data-tour-coach-input
           />
           <Button
             onClick={() => sendMessage()}
             disabled={!input.trim() || sending}
             size="icon"
             className="rounded-xl"
+            data-tour-coach-send={isTourCoachMessage ? "true" : undefined}
           >
             <Send className="w-4 h-4" />
           </Button>

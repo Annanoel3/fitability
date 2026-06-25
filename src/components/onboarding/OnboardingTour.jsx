@@ -12,28 +12,52 @@ import { Button } from "@/components/ui/button";
 
 const TOUR_STEP_WELCOME = "welcome";
 const TOUR_STEP_COACH = "coach";
+const TOUR_STEP_COACH_MESSAGE = "coach_message";
 const TOUR_STEP_LIBRARY = "library";
+const TOUR_STEP_LIBRARY_SORT = "library_sort";
 const TOUR_STEP_PROGRESS = "progress";
+const TOUR_STEP_PROGRESS_LOG = "progress_log";
+const TOUR_STEP_HOME_END = "home_end";
 const TOUR_STEP_DONE = "done";
 
-const TOUR_ORDER = [TOUR_STEP_WELCOME, TOUR_STEP_COACH, TOUR_STEP_LIBRARY, TOUR_STEP_PROGRESS, TOUR_STEP_DONE];
+const TOUR_ORDER = [TOUR_STEP_WELCOME, TOUR_STEP_COACH, TOUR_STEP_COACH_MESSAGE, TOUR_STEP_LIBRARY, TOUR_STEP_LIBRARY_SORT, TOUR_STEP_PROGRESS, TOUR_STEP_PROGRESS_LOG, TOUR_STEP_HOME_END, TOUR_STEP_DONE];
 
 export default function OnboardingTour({ profile, onComplete }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [tourStep, setTourStep] = useState(TOUR_STEP_WELCOME);
 
+  // Dispatch tour step changes to window so other pages can listen
+  useEffect(() => {
+    window.fitabilityTourStep = tourStep;
+    window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep } }));
+  }, [tourStep]);
+
   // When user navigates to the right page, advance the tour
   useEffect(() => {
     if (tourStep === TOUR_STEP_COACH && location.pathname === "/coach") {
-      // Give them a moment to land on the page before advancing
-      setTimeout(() => setTourStep(TOUR_STEP_LIBRARY), 3500);
+      // Transition to coach message step
+      setTimeout(() => setTourStep(TOUR_STEP_COACH_MESSAGE), 500);
+    }
+    if (tourStep === TOUR_STEP_COACH_MESSAGE && location.pathname === "/coach") {
+      // Stay here until user sends the pre-filled message (handled externally via prop)
     }
     if (tourStep === TOUR_STEP_LIBRARY && location.pathname === "/exercises") {
-      setTimeout(() => setTourStep(TOUR_STEP_PROGRESS), 2000);
+      // Transition to library sort step
+      setTimeout(() => setTourStep(TOUR_STEP_LIBRARY_SORT), 500);
+    }
+    if (tourStep === TOUR_STEP_LIBRARY_SORT && location.pathname === "/exercises") {
+      // Stay here until user clicks a sort button (handled externally via prop)
     }
     if (tourStep === TOUR_STEP_PROGRESS && location.pathname === "/progress") {
-      setTimeout(() => completeTour(), 2000);
+      // Transition to progress log step
+      setTimeout(() => setTourStep(TOUR_STEP_PROGRESS_LOG), 500);
+    }
+    if (tourStep === TOUR_STEP_PROGRESS_LOG && location.pathname === "/progress") {
+      // Stay here until user clicks log progress (handled externally via prop)
+    }
+    if (tourStep === TOUR_STEP_HOME_END && location.pathname === "/") {
+      // Show ending message
     }
   }, [location.pathname, tourStep]);
 
@@ -88,9 +112,13 @@ export default function OnboardingTour({ profile, onComplete }) {
     return <SpotlightOverlay
       icon={<Bot className="w-7 h-7 text-primary" />}
       title="Meet your Coach"
-      message="Your AI fitness coach remembers your preferences and adjusts workouts going forward. Tap Coach to meet them!"
+      message="Your AI fitness coach remembers your preferences, adjusts workouts, and can help with any improving or worsening conditions. Tap Coach to meet them!"
       navLabel="Coach"
     />;
+  }
+
+  if (tourStep === TOUR_STEP_COACH_MESSAGE) {
+    return <CoachMessageOverlay onAdvance={() => setTourStep(TOUR_STEP_LIBRARY)} />;
   }
 
   if (tourStep === TOUR_STEP_LIBRARY) {
@@ -102,6 +130,10 @@ export default function OnboardingTour({ profile, onComplete }) {
     />;
   }
 
+  if (tourStep === TOUR_STEP_LIBRARY_SORT) {
+    return <SortButtonOverlay onAdvance={() => setTourStep(TOUR_STEP_PROGRESS)} />;
+  }
+
   if (tourStep === TOUR_STEP_PROGRESS) {
     return <SpotlightOverlay
       icon={<TrendingUp className="w-7 h-7 text-primary" />}
@@ -109,6 +141,14 @@ export default function OnboardingTour({ profile, onComplete }) {
       message="Watch your strength, mobility, and consistency grow over time. Tap Progress to see your dashboard."
       navLabel="Progress"
     />;
+  }
+
+  if (tourStep === TOUR_STEP_PROGRESS_LOG) {
+    return <LogProgressOverlay onAdvance={() => setTourStep(TOUR_STEP_HOME_END)} />;
+  }
+
+  if (tourStep === TOUR_STEP_HOME_END) {
+    return <HomeEndingOverlay onAdvance={() => completeTour()} />;
   }
 
   return null;
@@ -144,6 +184,117 @@ function SpotlightOverlay({ icon, title, message, navLabel }) {
           <h3 className="font-heading font-bold text-lg text-foreground">{title}</h3>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{message}</p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CoachMessageOverlay({ onAdvance }) {
+  return (
+    <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+      <style>{`
+        @keyframes button-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+        [data-tour-coach-send] {
+          animation: button-pulse 1.5s ease-in-out infinite !important;
+          pointer-events: auto;
+        }
+        [data-tour-coach-input] {
+          pointer-events: auto;
+        }
+        [data-tour-coach-overlay] {
+          pointer-events: auto;
+        }
+      `}</style>
+      <div data-tour-coach-overlay className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+          <Bot className="w-7 h-7 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-heading font-bold text-lg text-foreground">Great! Now say hello</h3>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            Send "Sounds good!" to confirm you're ready to start.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SortButtonOverlay({ onAdvance }) {
+  return (
+    <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+      <style>{`
+        @keyframes button-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        [data-tour-sort-button] {
+          animation: button-pulse 1.5s ease-in-out infinite !important;
+          pointer-events: auto;
+        }
+      `}</style>
+      <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+          <BookOpen className="w-7 h-7 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-heading font-bold text-lg text-foreground">Filter your exercises</h3>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            Tap one of the sorting buttons above to filter exercises by difficulty, category, or position.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LogProgressOverlay({ onAdvance }) {
+  return (
+    <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+      <style>{`
+        @keyframes button-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        [data-tour-log-button] {
+          animation: button-pulse 1.5s ease-in-out infinite !important;
+          pointer-events: auto;
+        }
+      `}</style>
+      <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+          <TrendingUp className="w-7 h-7 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-heading font-bold text-lg text-foreground">Log your progress</h3>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            Tap "Log Progress" to record your activity, mood, energy, and pain levels so we can track your journey.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HomeEndingOverlay({ onAdvance }) {
+  return (
+    <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+      <div className="bg-card rounded-3xl border border-border w-full max-w-sm p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+          <span className="text-3xl">🎯</span>
+        </div>
+        <div>
+          <h3 className="font-heading font-bold text-xl text-foreground">You're all set!</h3>
+          <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+            You now know all the essentials. Check in daily, adjust with your Coach, and track your progress over time. For any questions, just visit Coach anytime.
+          </p>
+        </div>
+        <Button className="w-full h-12 text-base" onClick={onAdvance}>
+          Let's go! <ArrowRight className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );
