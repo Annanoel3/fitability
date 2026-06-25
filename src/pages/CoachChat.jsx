@@ -12,8 +12,14 @@ const SUGGESTIONS = [
   "What exercises can I do for bad knees?",
 ];
 
-function MessageBubble({ message }) {
+function MessageBubble({ message, isTourCoachMessage }) {
   const isUser = message.role === "user";
+  // Remove "What can I help you with today?" when in tour
+  let content = message.content;
+  if (isTourCoachMessage && !isUser && content.includes("What can I help you with today?")) {
+    content = content.replace(/\s*What can I help you with today\?.*$/i, "").trim();
+  }
+  
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
       {!isUser && (
@@ -32,7 +38,7 @@ function MessageBubble({ message }) {
           <p>{message.content}</p>
         ) : (
           <ReactMarkdown className="prose prose-sm max-w-none [&>p]:mb-2 [&>ul]:pl-4 [&>ul]:list-disc [&>ol]:pl-4 [&>ol]:list-decimal">
-            {message.content}
+            {content}
           </ReactMarkdown>
         )}
         {message.planUpdated && (
@@ -87,12 +93,12 @@ export default function CoachChat() {
     init();
   }, []);
 
-  // Pre-fill message during tour
+  // Pre-fill message and disable editing during tour
   useEffect(() => {
-    if (isTourCoachMessage && input === "") {
+    if (isTourCoachMessage && input === "" && messages.length > 0) {
       setInput("Sounds good!");
     }
-  }, [isTourCoachMessage]);
+  }, [isTourCoachMessage, messages.length]);
 
   const sendWelcome = async (prof) => {
     setSending(true);
@@ -198,7 +204,7 @@ export default function CoachChat() {
         )}
 
         {messages.map((msg, i) => (
-          <MessageBubble key={i} message={msg} />
+          <MessageBubble key={i} message={msg} isTourCoachMessage={isTourCoachMessage} />
         ))}
 
         {sending && (
@@ -230,11 +236,11 @@ export default function CoachChat() {
         <div className="flex gap-2">
           <Input
             value={input}
-            onChange={e => !isTourCoachMessage && setInput(e.target.value)}
+            onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Tell me how your workout is going…"
             className="flex-1 rounded-xl"
-            disabled={sending}
+            disabled={sending || isTourCoachMessage}
             data-tour-coach-input
           />
           <Button
