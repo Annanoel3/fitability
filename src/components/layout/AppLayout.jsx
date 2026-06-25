@@ -186,9 +186,9 @@ export default function AppLayout() {
       {/* Tour pulsing styles for library, progress and home */}
       <style key={tourStep}>{`
         @keyframes icon-pulse {
-          0%   { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.6); border-radius: 12px; }
-          50%  { transform: scale(1.45); box-shadow: 0 0 0 14px hsl(var(--primary) / 0);  border-radius: 12px; }
-          100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.6); border-radius: 12px; }
+          0%   { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.25); border-radius: 12px; }
+          50%  { transform: scale(1.45); box-shadow: 0 0 0 10px hsl(var(--primary) / 0);  border-radius: 12px; }
+          100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.25); border-radius: 12px; }
         }
         ${["coach", "library", "progress", "home_end"].includes(tourStep) ? `
         nav > div > a {
