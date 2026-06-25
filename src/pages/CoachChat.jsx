@@ -24,7 +24,7 @@ function MessageBubble({ message, isTourCoachMessage }) {
         </div>
       }
       <div
-        className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+        className={`max-w-[80%] px-4 text-sm py-2 ${
         isUser ?
         "bg-primary text-primary-foreground rounded-tr-sm" :
         "bg-card border border-border rounded-tl-sm"}`
@@ -114,7 +114,7 @@ export default function CoachChat() {
 
   // Auto-disable send button during coach message step
   const sendButtonDisabled = () => {
-    return !input.trim() || sending || (isTourCoachMessage && input !== "Sounds good!");
+    return !input.trim() || sending || isTourCoachMessage && input !== "Sounds good!";
   };
 
   const sendWelcome = async (prof) => {
