@@ -20,7 +20,34 @@ Deno.serve(async (req) => {
       await base44.entities.UserProfile.update(profiles[0].id, updateData);
     }
 
-    return Response.json({ success: true });
+    // Determine if ad should show based on veteran status and app opens
+    const today = new Date().toISOString().split('T')[0];
+    const profile = profiles[0];
+    const isVeteran = profile?.is_veteran === true;
+    
+    let showAd = false;
+    
+    if (!isVeteran) {
+      // Non-veterans: ads on 2nd open, then once per day
+      let appOpens = parseInt(localStorage.getItem('app_opens') || '0') + 1;
+      localStorage.setItem('app_opens', appOpens.toString());
+      
+      const lastAdDate = localStorage.getItem('last_ad_date');
+      if (appOpens === 2 || (appOpens > 2 && lastAdDate !== today)) {
+        showAd = true;
+        localStorage.setItem('last_ad_date', today);
+      }
+    } else {
+      // Veterans: one ad every 3 opens
+      let veteranOpens = parseInt(localStorage.getItem('veteran_opens') || '0') + 1;
+      localStorage.setItem('veteran_opens', veteranOpens.toString());
+      
+      if (veteranOpens % 3 === 0) {
+        showAd = true;
+      }
+    }
+
+    return Response.json({ success: true, showAd });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

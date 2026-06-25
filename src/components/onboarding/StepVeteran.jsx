@@ -63,9 +63,14 @@ export default function StepVeteran({ data, onChange }) {
           <div className="flex items-center gap-2 text-primary font-semibold text-sm">
             <Shield className="w-4 h-4" /> Thank you for your service 🇺🇸
           </div>
-          <p className="text-sm text-muted-foreground">
-            You have <strong>free lifetime access</strong> to FitAbility.
-          </p>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              You have <strong>free lifetime access</strong> to FitAbility.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Plus, you'll see <strong>significantly fewer ads</strong> — one every few uses instead of daily.
+            </p>
+          </div>
 
           {/* Organizations — optional */}
           <button
