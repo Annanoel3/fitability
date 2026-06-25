@@ -11,11 +11,13 @@ import {
   ChevronRight, Eye, Save, MessageSquare, Sun, Moon
 } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
+import { useAccessibility } from "@/lib/AccessibilityContext";
 import EquipmentEditor from "@/components/settings/EquipmentEditor";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { dark, toggle } = useTheme();
+  const { updatePrefs } = useAccessibility();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -204,7 +206,7 @@ export default function SettingsPage() {
           </div>
           <Switch
             checked={prefs.large_text || false}
-            onCheckedChange={v => updateProfile({ accessibility_preferences: { ...prefs, large_text: v } })}
+            onCheckedChange={v => { const next = { ...prefs, large_text: v }; updateProfile({ accessibility_preferences: next }); updatePrefs(next); }}
           />
         </div>
 
@@ -215,7 +217,7 @@ export default function SettingsPage() {
           </div>
           <Switch
             checked={prefs.high_contrast || false}
-            onCheckedChange={v => updateProfile({ accessibility_preferences: { ...prefs, high_contrast: v } })}
+            onCheckedChange={v => { const next = { ...prefs, high_contrast: v }; updateProfile({ accessibility_preferences: next }); updatePrefs(next); }}
           />
         </div>
 
@@ -226,7 +228,7 @@ export default function SettingsPage() {
           </div>
           <Switch
             checked={prefs.simplified || false}
-            onCheckedChange={v => updateProfile({ accessibility_preferences: { ...prefs, simplified: v } })}
+            onCheckedChange={v => { const next = { ...prefs, simplified: v }; updateProfile({ accessibility_preferences: next }); updatePrefs(next); }}
           />
         </div>
       </div>

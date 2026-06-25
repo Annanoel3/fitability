@@ -92,3 +92,30 @@
     @apply bg-background text-foreground font-body;
   }
 }
+
+/* Accessibility: Large Text */
+.large-text {
+  font-size: 112%;
+}
+
+/* Accessibility: High Contrast */
+.high-contrast {
+  --foreground: 0 0% 0%;
+  --muted-foreground: 0 0% 20%;
+  --border: 0 0% 40%;
+  --primary: 174 80% 28%;
+}
+.dark.high-contrast {
+  --foreground: 0 0% 100%;
+  --muted-foreground: 0 0% 80%;
+  --border: 0 0% 70%;
+  --primary: 174 70% 55%;
+}
+
+/* Accessibility: Simplified — hide decorative secondary elements */
+.simplified .text-muted-foreground {
+  display: none;
+}
+.simplified [data-simplified-hide] {
+  display: none;
+}
