@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, Loader2, CheckCircle2 } from "lucide-react";
+import { Send, Bot, Loader2, CheckCircle2, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 const SUGGESTIONS = [
@@ -148,6 +148,7 @@ export default function CoachChat() {
       // Auto-advance tour when user sends "Sounds good!" during coach message step
       if (isTourCoachMessage && userText.toLowerCase().includes("sounds good")) {
         setTimeout(() => {
+          setTourStep("library");
           window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "library" } }));
         }, 500);
       }
@@ -216,11 +217,15 @@ export default function CoachChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {isTourCoachMessage &&
+      {(isTourCoachMessage || tourStep === "library") &&
       <style>{`
           @keyframes button-pulse {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(174, 104, 75, 0.7); }
             50% { transform: scale(1.3); box-shadow: 0 0 0 10px rgba(174, 104, 75, 0); }
+          }
+          @keyframes icon-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
           }
           [data-tour-coach-send] {
             animation: button-pulse 1.5s ease-in-out infinite !important;
@@ -236,7 +241,26 @@ export default function CoachChat() {
             background: hsl(var(--primary)) !important;
             color: hsl(var(--primary-foreground)) !important;
           }
+          [data-tour-library-nav] {
+            animation: icon-pulse 1.5s ease-in-out infinite !important;
+          }
         `}</style>
+      }
+
+      {tourStep === "library" &&
+      <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+        <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <BookOpen className="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-heading font-bold text-lg text-foreground">Check the Library</h3>
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+              Let's explore the exercise library to find movements that work for your fitness needs.
+            </p>
+          </div>
+        </div>
+      </div>
       }
 
       {/* Input */}

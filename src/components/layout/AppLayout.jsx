@@ -123,10 +123,11 @@ export default function AppLayout() {
                 key={item.path}
                 to={item.path}
                 data-tour-nav={item.label}
+                data-tour-library-nav={item.label === "Library" && window.fitabilityTourStep === "library" ? "true" : undefined}
                 className={`flex flex-col items-center gap-0.5 flex-1 py-1 rounded-lg text-xs ${
                 active ? "text-primary" : "text-muted-foreground"}`
                 }>
-                
+
                 <item.icon className="w-5 h-5" />
                 <span className="text-[10px] leading-tight">{item.label}</span>
               </Link>);
