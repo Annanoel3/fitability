@@ -223,16 +223,26 @@ function CoachMessageOverlay({ onAdvance }) {
 }
 
 function SortButtonOverlay({ onAdvance }) {
+  // Listen for the user clicking the first exercise in the library
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail === "first_exercise_clicked") onAdvance();
+    };
+    window.addEventListener("fitability-tour-action", handler);
+    return () => window.removeEventListener("fitability-tour-action", handler);
+  }, [onAdvance]);
+
   return (
     <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
       <style>{`
-        @keyframes button-pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
+        @keyframes exercise-pulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5); }
+          50% { transform: scale(1.02); box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
         }
-        [data-tour-sort-button] {
-          animation: button-pulse 1.5s ease-in-out infinite !important;
-          pointer-events: auto;
+        [data-tour-first-exercise] {
+          animation: exercise-pulse 1.5s ease-in-out infinite !important;
+          border-color: hsl(var(--primary)) !important;
+          pointer-events: auto !important;
         }
       `}</style>
       <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
@@ -242,28 +252,34 @@ function SortButtonOverlay({ onAdvance }) {
         <div>
           <h3 className="font-heading font-bold text-lg text-foreground">Your Exercise Library</h3>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-            Browse exercises filtered for your specific abilities. Use the dropdowns to sort and filter by category, position, or difficulty.
+            Every exercise here is filtered for your specific abilities. Tap the first exercise below to see its details.
           </p>
         </div>
-        <Button className="w-full h-11 gap-2" onClick={onAdvance}>
-          Next <ArrowRight className="w-4 h-4" />
-        </Button>
       </div>
     </div>
   );
 }
 
 function LogProgressOverlay({ onAdvance }) {
+  // Listen for the user saving a progress log
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail === "progress_logged") onAdvance();
+    };
+    window.addEventListener("fitability-tour-action", handler);
+    return () => window.removeEventListener("fitability-tour-action", handler);
+  }, [onAdvance]);
+
   return (
     <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
       <style>{`
         @keyframes button-pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
+          0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5); }
+          50% { transform: scale(1.05); box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
         }
         [data-tour-log-button] {
           animation: button-pulse 1.5s ease-in-out infinite !important;
-          pointer-events: auto;
+          pointer-events: auto !important;
         }
       `}</style>
       <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
@@ -273,7 +289,7 @@ function LogProgressOverlay({ onAdvance }) {
         <div>
           <h3 className="font-heading font-bold text-lg text-foreground">Log your progress</h3>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-            Tap "Log Progress" to record your activity, mood, energy, and pain levels so we can track your journey.
+            Tap the "Log Progress" button to record your activity and how you're feeling. This helps track your journey over time.
           </p>
         </div>
       </div>
