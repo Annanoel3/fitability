@@ -141,12 +141,24 @@ export default function AppLayout() {
       </div>
       </nav>
 
-      {/* Tour pulsing styles for progress and home */}
-      {(window.fitabilityTourStep === "progress" || window.fitabilityTourStep === "home_end") &&
+      {/* Tour pulsing styles for library, progress and home */}
+      {window.fitabilityTourStep &&
       <style>{`
         @keyframes icon-pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
+        }
+        ${window.fitabilityTourStep === "library" ? `
+        nav {
+          pointer-events: none;
+        }
+        [data-tour-library-nav] {
+          pointer-events: auto !important;
+        }
+        ` : ""}
+        [data-tour-library-nav] {
+          animation: icon-pulse 1.5s ease-in-out infinite !important;
+          color: hsl(var(--primary)) !important;
         }
         [data-tour-progress-nav] {
           animation: icon-pulse 1.5s ease-in-out infinite !important;
