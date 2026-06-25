@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Bot, BookOpen, TrendingUp, ArrowRight, X } from "lucide-react";
@@ -26,6 +26,8 @@ export default function OnboardingTour({ profile, onComplete }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [tourStep, setTourStep] = useState(TOUR_STEP_WELCOME);
+  const tourStepRef = useRef(tourStep);
+  useEffect(() => { tourStepRef.current = tourStep; }, [tourStep]);
 
   // Dispatch tour step changes to window so other pages can listen
   useEffect(() => {
@@ -36,30 +38,26 @@ export default function OnboardingTour({ profile, onComplete }) {
   // When user navigates to the right page, advance the tour
   useEffect(() => {
     if (tourStep === TOUR_STEP_COACH && location.pathname === "/coach") {
-      // Transition to coach message step
       setTimeout(() => setTourStep(TOUR_STEP_COACH_MESSAGE), 500);
     }
-    if (tourStep === TOUR_STEP_COACH_MESSAGE && location.pathname === "/coach") {
-      // Stay here until user sends the pre-filled message (handled externally via prop)
-    }
     if (tourStep === TOUR_STEP_LIBRARY && location.pathname === "/exercises") {
-      // Transition to library sort step
       setTimeout(() => setTourStep(TOUR_STEP_LIBRARY_SORT), 500);
     }
-    if (tourStep === TOUR_STEP_LIBRARY_SORT && location.pathname === "/exercises") {
-      // Stay here until user clicks a sort button (handled externally via prop)
-    }
     if (tourStep === TOUR_STEP_PROGRESS && location.pathname === "/progress") {
-      // Transition to progress log step
       setTimeout(() => setTourStep(TOUR_STEP_PROGRESS_LOG), 500);
     }
-    if (tourStep === TOUR_STEP_PROGRESS_LOG && location.pathname === "/progress") {
-      // Stay here until user clicks log progress (handled externally via prop)
-    }
-    if (tourStep === TOUR_STEP_HOME_END && location.pathname === "/") {
-      // Show ending message
-    }
   }, [location.pathname, tourStep]);
+
+  // Listen for CoachChat signaling that the coach message was sent → advance to library
+  useEffect(() => {
+    const handleExternal = (e) => {
+      if (e.detail.tourStep === "library" && tourStepRef.current === TOUR_STEP_COACH_MESSAGE) {
+        setTourStep(TOUR_STEP_LIBRARY);
+      }
+    };
+    window.addEventListener("fitability-tour-step-change", handleExternal);
+    return () => window.removeEventListener("fitability-tour-step-change", handleExternal);
+  }, []);
 
   const completeTour = async () => {
     setTourStep(TOUR_STEP_DONE);
@@ -134,6 +132,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     return <SortButtonOverlay onAdvance={() => setTourStep(TOUR_STEP_PROGRESS)} />;
   }
 
+
   if (tourStep === TOUR_STEP_PROGRESS) {
     return <SpotlightOverlay
       icon={<TrendingUp className="w-7 h-7 text-primary" />}
@@ -190,16 +189,6 @@ function SpotlightOverlay({ icon, title, message, navLabel }) {
 }
 
 function CoachMessageOverlay({ onAdvance }) {
-  useEffect(() => {
-    const handleTourChange = (e) => {
-      if (e.detail.tourStep === "library") {
-        onAdvance();
-      }
-    };
-    window.addEventListener("fitability-tour-step-change", handleTourChange);
-    return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
-  }, []);
-
   return (
     <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
       <style>{`
