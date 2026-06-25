@@ -167,7 +167,7 @@ export default function CoachChat() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)] max-w-2xl mx-auto">
+    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)] max-w-2xl mx-auto pb-0">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card rounded-t-2xl">
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -224,11 +224,17 @@ export default function CoachChat() {
             animation: button-pulse 1.5s ease-in-out infinite !important;
             pointer-events: auto !important;
           }
+          [data-tour-coach-input] {
+            color: hsl(var(--foreground)) !important;
+          }
+          [data-tour-coach-input]::placeholder {
+            color: hsl(var(--foreground)) !important;
+          }
         `}</style>
       )}
 
       {/* Input */}
-      <div className={`px-4 py-1 border-t border-border bg-card rounded-b-2xl ${isTourCoachMessage ? "pointer-events-none" : ""}`}>
+      <div className={`px-4 py-2 border-t border-border bg-card rounded-b-2xl flex-shrink-0 ${isTourCoachMessage ? "pointer-events-none" : ""}`}>
         <div className="flex gap-2">
           <Input
             value={input}
