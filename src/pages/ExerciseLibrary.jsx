@@ -323,11 +323,11 @@ export default function ExerciseLibrary() {
             key={ex.id || i}
             onClick={() => {
               setSelectedExercise(selectedExercise?.id !== ex.id ? ex : null);
-              if (i === 0 && window.fitabilityTourStep === "library_sort") {
+              if (i === 0 && window.fitabilityTourStep === "library_exercise") {
                 window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "first_exercise_clicked" }));
               }
             }}
-            data-tour-first-exercise={i === 0 && window.fitabilityTourStep === "library_sort" ? "true" : undefined}
+            data-tour-first-exercise={i === 0 && window.fitabilityTourStep === "library_exercise" ? "true" : undefined}
             className="w-full text-left bg-card rounded-xl border border-border p-4 hover:border-primary/30 transition-colors"
           >
             <div className="flex items-center justify-between">

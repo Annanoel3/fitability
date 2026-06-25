@@ -163,12 +163,11 @@ export default function CoachChat() {
       }
       setMessages((prev) => [...prev, { role: "assistant", content: reply, planUpdated }]);
 
-      // Auto-advance tour when user sends "Sounds good!" during coach message step
+      // Advance tour after coach replies — fire action so OnboardingTour handles the step change
       if (isTourCoachMessage && userText.toLowerCase().includes("sounds good")) {
         setTimeout(() => {
-          setTourStep("library");
-          window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "library" } }));
-        }, 3000);
+          window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "coach_message_sent" }));
+        }, 2000);
       }
     } catch (e) {
       setMessages((prev) => [...prev, {

@@ -62,9 +62,9 @@ export default function AppLayout() {
           <nav className="hidden md:flex items-center gap-1">
             {NAV_ITEMS.map((item) => {
               const active = location.pathname === item.path;
-              const tourActive = ["coach", "coach_message", "library", "progress", "home_end"].includes(tourStep);
+              const tourActive = ["coach", "library", "progress", "home_end"].includes(tourStep);
               const isAllowed =
-                (item.label === "Coach" && (tourStep === "coach" || tourStep === "coach_message")) ||
+                (item.label === "Coach" && tourStep === "coach") ||
                 (item.label === "Library" && tourStep === "library") ||
                 (item.label === "Progress" && tourStep === "progress") ||
                 (item.label === "Home" && tourStep === "home_end");
@@ -151,7 +151,7 @@ export default function AppLayout() {
       <div className="flex items-center justify-between px-1 py-3">
         {NAV_ITEMS.map((item) => {
             const active = location.pathname === item.path;
-            const isPulsingCoach = item.label === "Coach" && (tourStep === "coach" || tourStep === "coach_message");
+            const isPulsingCoach = item.label === "Coach" && tourStep === "coach";
             const isPulsingLibrary = item.label === "Library" && tourStep === "library";
             const isPulsingProgress = item.label === "Progress" && tourStep === "progress";
             const isPulsingHome = item.label === "Home" && tourStep === "home_end";
@@ -189,7 +189,7 @@ export default function AppLayout() {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
         }
-        ${["coach", "coach_message", "library", "progress", "home_end"].includes(tourStep) ? `
+        ${["coach", "library", "progress", "home_end"].includes(tourStep) ? `
         nav > div > a {
           pointer-events: none !important;
           opacity: 0.4 !important;

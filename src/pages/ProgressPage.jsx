@@ -107,7 +107,12 @@ export default function ProgressPage() {
           <h1 className="text-2xl font-heading font-bold text-foreground">Progress</h1>
           <p className="text-muted-foreground mt-1">Track your journey over time.</p>
         </div>
-        <Button onClick={() => setShowLogForm(!showLogForm)} variant="outline" size="sm" data-tour-log-button={isTourProgressLog ? "true" : undefined}>
+        <Button
+          onClick={() => setShowLogForm(!showLogForm)}
+          variant="outline"
+          size="sm"
+          data-tour-log-button={isTourProgressLog ? "true" : undefined}
+        >
           Log Progress
         </Button>
       </div>
