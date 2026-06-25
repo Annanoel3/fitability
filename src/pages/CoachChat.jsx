@@ -252,7 +252,7 @@ export default function CoachChat() {
             onClick={() => sendMessage()}
             disabled={!input.trim() || sending || !isTourCoachMessage ? false : false}
             size="icon"
-            className="rounded-xl my-3 py-1"
+            className="rounded-xl my-2"
             style={isTourCoachMessage ? { pointerEvents: "auto" } : {}}
             data-tour-coach-send={isTourCoachMessage ? "true" : undefined}>
             
