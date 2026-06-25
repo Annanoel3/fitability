@@ -125,29 +125,29 @@ export default function AppLayout() {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border z-50">
-      <div className="flex items-center justify-between px-1 py-2">
+      <div className="flex items-center justify-between px-1 py-3">
         {NAV_ITEMS.map((item) => {
-          const active = location.pathname === item.path;
-          const isPulsingLibrary = item.label === "Library" && window.fitabilityTourStep === "library";
-          const isPulsingProgress = item.label === "Progress" && window.fitabilityTourStep === "progress";
-          const isPulsingHome = item.label === "Home" && window.fitabilityTourStep === "home_end";
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              data-tour-nav={item.label}
-              data-tour-library-nav={isPulsingLibrary ? "true" : undefined}
-              data-tour-progress-nav={isPulsingProgress ? "true" : undefined}
-              data-tour-home-nav={isPulsingHome ? "true" : undefined}
-              className={`flex flex-col items-center gap-0.5 flex-1 py-1 rounded-lg text-xs ${
-              active ? "text-primary" : "text-muted-foreground"}`
-              }>
+            const active = location.pathname === item.path;
+            const isPulsingLibrary = item.label === "Library" && window.fitabilityTourStep === "library";
+            const isPulsingProgress = item.label === "Progress" && window.fitabilityTourStep === "progress";
+            const isPulsingHome = item.label === "Home" && window.fitabilityTourStep === "home_end";
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                data-tour-nav={item.label}
+                data-tour-library-nav={isPulsingLibrary ? "true" : undefined}
+                data-tour-progress-nav={isPulsingProgress ? "true" : undefined}
+                data-tour-home-nav={isPulsingHome ? "true" : undefined}
+                className={`flex flex-col items-center gap-0.5 flex-1 py-1 rounded-lg text-xs ${
+                active ? "text-primary" : "text-muted-foreground"}`
+                }>
 
               <item.icon className="w-5 h-5" />
               <span className="text-[10px] leading-tight">{item.label}</span>
             </Link>);
 
-        })}
+          })}
       </div>
       </nav>
 
