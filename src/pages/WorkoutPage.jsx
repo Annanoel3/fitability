@@ -55,6 +55,7 @@ export default function WorkoutPage() {
 
   useEffect(() => {
     loadTodayWorkout();
+    setShowAudioSetup(true); // Show audio setup on load
   }, []);
 
   // Elapsed timer — counts up while workout is active and not paused
