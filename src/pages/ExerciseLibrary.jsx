@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Dumbbell, Loader2, Shield, Plus, Trash2, BookOpen } from "lucide-react";
+import { Search, Dumbbell, Loader2, Shield, Plus, Trash2, BookOpen, TrendingUp } from "lucide-react";
 import CreateExerciseModal from "@/components/library/CreateExerciseModal";
 
 const CATEGORIES = ["All", "Warmup", "Strength", "Cardio", "Balance", "Flexibility", "Cooldown", "Breathing", "Recovery"];
@@ -128,7 +128,9 @@ export default function ExerciseLibrary() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleted, setDeleted] = useState(new Set());
   const [tourStep, setTourStep] = useState(null);
+  const [showExercisePopup, setShowExercisePopup] = useState(false);
   const isTourLibrarySort = tourStep === "library_sort";
+  const isTourLibraryExercise = tourStep === "library_exercise";
 
   useEffect(() => {
     loadExercises();
@@ -249,31 +251,67 @@ export default function ExerciseLibrary() {
   return (
     <div className="pb-20 md:pb-6">
       {isTourLibrarySort && (
-        <style>{`
-          @keyframes button-pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-          }
-          [data-tour-sort-button] {
-            animation: button-pulse 1.5s ease-in-out infinite;
-          }
-        `}</style>
-      )}
-      {isTourLibrarySort && (
-        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
-          <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-              <BookOpen className="w-7 h-7 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-heading font-bold text-lg text-foreground">Filter your exercises</h3>
-              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                Tap one of the sorting buttons above to filter exercises by difficulty, category, or position.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+         <style>{`
+           @keyframes button-pulse {
+             0%, 100% { transform: scale(1); }
+             50% { transform: scale(1.05); }
+           }
+           [data-tour-sort-button] {
+             animation: button-pulse 1.5s ease-in-out infinite;
+           }
+         `}</style>
+       )}
+       {isTourLibrarySort && (
+         <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+           <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+               <BookOpen className="w-7 h-7 text-primary" />
+             </div>
+             <div>
+               <h3 className="font-heading font-bold text-lg text-foreground">Filter your exercises</h3>
+               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                 Tap one of the sorting buttons above to filter exercises by difficulty, category, or position.
+               </p>
+             </div>
+           </div>
+         </div>
+       )}
+       {isTourLibraryExercise && (
+         <style>{`
+           @keyframes button-pulse {
+             0%, 100% { transform: scale(1); }
+             50% { transform: scale(1.05); }
+           }
+           [data-tour-first-exercise] {
+             animation: button-pulse 1.5s ease-in-out infinite;
+           }
+         `}</style>
+       )}
+       {showExercisePopup && (
+         <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+           <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+               <TrendingUp className="w-7 h-7 text-primary" />
+             </div>
+             <div>
+               <h3 className="font-heading font-bold text-lg text-foreground">Track your progress</h3>
+               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                 Now let's check out your progress page to see your fitness journey.
+               </p>
+             </div>
+             <button
+               onClick={() => {
+                 setShowExercisePopup(false);
+                 setTourStep("progress");
+                 window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "progress" } }));
+               }}
+               className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm"
+             >
+               Go to Progress
+             </button>
+           </div>
+         </div>
+       )}
       {showCreateModal && (
         <CreateExerciseModal 
           onClose={() => setShowCreateModal(false)}
@@ -357,8 +395,8 @@ export default function ExerciseLibrary() {
                 setSortBy(val);
                 if (isTourLibrarySort) {
                   setTimeout(() => {
-                    setTourStep("progress");
-                    window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "progress" } }));
+                    setTourStep("library_exercise");
+                    window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "library_exercise" } }));
                   }, 500);
                 }
               }}>
@@ -379,7 +417,16 @@ export default function ExerciseLibrary() {
         {sorted.map((ex, i) => (
           <button
             key={ex.id || i}
-            onClick={() => setSelectedExercise(selectedExercise?.id === ex.id ? null : ex)}
+            onClick={() => {
+              const isSelecting = selectedExercise?.id !== ex.id;
+              setSelectedExercise(isSelecting ? ex : null);
+              if (isTourLibraryExercise && isSelecting && i === 0) {
+                setTimeout(() => {
+                  setShowExercisePopup(true);
+                }, 4000);
+              }
+            }}
+            data-tour-first-exercise={isTourLibraryExercise && i === 0 ? "true" : undefined}
             className="w-full text-left bg-card rounded-xl border border-border p-4 hover:border-primary/30 transition-colors"
           >
             <div className="flex items-center justify-between">
