@@ -148,6 +148,16 @@ export default function ExerciseLibrary() {
     return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
   }, []);
 
+  // Auto-advance tour when landing on library (if still on library step)
+  useEffect(() => {
+    if (tourStep === "library") {
+      setTimeout(() => {
+        setTourStep("library_sort");
+        window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "library_sort" } }));
+      }, 500);
+    }
+  }, [tourStep]);
+
   const loadExercises = async () => {
     setLoading(true);
     const profiles = await base44.entities.UserProfile.filter({});
@@ -295,55 +305,55 @@ export default function ExerciseLibrary() {
           />
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={position} onValueChange={setPosition}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {POSITIONS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FILTERS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={muscleGroup} onValueChange={setMuscleGroup}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {MUSCLE_GROUPS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={sortBy} onValueChange={(val) => {
-            setSortBy(val);
-            if (isTourLibrarySort) {
-              setTimeout(() => {
-                setTourStep("progress");
-                window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "progress" } }));
-              }, 500);
-            }
-          }}>
-            <SelectTrigger data-tour-sort-button={isTourLibrarySort ? "true" : undefined}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+           <Select value={category} onValueChange={setCategory}>
+             <SelectTrigger>
+               <SelectValue placeholder="Category" />
+             </SelectTrigger>
+             <SelectContent>
+               {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+             </SelectContent>
+           </Select>
+           <Select value={position} onValueChange={setPosition}>
+             <SelectTrigger>
+               <SelectValue placeholder="Position" />
+             </SelectTrigger>
+             <SelectContent>
+               {POSITIONS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+             </SelectContent>
+           </Select>
+           <Select value={filter} onValueChange={setFilter}>
+             <SelectTrigger>
+               <SelectValue placeholder="Filter" />
+             </SelectTrigger>
+             <SelectContent>
+               {FILTERS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+             </SelectContent>
+           </Select>
+           <Select value={muscleGroup} onValueChange={setMuscleGroup}>
+             <SelectTrigger>
+               <SelectValue placeholder="Muscle" />
+             </SelectTrigger>
+             <SelectContent>
+               {MUSCLE_GROUPS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+             </SelectContent>
+           </Select>
+           <Select value={sortBy} onValueChange={(val) => {
+             setSortBy(val);
+             if (isTourLibrarySort) {
+               setTimeout(() => {
+                 setTourStep("progress");
+                 window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "progress" } }));
+               }, 500);
+             }
+           }}>
+             <SelectTrigger data-tour-sort-button={isTourLibrarySort ? "true" : undefined}>
+               <SelectValue placeholder="Sort" />
+             </SelectTrigger>
+             <SelectContent>
+               {SORT_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+             </SelectContent>
+           </Select>
+         </div>
       </div>
 
       {/* Exercise list */}
