@@ -116,7 +116,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   }
 
   if (tourStep === TOUR_STEP_COACH_MESSAGE) {
-    return <CoachMessageOverlay onAdvance={() => setTourStep(TOUR_STEP_LIBRARY)} />;
+    return null; // CoachChat handles this step directly (pulsing send button + pre-filled input)
   }
 
   if (tourStep === TOUR_STEP_LIBRARY) {
