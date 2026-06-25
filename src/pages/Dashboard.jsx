@@ -516,10 +516,14 @@ Return the complete corrected workout in the same JSON structure.`,
 
   return (
     <div className="space-y-6 pb-20 md:pb-6">
-      {showTour && (
+      {showTour && profile && (
         <OnboardingTour
           profile={profile}
-          onComplete={() => setShowTour(false)}
+          onComplete={() => {
+            setShowTour(false);
+            // Force profile refresh to confirm tour completion is persisted
+            setProfile(p => ({ ...p, onboarding_tour_completed: true }));
+          }}
         />
       )}
       {showWorkoutPicker && (
