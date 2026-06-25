@@ -107,9 +107,21 @@ export default function ProgressPage() {
           <h1 className="text-2xl font-heading font-bold text-foreground">Progress</h1>
           <p className="text-muted-foreground mt-1">Track your journey over time.</p>
         </div>
+        {isTourProgressLog && (
+          <style>{`
+            @keyframes log-btn-pulse {
+              0%   { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.5); }
+              50%  { transform: scale(1.12); box-shadow: 0 0 0 12px hsl(var(--primary) / 0); }
+              100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.5); }
+            }
+            [data-tour-log-button="true"] {
+              animation: log-btn-pulse 1.1s ease-in-out infinite !important;
+            }
+          `}</style>
+        )}
         <Button
           onClick={() => setShowLogForm(!showLogForm)}
-          variant="outline"
+          variant={isTourProgressLog ? "default" : "outline"}
           size="sm"
           data-tour-log-button={isTourProgressLog ? "true" : undefined}
         >
