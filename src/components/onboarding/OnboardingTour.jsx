@@ -119,16 +119,16 @@ function SpotlightOverlay({ icon, title, message }) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-5 pointer-events-none">
       <style>{`
         @keyframes pulse-scale {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.2); }
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.3); opacity: 0.8; }
         }
-        .animate-pulse-scale {
-          animation: pulse-scale 2s ease-in-out infinite;
+        .pulse-icon {
+          animation: pulse-scale 1.5s ease-in-out infinite;
         }
       `}</style>
       
       <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse-scale">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto pulse-icon">
           {icon}
         </div>
         <div>
