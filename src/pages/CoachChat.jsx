@@ -247,7 +247,7 @@ export default function CoachChat() {
       )}
 
       {/* Input */}
-      <div className="px-4 py-3 border-t border-border bg-card rounded-b-2xl">
+      <div className="px-4 py-1.5 border-t border-border bg-card rounded-b-2xl">
         <div className="flex gap-2">
           <Input
             value={input}
