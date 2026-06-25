@@ -141,24 +141,12 @@ export default function AppLayout() {
       </div>
       </nav>
 
-      {/* Tour pulsing styles for library, progress and home */}
-      {(window.fitabilityTourStep === "library" || window.fitabilityTourStep === "progress" || window.fitabilityTourStep === "home_end") &&
+      {/* Tour pulsing styles for progress and home */}
+      {(window.fitabilityTourStep === "progress" || window.fitabilityTourStep === "home_end") &&
       <style>{`
         @keyframes icon-pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
-        }
-        ${window.fitabilityTourStep === "library" ? `
-        nav {
-          pointer-events: none;
-        }
-        [data-tour-library-nav] {
-          pointer-events: auto !important;
-        }
-        ` : ""}
-        [data-tour-library-nav] {
-          animation: icon-pulse 1.5s ease-in-out infinite !important;
-          color: hsl(var(--primary)) !important;
         }
         [data-tour-progress-nav] {
           animation: icon-pulse 1.5s ease-in-out infinite !important;
@@ -167,9 +155,6 @@ export default function AppLayout() {
         [data-tour-home-nav] {
           animation: icon-pulse 1.5s ease-in-out infinite !important;
           color: hsl(var(--primary)) !important;
-        }
-        nav [data-tour-nav]:not([data-tour-library-nav]):not([data-tour-progress-nav]):not([data-tour-home-nav]) {
-          color: hsl(var(--muted-foreground)) !important;
         }
       `}</style>
       }
