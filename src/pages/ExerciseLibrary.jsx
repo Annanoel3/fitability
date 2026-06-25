@@ -326,14 +326,14 @@ export default function ExerciseLibrary() {
             onClick={() => {
               setSelectedExercise(selectedExercise?.id !== ex.id ? ex : null);
               if (i === 0 && window.fitabilityTourStep === "library_exercise") {
-                // Scroll to the card, then after it expands scroll again, then advance tour
+                // Immediately hide the popup, let user read for 3s, then advance
+                window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "first_exercise_clicked" }));
                 setTimeout(() => {
                   firstExerciseRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }, 100);
                 setTimeout(() => {
-                  firstExerciseRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "first_exercise_clicked" }));
-                }, 3200);
+                  window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "exercise_read_done" }));
+                }, 3000);
               }
             }}
             data-tour-first-exercise={i === 0 && window.fitabilityTourStep === "library_exercise" ? "true" : undefined}

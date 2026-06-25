@@ -47,6 +47,9 @@ export default function OnboardingTour({ profile, onComplete }) {
         advance("library");
       }
       if (e.detail === "first_exercise_clicked" && tourStepRef.current === "library_exercise") {
+        advance("library_exercise_clicked");
+      }
+      if (e.detail === "exercise_read_done" && tourStepRef.current === "library_exercise_clicked") {
         advance("progress");
       }
       if (e.detail === "progress_logged" && tourStepRef.current === "progress_log") {
@@ -142,10 +145,10 @@ export default function OnboardingTour({ profile, onComplete }) {
   // ── LIBRARY EXERCISE — pulse first exercise card, wait for tap ──
   if (tourStep === "library_exercise") {
     return (
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+      <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-32">
         <style>{`
           @keyframes exercise-pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5); }
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.25); }
             50% { transform: scale(1.02); box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
           }
           [data-tour-first-exercise="true"] {
@@ -153,20 +156,26 @@ export default function OnboardingTour({ profile, onComplete }) {
             border-color: hsl(var(--primary)) !important;
             pointer-events: auto !important;
           }
+          main, main * { pointer-events: auto !important; }
         `}</style>
-        <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <BookOpen className="w-7 h-7 text-primary" />
+        <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-6 shadow-2xl text-center space-y-3 pointer-events-auto">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <BookOpen className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="font-heading font-bold text-lg text-foreground">Your Exercise Library</h3>
-            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-              Tap the first exercise below to see its details and modifications.
+            <h3 className="font-heading font-bold text-base text-foreground">Your Exercise Library</h3>
+            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+              Tap the first exercise above to see its details and modifications.
             </p>
           </div>
         </div>
       </div>
     );
+  }
+
+  // ── LIBRARY EXERCISE CLICKED — hide everything for 3s while user reads ──
+  if (tourStep === "library_exercise_clicked") {
+    return null;
   }
 
   // ── PROGRESS — pulse Progress icon, wait for user to tap ──
