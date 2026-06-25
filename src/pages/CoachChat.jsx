@@ -108,6 +108,12 @@ export default function CoachChat() {
       // Remove any "What can I help..." text from the reply
       const cleanReply = reply.replace(/\s*What can I help you with today\?.*$/i, "").trim();
       setMessages([{ role: "assistant", content: cleanReply }]);
+      // If in coach tour step, advance to coach_message step
+      if (window.fitabilityTourStep === "coach") {
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "coach_message" } }));
+        }, 300);
+      }
     } catch (e) {
       setMessages([{ role: "assistant", content: `Hi ${prof?.display_name || "there"}! I'm your FitAbility Coach. I'm here to help adjust your workouts, answer questions, and keep you moving safely.` }]);
     } finally {
