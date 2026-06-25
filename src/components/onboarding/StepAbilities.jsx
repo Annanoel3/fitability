@@ -34,7 +34,7 @@ export default function StepAbilities({ data, onChange }) {
     <div className="space-y-6">
       <div className="text-center mb-6">
          <h2 className="text-2xl font-heading font-bold text-foreground">Current Abilities</h2>
-         <p className="text-muted-foreground mt-2">Click the ones that apply to you</p>
+         <p className="text-muted-foreground mt-2">Click the activities you are able to do</p>
        </div>
 
       <div className="space-y-3">
