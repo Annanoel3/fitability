@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
@@ -19,6 +19,15 @@ export default function AppLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { dark, toggle } = useTheme();
+  const [tourStep, setTourStep] = useState(window.fitabilityTourStep || null);
+
+  useEffect(() => {
+    const handleTourChange = (e) => {
+      setTourStep(e.detail.tourStep);
+    };
+    window.addEventListener("fitability-tour-step-change", handleTourChange);
+    return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
+  }, []);
 
   const handleLogout = () => {
     base44.auth.logout("/login");
@@ -142,18 +151,38 @@ export default function AppLayout() {
       </nav>
 
       {/* Tour pulsing styles for library, progress and home */}
-      {window.fitabilityTourStep &&
+      {tourStep &&
       <style>{`
         @keyframes icon-pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
         }
-        ${window.fitabilityTourStep === "library" ? `
+        ${tourStep === "library" ? `
         nav > div > a {
           pointer-events: none !important;
           opacity: 0.4 !important;
         }
         nav > div > a[data-tour-library-nav] {
+          pointer-events: auto !important;
+          opacity: 1 !important;
+        }
+        ` : ""}
+        ${tourStep === "progress" ? `
+        nav > div > a {
+          pointer-events: none !important;
+          opacity: 0.4 !important;
+        }
+        nav > div > a[data-tour-progress-nav] {
+          pointer-events: auto !important;
+          opacity: 1 !important;
+        }
+        ` : ""}
+        ${tourStep === "home_end" ? `
+        nav > div > a {
+          pointer-events: none !important;
+          opacity: 0.4 !important;
+        }
+        nav > div > a[data-tour-home-nav] {
           pointer-events: auto !important;
           opacity: 1 !important;
         }
