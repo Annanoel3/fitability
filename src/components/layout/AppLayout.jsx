@@ -152,7 +152,7 @@ export default function AppLayout() {
       </nav>
 
       {/* Tour pulsing styles for library, progress and home */}
-      <style>{`
+      <style key={tourStep}>{`
         @keyframes icon-pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
