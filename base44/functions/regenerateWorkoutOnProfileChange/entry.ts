@@ -23,13 +23,9 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.WorkoutPlan.delete(workout.id);
     }
 
-    // Trigger regeneration
-    const result = await base44.functions.invoke('generateWorkoutFromPreferences', {});
-
     return Response.json({ 
       success: true,
-      message: 'Workout regenerated due to profile changes',
-      result: result
+      message: "Today's workout cleared after profile change; it will be regenerated safely on the next dashboard visit."
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
