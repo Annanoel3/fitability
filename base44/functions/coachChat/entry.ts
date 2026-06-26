@@ -217,27 +217,20 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
     // After each conversation, update coach memory with any new persistent preferences
     let updatedMemory = profile?.coach_memory || '';
     if (messages && messages.length >= 1) {
-      const lastUserMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
-      
-      // Check for explicit difficulty feedback
-      const tooEasyMatch = lastUserMessage.match(/too easy|make it harder|increase difficulty|harder|more challenging/i);
-      const tooHardMatch = lastUserMessage.match(/too hard|too difficult|make it easier|reduce difficulty|easier|slower/i);
-      
       const memoryUpdate = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: `Extract ANY persistent information from this conversation that should affect future workout generation. This includes:
-- Difficulty feedback: if the user said workouts are "too easy" or "too hard", record this explicitly
-- Changes to pain, symptoms, or condition status ("my knee hurts worse", "my wrist feels better", "new shoulder pain")
-- Workout preferences (difficulty, duration, exercise types, equipment)
-- Limitations or restrictions the user reports
-- Any feedback about what works or doesn't work for them
+          { role: "system", content: `Extract ANY persistent information from this conversation that should affect future workout generation or user profile. This includes:
+- Difficulty or intensity feedback (workouts too easy/hard, need more/less challenge)
+- Changes to pain, symptoms, or condition status (new pain, pain improving, flare-ups, etc.)
+- Changes to mobility, energy, or physical capabilities
+- Workout preferences (duration, exercise types, equipment)
+- Limitations or restrictions the user reports or reports improving
+- Anything the user says about their body, health, or how exercises make them feel
+- Any other feedback that would shape how we build their next workout
 
-ALWAYS preserve existing memory and add new information. If something contradicts old memory, update it with the new status.
-Return only the updated memory string, concise and actionable. Keep under 400 characters.
-
-User said: ${lastUserMessage}
-Explicit difficulty feedback detected: ${tooEasyMatch ? 'TOO EASY' : tooHardMatch ? 'TOO HARD' : 'none'}` },
+ALWAYS preserve existing memory and add new information. If something contradicts old memory, update it.
+Return only the updated memory string, concise and actionable. Keep under 400 characters.` },
           { role: "user", content: `Existing memory:\n${updatedMemory || '(none)'}\n\nConversation:\n${messages.map(m => `${m.role}: ${m.content}`).join('\n')}\n\nAssistant reply: ${reply}` }
         ],
         max_tokens: 200
