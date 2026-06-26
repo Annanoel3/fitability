@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -201,6 +201,7 @@ export default function Dashboard() {
   const [generating, setGenerating] = useState(false);
   const [showWorkoutPicker, setShowWorkoutPicker] = useState(false);
   const [tourStep, setTourStep] = useState(window.fitabilityTourStep || null);
+  const pageVisibleRef = useRef(true);
 
   useEffect(() => {
     loadData();
@@ -210,7 +211,24 @@ export default function Dashboard() {
       window.fitabilityTourStep = newStep;
     };
     window.addEventListener("fitability-tour-step-change", handler);
-    return () => window.removeEventListener("fitability-tour-step-change", handler);
+    
+    // Restore generating state from localStorage if present
+    const savedGenerating = localStorage.getItem('fitability_generating');
+    if (savedGenerating === 'true') {
+      setGenerating(true);
+    }
+    
+    // Track visibility
+    const handleVisibilityChange = () => {
+      pageVisibleRef.current = !document.hidden;
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    pageVisibleRef.current = !document.hidden;
+    
+    return () => {
+      window.removeEventListener("fitability-tour-step-change", handler);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const loadData = async () => {
@@ -261,6 +279,7 @@ export default function Dashboard() {
 
   const handleGenerateWorkout = async (checkin, preferences = {}) => {
     setGenerating(true);
+    localStorage.setItem('fitability_generating', 'true');
     const today = new Date().toISOString().split("T")[0];
     
     // Fetch recent workouts to avoid repeating exercises
@@ -542,10 +561,18 @@ Return the complete corrected workout in the same JSON structure.`,
       workout_data: JSON.stringify(finalResult)
     });
 
-    // Navigate immediately — pass the created workout in state so WorkoutPage
-    // doesn't have to re-fetch and can't miss it due to timing
+    // Clear generating state
     setGenerating(false);
-    navigate("/workout", { state: { workout: { ...created, workout_data: JSON.stringify(finalResult) } } });
+    localStorage.removeItem('fitability_generating');
+    
+    // Refresh workouts list so it shows the new workout
+    const updatedWorkouts = await base44.entities.WorkoutPlan.filter({ created_by_id: (await base44.auth.me()).id }, "-date", 10);
+    setWorkouts(updatedWorkouts);
+    
+    // Auto-navigate only if user stayed on the Dashboard
+    if (pageVisibleRef.current) {
+      navigate("/workout", { state: { workout: { ...created, workout_data: JSON.stringify(finalResult) } } });
+    }
 
     // Pre-generate exercise images in background (non-blocking, after navigation)
     if (finalResult.exercises?.length) {
