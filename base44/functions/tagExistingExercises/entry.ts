@@ -26,8 +26,12 @@ Deno.serve(async (req) => {
     }
 
     const exerciseList = batch.map((ex, i) =>
-      `${i + 1}. Name: "${ex.name}" | Category: ${ex.category || '?'} | Position: ${ex.position || '?'} | Description: ${(ex.description || '').slice(0, 100)}`
-    ).join('\n');
+      `${i + 1}. Name: "${ex.name}"
+   Category: ${ex.category || '?'} | Position: ${ex.position || '?'} | Difficulty: ${ex.difficulty || '?'}
+   Description: ${ex.description || 'N/A'}
+   Instructions: ${ex.instructions || 'N/A'}
+   Muscles: ${(ex.muscles_used || []).join(', ') || 'N/A'}`
+    ).join('\n\n');
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are an expert adaptive physical therapist. For each exercise below, assign accurate restriction_tags, suitable_for_tags, and equipment_tags based on the exercise name, category, position, and description.
@@ -39,16 +43,20 @@ RESTRICTION_TAGS — use ONLY these exact strings. Tag an exercise if the condit
 
 MOBILITY: cannot_stand, wheelchair_user, no_legs, single_leg_amputation, no_arms, single_arm_amputation, no_bilateral_arms, paraplegia, very_low_mobility, bedridden
 JOINTS: knee_pain, knee_replacement, hip_pain, hip_replacement, back_pain, neck_injury, shoulder_injury, wrist_injury, elbow_injury, ankle_pain
-MOVEMENT RESTRICTIONS: no_high_impact, no_spinal_flexion, no_overhead_press, no_neck_flexion, no_head_inversion, balance_issues, no_bilateral_arms
+MOVEMENT RESTRICTIONS: no_high_impact, no_spinal_flexion, no_overhead_press, no_neck_flexion, no_head_inversion, balance_issues
 CARDIAC/PULMONARY: heart_condition, copd, breathing_difficulty
 BONE/STRUCTURAL: osteoporosis, fracture_risk, scoliosis
-NEUROLOGICAL: multiple_sclerosis, parkinsons, stroke_recovery, cerebral_palsy, seizure_risk, vertigo
-SYSTEMIC: fibromyalgia, chronic_fatigue, arthritis, rheumatoid_arthritis, high_bmi, pregnancy, heat_sensitive, immune_compromised, pain_flares
+NEUROLOGICAL: multiple_sclerosis, parkinsons, cerebral_palsy, seizure_risk, vertigo
+SYSTEMIC: fibromyalgia, chronic_fatigue, arthritis, rheumatoid_arthritis, high_bmi, pregnancy, heat_sensitive, immune_compromised
 
-IMPORTANT: stroke_recovery as a restriction_tag means the exercise is UNSAFE for stroke patients. If an exercise is GOOD for stroke recovery, put stroke_recovery in suitable_for_tags instead, NOT restriction_tags.
+CRITICAL LOGIC:
+- If position = "Standing" but person cannot_stand, tag it. If position = "Wheelchair" but person is NOT wheelchair_user, EXCLUDE this exercise (don't show it). If position = "Seated", it's usually safe for wheelchair users.
+- If exercise requires high-impact movements (jumping, running, heavy impact), tag no_high_impact.
+- If exercise requires core stability or trunk control, tag paraplegia and very_low_mobility.
+- If exercise mentions pain-provoking movements for a joint (e.g., deep squats → knee_pain), tag it.
 
-SUITABLE_FOR_TAGS — conditions this exercise is especially good for:
-wheelchair_user, seated_only, low_mobility, bedridden, chronic_pain, heart_safe, vertigo_safe, osteoporosis_safe, balance_training, fall_prevention, stroke_recovery, coordination, sensory_grounding, fatigue_management, breathing_focused, joint_mobility, upper_body_only, lower_body_only, core_stability, bone_density, neurological_rehab, pelvic_floor, pregnancy_safe, single_arm_amputation, single_leg_amputation
+SUITABLE_FOR_TAGS — conditions this exercise is especially good for. Only tag if the exercise actively helps:
+wheelchair_user, seated_only, low_mobility, very_low_mobility, chronic_pain, heart_safe, vertigo_safe, osteoporosis_safe, balance_training, fall_prevention, stroke_recovery, coordination, sensory_grounding, fatigue_management, breathing_focused, joint_mobility, upper_body_focus, lower_body_focus, core_stability
 
 EQUIPMENT_TAGS: exact equipment needed. Use ONLY: chair, mat, resistance_bands, dumbbells, wall, pillow, towel. Empty array = pure bodyweight (no equipment needed).
 
