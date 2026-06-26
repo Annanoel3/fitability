@@ -120,6 +120,20 @@
       },
       "description": "Available equipment list"
     },
+    "restriction_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Computed exercise restriction tags based on user's profile (updated whenever profile changes)"
+    },
+    "capability_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Computed exercise capability tags for exercises this user is well-suited for"
+    },
     "onboarding_completed": {
       "type": "boolean",
       "default": false
