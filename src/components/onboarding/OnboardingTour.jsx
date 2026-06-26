@@ -105,6 +105,19 @@ export default function OnboardingTour({ profile, onComplete }) {
     return () => window.removeEventListener("fitability-tour-action", handler);
   }, [navigate]);
 
+  // Listen for tour step changes from Dashboard (when picker opens, etc.)
+  useEffect(() => {
+    const stepHandler = (e) => {
+      const newStep = e.detail?.tourStep;
+      if (newStep) {
+        tourStepRef.current = newStep;
+        setTourStep(newStep);
+      }
+    };
+    window.addEventListener("fitability-tour-step-change", stepHandler);
+    return () => window.removeEventListener("fitability-tour-step-change", stepHandler);
+  }, []);
+
   // Broadcast initial step on mount
   useEffect(() => {
     window.fitabilityTourStep = "welcome";
