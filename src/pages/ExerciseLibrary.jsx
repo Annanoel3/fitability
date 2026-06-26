@@ -12,6 +12,53 @@ const FILTERS = ["All", "Created by me", "Library"];
 const SORT_OPTIONS = ["Name", "Difficulty", "Category"];
 const MUSCLE_GROUPS = ["All", "Chest", "Back", "Shoulders", "Arms", "Forearms", "Wrists", "Core", "Abs", "Obliques", "Glutes", "Quads", "Hamstrings", "Calves", "Legs", "Full body"];
 
+const RESTRICTION_LABELS = {
+  cannot_stand: "Cannot stand",
+  wheelchair_user: "Wheelchair users",
+  no_high_impact: "No high-impact activity",
+  very_low_mobility: "Very low mobility",
+  paraplegia: "Paralysis / paraplegia",
+  no_legs: "Lower limb amputation",
+  single_leg_amputation: "Single leg amputation",
+  no_arms: "Upper limb amputation",
+  single_arm_amputation: "Single arm amputation",
+  no_bilateral_arms: "Limited bilateral arm use",
+  knee_pain: "Knee pain",
+  knee_replacement: "Knee replacement",
+  hip_pain: "Hip pain",
+  hip_replacement: "Hip replacement",
+  back_pain: "Back pain",
+  no_spinal_flexion: "Spinal flexion restrictions",
+  neck_injury: "Neck injury",
+  no_neck_flexion: "Neck flexion restrictions",
+  shoulder_injury: "Shoulder injury",
+  no_overhead_press: "No overhead pressing",
+  wrist_injury: "Wrist injury",
+  elbow_injury: "Elbow injury",
+  ankle_pain: "Ankle pain",
+  balance_issues: "Balance difficulties",
+  scoliosis: "Scoliosis",
+  osteoporosis: "Osteoporosis",
+  fracture_risk: "Fracture risk",
+  heart_condition: "Heart condition",
+  breathing_difficulty: "Breathing difficulties",
+  copd: "COPD / lung condition",
+  seizure_risk: "Seizure risk",
+  no_head_inversion: "No head inversion",
+  vertigo: "Vertigo",
+  pregnancy: "Pregnancy",
+  parkinsons: "Parkinson's disease",
+  multiple_sclerosis: "Multiple sclerosis",
+  heat_sensitive: "Heat sensitivity",
+  fibromyalgia: "Fibromyalgia",
+  chronic_fatigue: "Chronic fatigue",
+  arthritis: "Arthritis",
+  rheumatoid_arthritis: "Rheumatoid arthritis",
+  cerebral_palsy: "Cerebral palsy",
+  high_bmi: "High BMI",
+  immune_compromised: "Immune compromised",
+};
+
 // Must match buildUserTags() in Dashboard — same vocabulary
 function buildUserRestrictionTags(profile) {
   const restriction = new Set();
@@ -403,7 +450,9 @@ export default function ExerciseLibrary() {
                     <Shield className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <span className="text-xs font-semibold text-amber-800">Not recommended for:</span>
-                      <p className="text-xs text-amber-700">{ex.restriction_tags.join(", ")}</p>
+                      <p className="text-xs text-amber-700">
+                        {ex.restriction_tags.map(tag => RESTRICTION_LABELS[tag] || tag.replace(/_/g, " ")).join(", ")}
+                      </p>
                     </div>
                   </div>
                 )}
