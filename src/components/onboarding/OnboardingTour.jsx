@@ -27,6 +27,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   const location = useLocation();
   const [tourStep, setTourStep] = useState("welcome");
   const [showWorkoutBridge, setShowWorkoutBridge] = useState(false);
+  const [emojiClickCount, setEmojiClickCount] = useState(0);
   const tourStepRef = useRef("welcome");
 
   const advance = (step) => {
@@ -181,11 +182,19 @@ export default function OnboardingTour({ profile, onComplete }) {
 
   // ── WELCOME MODAL ──
   if (tourStep === "welcome") {
+    const handleEmojiClick = () => {
+      const newCount = emojiClickCount + 1;
+      setEmojiClickCount(newCount);
+      if (newCount >= 7) {
+        setTourStep("done");
+      }
+    };
+
     return (
       <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
         <style>{ANIM_STYLE}</style>
         <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-7 shadow-2xl text-center space-y-5">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto cursor-pointer" onClick={handleEmojiClick}>
             <span className="text-3xl">🎉</span>
           </div>
           <div>
