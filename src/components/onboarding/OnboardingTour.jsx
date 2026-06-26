@@ -4,15 +4,23 @@ import { base44 } from "@/api/base44Client";
 import { Bot, BookOpen, TrendingUp, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Tour flow:
-// welcome → coach (pulse coach icon, wait for user to tap it)
-//   → coach_message (coach sends intro, "Sounds good!" pre-filled, send button pulses)
-//   → library (popup + pulse Library icon, wait for tap)
-//   → library_exercise (popup + pulse first exercise, wait for tap)
-//   → progress (popup + pulse Progress icon, wait for tap)
-//   → progress_log (popup + pulse Log button, wait for save)
-//   → home_end (auto-navigate home, show final "You're all set!" popup)
-//   → done
+// Shared smooth entrance animation injected once
+const ANIM_STYLE = `
+  @keyframes tour-pop-in {
+    0%   { opacity: 0; transform: scale(0.88) translateY(12px); }
+    100% { opacity: 1; transform: scale(1)    translateY(0); }
+  }
+  .tour-card {
+    animation: tour-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes tour-fade-in {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  .tour-overlay {
+    animation: tour-fade-in 0.25s ease both;
+  }
+`;
 
 export default function OnboardingTour({ profile, onComplete }) {
   const navigate = useNavigate();
@@ -47,13 +55,15 @@ export default function OnboardingTour({ profile, onComplete }) {
         advance("library");
       }
       if (e.detail === "first_exercise_clicked" && tourStepRef.current === "library_exercise") {
+        // Immediately hide popup, wait 3s for user to read, then move on
         advance("library_exercise_clicked");
-      }
-      if (e.detail === "exercise_read_done" && tourStepRef.current === "library_exercise_clicked") {
-        advance("progress");
+        setTimeout(() => {
+          if (tourStepRef.current === "library_exercise_clicked") advance("progress");
+        }, 3000);
       }
       if (e.detail === "progress_logged" && tourStepRef.current === "progress_log") {
-        // Auto-navigate home then show final overlay
+        // Immediately hide popup, navigate home, show final overlay
+        advance("navigating_home");
         navigate("/");
         setTimeout(() => advance("home_end"), 600);
       }
@@ -76,13 +86,14 @@ export default function OnboardingTour({ profile, onComplete }) {
     onComplete();
   };
 
-  if (tourStep === "done") return null;
+  if (tourStep === "done" || tourStep === "coach_message" || tourStep === "library_exercise_clicked" || tourStep === "navigating_home") return null;
 
   // ── WELCOME MODAL ──
   if (tourStep === "welcome") {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
-        <div className="bg-card rounded-3xl border border-border w-full max-w-sm p-7 shadow-2xl text-center space-y-5">
+      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
+        <style>{ANIM_STYLE}</style>
+        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-7 shadow-2xl text-center space-y-5">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <span className="text-3xl">🎉</span>
           </div>
@@ -118,17 +129,11 @@ export default function OnboardingTour({ profile, onComplete }) {
   if (tourStep === "coach") {
     return (
       <NavSpotlight
-        navLabel="Coach"
         icon={<Bot className="w-7 h-7 text-primary" />}
         title="Meet your Coach"
         message="Your AI fitness coach adjusts your workouts and remembers your conditions. Tap the Coach icon below to meet them!"
       />
     );
-  }
-
-  // ── COACH MESSAGE — CoachChat handles the pulsing send button; no overlay here ──
-  if (tourStep === "coach_message") {
-    return null;
   }
 
   // ── LIBRARY — pulse Library icon, wait for user to tap ──
@@ -142,11 +147,12 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
-  // ── LIBRARY EXERCISE — pulse first exercise card, wait for tap ──
+  // ── LIBRARY EXERCISE — popup at top, pulse first exercise, disappears on tap ──
   if (tourStep === "library_exercise") {
     return (
       <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-20">
         <style>{`
+          ${ANIM_STYLE}
           @keyframes exercise-pulse {
             0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.35); }
             50%       { transform: scale(1.06); box-shadow: 0 0 0 14px hsl(var(--primary) / 0); }
@@ -158,7 +164,7 @@ export default function OnboardingTour({ profile, onComplete }) {
           }
           main, main * { pointer-events: auto !important; }
         `}</style>
-        <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-6 shadow-2xl text-center space-y-3 pointer-events-auto">
+        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-6 shadow-2xl text-center space-y-3 pointer-events-auto">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <BookOpen className="w-6 h-6 text-primary" />
           </div>
@@ -173,16 +179,10 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
-  // ── LIBRARY EXERCISE CLICKED — hide everything for 3s while user reads ──
-  if (tourStep === "library_exercise_clicked") {
-    return null;
-  }
-
   // ── PROGRESS — pulse Progress icon, wait for user to tap ──
   if (tourStep === "progress") {
     return (
       <NavSpotlight
-        navLabel="Progress"
         icon={<TrendingUp className="w-7 h-7 text-primary" />}
         title="Track Your Progress"
         message="Watch your strength, mobility, and consistency grow over time. Tap Progress below!"
@@ -190,24 +190,23 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
-  // ── PROGRESS LOG — pulse Log Progress button, wait for save ──
+  // ── PROGRESS LOG — popup, disappears immediately when user saves ──
   if (tourStep === "progress_log") {
     return (
       <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-32">
         <style>{`
+          ${ANIM_STYLE}
           @keyframes button-pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5); }
-            50% { transform: scale(1.05); box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.5); }
+            50%       { transform: scale(1.05); box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
           }
           [data-tour-log-button="true"] {
             animation: button-pulse 1.5s ease-in-out infinite !important;
             pointer-events: auto !important;
           }
-          main, main * {
-            pointer-events: auto !important;
-          }
+          main, main * { pointer-events: auto !important; }
         `}</style>
-        <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <TrendingUp className="w-7 h-7 text-primary" />
           </div>
@@ -225,8 +224,9 @@ export default function OnboardingTour({ profile, onComplete }) {
   // ── HOME END — final "You're all set!" modal ──
   if (tourStep === "home_end") {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
-        <div className="bg-card rounded-3xl border border-border w-full max-w-sm p-8 shadow-2xl text-center space-y-5">
+      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
+        <style>{ANIM_STYLE}</style>
+        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-8 shadow-2xl text-center space-y-5">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <span className="text-3xl">🎯</span>
           </div>
@@ -247,13 +247,11 @@ export default function OnboardingTour({ profile, onComplete }) {
   return null;
 }
 
-// Spotlight: dims all nav items except the one the user needs to tap
-// AppLayout handles all pointer-events / opacity / pulse via its own <style> block.
-// This component just shows the instructional card — it must NOT block the bottom nav.
 function NavSpotlight({ icon, title, message }) {
   return (
     <div className="fixed inset-0 z-[99] pointer-events-none flex items-center justify-center px-5 pb-24">
-      <div className="bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+      <style>{ANIM_STYLE}</style>
+      <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
           {icon}
         </div>
