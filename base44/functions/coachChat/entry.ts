@@ -220,20 +220,14 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
       const memoryUpdate = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: `Extract ANY new persistent user preferences or constraints from this conversation that should be remembered for future workouts and fitness adjustments.
+          { role: "system", content: `Extract ANY persistent information from this conversation that should affect future workout generation. This includes:
+- Changes to pain, symptoms, or condition status ("my knee hurts worse", "my wrist feels better", "new shoulder pain")
+- Workout preferences (difficulty, duration, exercise types, equipment)
+- Limitations or restrictions the user reports
+- Any feedback about what works or doesn't work for them
 
-CRITICAL CATEGORIES TO CAPTURE:
-- Difficulty/intensity: "too easy", "too hard", "more challenging", "less intense", "wants harder workouts", etc.
-- Specific exercise preferences: "don't include push-ups", "more stretching", "more cardio", "skip shoulder exercises", etc.
-- Duration: "workouts too long/short"
-- Pain/discomfort: "X exercise hurts", "avoid Y movements"
-- Equipment: "don't have Y equipment", "prefer using X"
-- Modality: "prefer seated exercises", "no high-impact"
-- Motivation/style: "like variety", "repetitive gets boring", "prefer music/audio coaching"
-
-For each new preference found, add it as a concise, actionable statement to the existing memory. ALWAYS preserve existing memory and build on it.
-If nothing new is mentioned, return existing memory unchanged.
-Return only the updated memory string, no explanation. Keep total under 400 characters.` },
+ALWAYS preserve existing memory and add new information. If something contradicts old memory, update it with the new status.
+Return only the updated memory string, concise and actionable. Keep under 400 characters.` },
           { role: "user", content: `Existing memory:\n${updatedMemory || '(none)'}\n\nNew conversation:\n${messages.map(m => `${m.role}: ${m.content}`).join('\n')}\n\nAssistant reply: ${reply}` }
         ],
         max_tokens: 200
