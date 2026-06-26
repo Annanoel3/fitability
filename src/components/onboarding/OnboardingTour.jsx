@@ -55,17 +55,19 @@ export default function OnboardingTour({ profile, onComplete }) {
         advance("library");
       }
       if (e.detail === "first_exercise_clicked" && tourStepRef.current === "library_exercise") {
-        // Immediately hide popup, wait 3s for user to read, then move on
+        // Immediately hide popup, block clicks for 4s so user can read, then move on
         advance("library_exercise_clicked");
         setTimeout(() => {
           if (tourStepRef.current === "library_exercise_clicked") advance("progress");
-        }, 3000);
+        }, 4000);
       }
       if (e.detail === "progress_logged" && tourStepRef.current === "progress_log") {
-        // Immediately hide popup, navigate home, show final overlay
+        // Immediately hide popup, block clicks for 4s, then navigate home and show final overlay
         advance("navigating_home");
-        navigate("/");
-        setTimeout(() => advance("home_end"), 600);
+        setTimeout(() => {
+          navigate("/");
+          setTimeout(() => advance("home_end"), 600);
+        }, 4000);
       }
     };
     window.addEventListener("fitability-tour-action", handler);
@@ -86,7 +88,19 @@ export default function OnboardingTour({ profile, onComplete }) {
     onComplete();
   };
 
-  if (tourStep === "done" || tourStep === "coach_message" || tourStep === "library_exercise_clicked" || tourStep === "navigating_home") return null;
+  if (tourStep === "done" || tourStep === "coach_message") return null;
+
+  // During transition delays — allow scroll but block all taps/clicks
+  if (tourStep === "library_exercise_clicked" || tourStep === "navigating_home") {
+    return (
+      <div
+        className="fixed inset-0 z-[100]"
+        style={{ pointerEvents: "auto", touchAction: "pan-y", userSelect: "none", background: "transparent" }}
+        onClick={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
+      />
+    );
+  }
 
   // ── WELCOME MODAL ──
   if (tourStep === "welcome") {
