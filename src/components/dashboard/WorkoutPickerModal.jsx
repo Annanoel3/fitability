@@ -27,6 +27,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
 
   const handleConfirm = () => {
     onConfirm({ workoutTypes: types, intensity });
+    onClose();
   };
 
   const canConfirm = types.length > 0 && intensity;
