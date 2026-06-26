@@ -305,6 +305,7 @@ export const BODY_AREAS = [
   "Left Knee", "Right Knee", "Left Ankle/Foot", "Right Ankle/Foot"
 ];
 
+// For users with significant limitations / low activity
 export const ABILITIES_CHECKLIST = [
   { key: "stand_from_chair", label: "Stand from a chair without help" },
   { key: "walk_stairs", label: "Walk up stairs" },
@@ -316,6 +317,22 @@ export const ABILITIES_CHECKLIST = [
   { key: "get_up_from_floor", label: "Get up from the floor" },
   { key: "carry_groceries", label: "Carry groceries" },
   { key: "open_jar", label: "Open a jar" }
+];
+
+// For more capable users with light/no limitations
+export const ABILITIES_CHECKLIST_ATHLETIC = [
+  { key: "walk_30_min", label: "Walk for 30 minutes without stopping" },
+  { key: "walk_stairs", label: "Walk up 2 flights of stairs without stopping" },
+  { key: "lift_20_lbs", label: "Lift 20 pounds" },
+  { key: "lift_40_lbs", label: "Lift 40+ pounds" },
+  { key: "do_pushups", label: "Do 5 push-ups" },
+  { key: "do_squat", label: "Do a full squat" },
+  { key: "do_situp", label: "Do a sit-up or crunch" },
+  { key: "hold_plank", label: "Hold a plank for 20 seconds" },
+  { key: "jog_1_min", label: "Jog or run for 1 minute" },
+  { key: "balance_one_foot", label: "Balance on one foot for 10 seconds" },
+  { key: "get_up_from_floor", label: "Get up from the floor without using hands" },
+  { key: "reach_overhead", label: "Reach overhead with both arms" }
 ];
 
 export const RISK_FACTORS = [
