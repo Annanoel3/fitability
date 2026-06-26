@@ -104,25 +104,27 @@ function buildUserTags(p) {
     restriction.add('no_bilateral_arms');
   }
 
-  // ── JOINT PAIN ──
+  // ── JOINT PAIN (LEFT/RIGHT SPECIFIC) ──
   Object.entries(p.pain_areas || {}).forEach(([area, level]) => {
     const a = area.toLowerCase();
+    const side = a.includes('left') ? 'left_' : a.includes('right') ? 'right_' : '';
+    
     if (level >= 4) {
-      if (a.includes('knee')) restriction.add('knee_pain');
-      if (a.includes('hip')) restriction.add('hip_pain');
+      if (a.includes('knee')) restriction.add(`${side}knee_pain`);
+      if (a.includes('hip')) restriction.add(`${side}hip_pain`);
       if (a.includes('back') || a.includes('lumbar')) restriction.add('back_pain');
       if (a.includes('neck') || a.includes('cervical')) restriction.add('neck_injury');
-      if (a.includes('shoulder')) restriction.add('shoulder_injury');
-      if (a.includes('wrist') || a.includes('hand')) restriction.add('wrist_injury');
-      if (a.includes('elbow')) restriction.add('elbow_injury');
-      if (a.includes('ankle') || a.includes('foot')) restriction.add('ankle_pain');
+      if (a.includes('shoulder')) restriction.add(`${side}shoulder_injury`);
+      if (a.includes('wrist') || a.includes('hand')) restriction.add(`${side}wrist_injury`);
+      if (a.includes('elbow')) restriction.add(`${side}elbow_injury`);
+      if (a.includes('ankle') || a.includes('foot')) restriction.add(`${side}ankle_pain`);
     }
     if (level >= 7) {
-      if (a.includes('knee')) restriction.add('knee_replacement');
-      if (a.includes('hip')) restriction.add('hip_replacement');
+      if (a.includes('knee')) restriction.add(`${side}knee_replacement`);
+      if (a.includes('hip')) restriction.add(`${side}hip_replacement`);
       if (a.includes('back') || a.includes('lumbar')) restriction.add('no_spinal_flexion');
       if (a.includes('neck') || a.includes('cervical')) restriction.add('no_neck_flexion');
-      if (a.includes('shoulder')) restriction.add('no_overhead_press');
+      if (a.includes('shoulder')) restriction.add(`${side}no_overhead_press`);
       if (a.includes('ankle') || a.includes('foot')) restriction.add('no_high_impact');
     }
   });
