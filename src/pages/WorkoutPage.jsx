@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronLeft, CheckCircle2, Circle, Shield, ChevronDown, ChevronUp, Trophy, Trash2, Archive, Volume2, VolumeX, Mic, X, Star, SkipForward, Pause, Play, Timer } from "lucide-react";
 import { useWorkoutAudio } from "@/hooks/useWorkoutAudio";
 
 export default function WorkoutPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [workout, setWorkout] = useState(null);
   const [workoutData, setWorkoutData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -72,6 +73,22 @@ export default function WorkoutPage() {
   }, [audioMode, expandedExercise]);
 
   const loadTodayWorkout = async () => {
+    // If Dashboard passed the workout directly via navigation state, use it immediately
+    if (location.state?.workout) {
+      const w = location.state.workout;
+      setWorkout(w);
+      if (w.completed) setDone(true);
+      let exList = [];
+      try {
+        const data = JSON.parse(w.workout_data || "{}");
+        setWorkoutData(data);
+        exList = data.exercises || [];
+        if (w.completed) setCompletedExercises(new Set(exList.map((_, i) => i)));
+      } catch (e) { setWorkoutData({}); }
+      setLoading(false);
+      return;
+    }
+    // Fallback: fetch from DB (e.g. user navigates directly to /workout)
     const today = new Date().toISOString().split("T")[0];
     const workouts = await base44.entities.WorkoutPlan.filter({ date: today, archived: false });
     if (workouts.length === 0) { navigate("/"); return; }

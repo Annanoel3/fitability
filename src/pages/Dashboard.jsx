@@ -478,9 +478,10 @@ Return the complete corrected workout in the same JSON structure.`,
       workout_data: JSON.stringify(finalResult)
     });
 
-    // Navigate immediately — don't make the user wait for image generation
+    // Navigate immediately — pass the created workout in state so WorkoutPage
+    // doesn't have to re-fetch and can't miss it due to timing
     setGenerating(false);
-    navigate("/workout");
+    navigate("/workout", { state: { workout: { ...created, workout_data: JSON.stringify(finalResult) } } });
 
     // Pre-generate exercise images in background (non-blocking, after navigation)
     if (finalResult.exercises?.length) {
