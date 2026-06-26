@@ -26,6 +26,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [tourStep, setTourStep] = useState("welcome");
+  const [showWorkoutBridge, setShowWorkoutBridge] = useState(false);
   const tourStepRef = useRef("welcome");
 
   const advance = (step) => {
@@ -40,6 +41,9 @@ export default function OnboardingTour({ profile, onComplete }) {
     if (tourStep === "coach" && location.pathname === "/coach") {
       setTimeout(() => advance("coach_message"), 400);
     }
+    if (tourStep === "workout" && location.pathname === "/") {
+      // ensure we're on home when this step shows
+    }
     if (tourStep === "library" && location.pathname === "/exercises") {
       setTimeout(() => advance("library_exercise"), 400);
     }
@@ -51,6 +55,14 @@ export default function OnboardingTour({ profile, onComplete }) {
   // Listen for action events from other pages
   useEffect(() => {
     const handler = (e) => {
+      if (e.detail === "workout_generated" && tourStepRef.current === "workout") {
+        advance("workout_generated");
+        setShowWorkoutBridge(true);
+        setTimeout(() => {
+          setShowWorkoutBridge(false);
+          advance("coach");
+        }, 4000);
+      }
       if (e.detail === "coach_message_sent" && tourStepRef.current === "coach_message") {
         advance("library");
       }
@@ -89,6 +101,26 @@ export default function OnboardingTour({ profile, onComplete }) {
   };
 
   if (tourStep === "done" || tourStep === "coach_message") return null;
+
+  // Bridge overlay shown after workout is generated — block clicks, show message
+  if (tourStep === "workout_generated" || showWorkoutBridge) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
+        <style>{ANIM_STYLE}</style>
+        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-7 shadow-2xl text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+            <span className="text-3xl">🎉</span>
+          </div>
+          <div>
+            <h3 className="font-heading font-bold text-xl text-foreground">Workout is on its way!</h3>
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+              Great job! Your personalized workout is being generated. Next up — meet your AI Coach who can adjust your workouts anytime.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // During transition delays — allow scroll but block all taps/clicks
   if (tourStep === "library_exercise_clicked" || tourStep === "navigating_home") {
@@ -131,9 +163,43 @@ export default function OnboardingTour({ profile, onComplete }) {
               <span><strong>Progress</strong> — see your journey over time</span>
             </div>
           </div>
-          <Button className="w-full h-12 text-base gap-2" onClick={() => advance("coach")}>
+          <Button className="w-full h-12 text-base gap-2" onClick={() => advance("workout")}>
             Show me around <ArrowRight className="w-4 h-4" />
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── WORKOUT — highlight "Start Workout" / "Choose Today's Workout" button ──
+  if (tourStep === "workout") {
+    return (
+      <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-48">
+        <style>{`
+          ${ANIM_STYLE}
+          @keyframes workout-btn-pulse {
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.5); }
+            50%       { transform: scale(1.04); box-shadow: 0 0 0 12px hsl(var(--primary) / 0); }
+          }
+          [data-tour-start-workout="true"] {
+            animation: workout-btn-pulse 1.4s ease-in-out infinite !important;
+            outline: 3px solid hsl(var(--primary)) !important;
+            outline-offset: 3px !important;
+            pointer-events: auto !important;
+          }
+          main, main * { pointer-events: none !important; }
+          [data-tour-start-workout="true"], [data-tour-start-workout="true"] * { pointer-events: auto !important; }
+        `}</style>
+        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-6 shadow-2xl text-center space-y-3 pointer-events-auto">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <span className="text-2xl">💪</span>
+          </div>
+          <div>
+            <h3 className="font-heading font-bold text-base text-foreground">Start your first workout!</h3>
+            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+              Tap the glowing button to choose your workout type and intensity.
+            </p>
+          </div>
         </div>
       </div>
     );

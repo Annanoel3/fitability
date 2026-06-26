@@ -200,8 +200,13 @@ export default function Dashboard() {
   const [emergency, setEmergency] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [showWorkoutPicker, setShowWorkoutPicker] = useState(false);
+  const [tourStep, setTourStep] = useState(window.fitabilityTourStep || null);
+
   useEffect(() => {
     loadData();
+    const handler = (e) => setTourStep(e.detail?.tourStep || null);
+    window.addEventListener("fitability-tour-step-change", handler);
+    return () => window.removeEventListener("fitability-tour-step-change", handler);
   }, []);
 
   const loadData = async () => {
@@ -239,6 +244,10 @@ export default function Dashboard() {
 
   const handleWorkoutPickerConfirm = (preferences) => {
     setShowWorkoutPicker(false);
+    // If tour is active on the workout step, fire the event
+    if (tourStep === "workout") {
+      window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "workout_generated" }));
+    }
     const workoutType = preferences.workoutTypes.includes("mixed") 
       ? "Mixed" 
       : preferences.workoutTypes[0];
@@ -649,17 +658,23 @@ Return the complete corrected workout in the same JSON structure.`,
 
           {/* Always-visible Start Workout button */}
           {todayCheckin && !todayWorkout && !generating && (
-            <Button onClick={() => setShowWorkoutPicker(true)} className="w-full h-12">
+            <Button data-tour-start-workout="true" onClick={() => setShowWorkoutPicker(true)} className="w-full h-12">
               <Sparkles className="w-4 h-4 mr-2" /> Choose Today's Workout
             </Button>
           )}
           {todayWorkout && (
-            <Button onClick={() => setShowWorkoutPicker(true)} variant="outline" className="w-full h-11">
+            <Button data-tour-start-workout="true" onClick={() => setShowWorkoutPicker(true)} variant="outline" className="w-full h-11">
               <Sparkles className="w-4 h-4 mr-2" /> Start a New Workout
             </Button>
           )}
           {!todayCheckin && !todayWorkout && !generating && (
-            <p className="text-center text-xs text-muted-foreground">Complete your check-in above to unlock today's workout.</p>
+            tourStep === "workout" ? (
+              <Button data-tour-start-workout="true" onClick={() => setShowWorkoutPicker(true)} className="w-full h-12">
+                <Sparkles className="w-4 h-4 mr-2" /> Start Your First Workout
+              </Button>
+            ) : (
+              <p className="text-center text-xs text-muted-foreground">Complete your check-in above to unlock today's workout.</p>
+            )
           )}
         </>
       )}
