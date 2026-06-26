@@ -221,16 +221,7 @@ export default function SettingsPage() {
           />
         </div>
 
-        <div className="flex items-center justify-between py-2">
-          <div>
-            <div className="font-medium text-sm">Simplified Mode</div>
-            <div className="text-xs text-muted-foreground">Larger buttons and text for easier tapping</div>
-          </div>
-          <Switch
-            checked={prefs.simplified || false}
-            onCheckedChange={v => { const next = { ...prefs, simplified: v }; updateProfile({ accessibility_preferences: next }); updatePrefs(next); }}
-          />
-        </div>
+
       </div>
 
       {/* Goals */}
