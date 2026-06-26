@@ -9,7 +9,7 @@ import { base44 } from "@/api/base44Client";
  * - Stops listening while speaking, restarts immediately after speech ends
  * - Handles all voice commands including "repeat", "what can I say", etc.
  */
-export function useWorkoutAudio({ exercises, onNext, onSkip, onBack, noisyMode, onRepeat, onCommandDetected }) {
+export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSkip, onBack, noisyMode, onRepeat, onCommandDetected }) {
   const [audioMode, setAudioMode] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [listening, setListening] = useState(false);
@@ -181,9 +181,16 @@ export function useWorkoutAudio({ exercises, onNext, onSkip, onBack, noisyMode, 
     activeIdxRef.current = idx;
     const isLast = idx === exercises.length - 1;
     const lastNote = isLast ? " This is your last exercise — great work, almost there!" : "";
-    const text = `Exercise ${idx + 1}: ${ex.name}. ${ex.sets ? `${ex.sets} sets` : ""} ${ex.reps ? `of ${ex.reps} reps.` : ex.duration_seconds ? `for ${ex.duration_seconds} seconds.` : ""} ${ex.instructions || ex.description || ""}${lastNote}`;
+    
+    // Check if this exercise has restrictions matching the user's profile
+    const matchingRestrictions = (ex.restriction_tags || []).filter(tag => userRestrictions.includes(tag));
+    const restrictionNote = matchingRestrictions.length > 0
+      ? ` I know you have ${matchingRestrictions.map(tag => tag.replace(/_/g, ' ')).join(' and ')}, so if this is giving you too much trouble, feel free to skip or modify.`
+      : "";
+    
+    const text = `Exercise ${idx + 1}: ${ex.name}. ${ex.sets ? `${ex.sets} sets` : ""} ${ex.reps ? `of ${ex.reps} reps.` : ex.duration_seconds ? `for ${ex.duration_seconds} seconds.` : ""} ${ex.instructions || ex.description || ""}${restrictionNote}${lastNote}`;
     await speak(text, ex.name);
-  }, [exercises, speak]);
+  }, [exercises, userRestrictions, speak]);
 
   const speakCommands = useCallback(() => {
     const text = `Here are the commands you can say: "next" or "done" to complete an exercise and move on. "skip" to skip an exercise without counting it. "back" to go to the previous exercise. "repeat" to hear the current exercise again. "commands" to hear this list again.`;

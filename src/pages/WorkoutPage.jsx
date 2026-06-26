@@ -33,8 +33,18 @@ export default function WorkoutPage() {
   const [started, setStarted] = useState(false); // timer doesn't run until user taps Start
   const isRestart = location.state?.workout?.completed === true; // came from a completed workout
   const [savedProgress, setSavedProgress] = useState(null); // mid-workout progress from localStorage
+  const [userProfile, setUserProfile] = useState(null); // user profile with restriction_tags
+  const [restrictionWarningIdx, setRestrictionWarningIdx] = useState(null); // index of exercise with restriction warning
 
   const exercises = workoutData?.exercises || [];
+
+  // Get matching restrictions for current exercise
+  const getMatchingRestrictions = (exerciseIdx) => {
+    if (!userProfile?.restriction_tags || !exercises[exerciseIdx]) return [];
+    const ex = exercises[exerciseIdx];
+    const exRestrictions = ex.restriction_tags || [];
+    return exRestrictions.filter(tag => userProfile.restriction_tags.includes(tag));
+  };
 
   const handleNext = (currentIdx) => {
     const nextIdx = (currentIdx ?? -1) + 1;
@@ -78,7 +88,7 @@ export default function WorkoutPage() {
   };
 
   const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported } =
-    useWorkoutAudio({ exercises, onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode, onRepeat: (idx) => repeatRef.current?.(idx), onCommandDetected: handleCommandDetected });
+    useWorkoutAudio({ exercises, userRestrictions: userProfile?.restriction_tags || [], onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode, onRepeat: (idx) => repeatRef.current?.(idx), onCommandDetected: handleCommandDetected });
 
   // Keep ref in sync after speakExercise is available
   repeatRef.current = (idx) => {
@@ -87,6 +97,17 @@ export default function WorkoutPage() {
 
   useEffect(() => {
     loadTodayWorkout();
+    // Load user profile for restriction tags
+    const loadProfile = async () => {
+      try {
+        const user = await base44.auth.me();
+        if (user) {
+          const profiles = await base44.entities.UserProfile.filter({ created_by_id: user.id });
+          if (profiles.length > 0) setUserProfile(profiles[0]);
+        }
+      } catch (e) {}
+    };
+    loadProfile();
     return () => { if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current); };
   }, []);
 
@@ -556,6 +577,24 @@ export default function WorkoutPage() {
         </div>
       )}
 
+      {/* Restriction warning modal */}
+      {restrictionWarningIdx !== null && exercises[restrictionWarningIdx] && (
+        <div className="fixed inset-0 z-40 bg-black/50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-card rounded-2xl border border-border w-full max-w-sm shadow-xl p-6 space-y-5">
+            <div className="flex items-start gap-3">
+              <Shield className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-heading font-bold text-lg text-foreground">Heads up!</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {getMatchingRestrictions(restrictionWarningIdx).map(tag => tag.replace(/_/g, ' ')).join(', ')} — if this is too much, feel free to skip or modify.
+                </p>
+              </div>
+            </div>
+            <Button className="w-full h-11" onClick={() => setRestrictionWarningIdx(null)}>Got it, let's go</Button>
+          </div>
+        </div>
+      )}
+
       {workout?.description && (
         <p className="text-sm text-muted-foreground mb-5 bg-muted/50 rounded-xl p-4">{workout.description}</p>
       )}
@@ -615,9 +654,14 @@ export default function WorkoutPage() {
                     ].filter(Boolean).join(' · ')}
                   </p>
                 </div>
-                <button onClick={() => setExpandedExercise(expanded ? null : idx)} className="p-1 text-muted-foreground">
-                  {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
+                <button onClick={() => {
+                  if (!expanded && getMatchingRestrictions(idx).length > 0 && !audioMode) {
+                    setRestrictionWarningIdx(idx);
+                  }
+                  setExpandedExercise(expanded ? null : idx);
+                }} className="p-1 text-muted-foreground">
+                    {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
               </div>
 
               {expanded && (
