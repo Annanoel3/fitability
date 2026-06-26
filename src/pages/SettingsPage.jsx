@@ -224,7 +224,7 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between py-2">
           <div>
             <div className="font-medium text-sm">Simplified Mode</div>
-            <div className="text-xs text-muted-foreground">Fewer options, cleaner interface</div>
+            <div className="text-xs text-muted-foreground">Larger buttons and text for easier tapping</div>
           </div>
           <Switch
             checked={prefs.simplified || false}

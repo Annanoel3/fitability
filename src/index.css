@@ -112,10 +112,24 @@
   --primary: 174 70% 55%;
 }
 
-/* Accessibility: Simplified — hide decorative secondary elements */
-.simplified .text-muted-foreground {
-  display: none;
-}
+/* Accessibility: Simplified — larger tap targets, bolder text, hide decorative-only elements */
 .simplified [data-simplified-hide] {
   display: none;
+}
+.simplified nav a,
+.simplified nav button {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+}
+.simplified button,
+.simplified a[role="button"] {
+  min-height: 3rem;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+}
+.simplified .text-xs {
+  font-size: 0.85rem !important;
+}
+.simplified .text-sm {
+  font-size: 1rem !important;
 }
