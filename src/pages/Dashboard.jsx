@@ -311,20 +311,49 @@ export default function Dashboard() {
       ? `\n\n═══ COACH MEMORY — MANDATORY ═══\nThe user has previously told their coach these preferences. You MUST honor every item below — they are non-negotiable rules, not suggestions:\n${p.coach_memory}`
       : '';
 
+    // Build goals-to-workout-focus mapping
+    const goals = p.goals || [];
+    const goalFocusLines = [];
+    if (goals.includes("Build strength")) goalFocusLines.push("PRIORITY: This person wants to BUILD STRENGTH — weight the workout heavily toward resistance/strength exercises (60–80% of exercises). Use progressive overload principles appropriate to their ability level.");
+    if (goals.includes("Lose weight")) goalFocusLines.push("PRIORITY: This person wants to LOSE WEIGHT — include more cardio-style movement, higher reps, circuit-friendly pacing, caloric burn focus.");
+    if (goals.includes("Improve mobility")) goalFocusLines.push("PRIORITY: This person wants to IMPROVE MOBILITY — include range-of-motion exercises, joint circles, dynamic stretching, functional movement patterns.");
+    if (goals.includes("Reduce pain")) goalFocusLines.push("PRIORITY: This person wants to REDUCE PAIN — gentle strengthening of muscles around painful joints, focus on pain-free movement, avoid aggravating exercises entirely.");
+    if (goals.includes("Improve balance")) goalFocusLines.push("PRIORITY: This person wants to IMPROVE BALANCE — include single-leg stands, weight shifts, proprioception drills appropriate to their mobility level.");
+    if (goals.includes("Increase stamina")) goalFocusLines.push("PRIORITY: This person wants to INCREASE STAMINA — use circuit-style, keep rest short, include sustained moderate-effort exercises.");
+    if (goals.includes("Improve flexibility")) goalFocusLines.push("PRIORITY: This person wants to IMPROVE FLEXIBILITY — add dedicated stretching sets, hold stretches longer (30–60s), target major muscle groups they can safely stretch.");
+    if (goals.includes("Walk farther")) goalFocusLines.push("PRIORITY: This person wants to WALK FARTHER — strengthen legs and core, include step training or marching exercises, build endurance in lower body.");
+    if (goals.includes("Stand longer")) goalFocusLines.push("PRIORITY: This person wants to STAND LONGER — focus on leg endurance, postural muscles, calf and quad strengthening.");
+    if (goals.includes("Wheelchair fitness")) goalFocusLines.push("PRIORITY: This person wants WHEELCHAIR FITNESS — all exercises must be performable from a wheelchair; focus upper body, core, and wheelchair-accessible cardio.");
+    if (goals.includes("Improve independence")) goalFocusLines.push("PRIORITY: This person wants to IMPROVE INDEPENDENCE — focus on functional ADL movements: standing from seated, carrying objects, reaching, step-overs.");
+    if (goals.includes("Fall prevention")) goalFocusLines.push("PRIORITY: This person wants FALL PREVENTION — prioritize balance, hip and ankle stability, slow controlled movements, proprioception.");
+    if (goals.includes("Better heart health")) goalFocusLines.push("PRIORITY: This person wants BETTER HEART HEALTH — include sustained aerobic activity at moderate intensity, keep it heart-safe and within their tolerance.");
+    if (goals.includes("Better daily functioning")) goalFocusLines.push("PRIORITY: This person wants BETTER DAILY FUNCTIONING — functional, practical exercises that mirror real-life tasks.");
+    const goalFocusBlock = goalFocusLines.length > 0
+      ? `\n═══ GOAL-DRIVEN WORKOUT PRIORITIES (MANDATORY) ═══\nThese are this person's stated goals. You MUST shape the workout around them — not just include token exercises:\n${goalFocusLines.join('\n')}`
+      : '';
+
+    // Build abilities context
+    const abilitiesLines = Object.entries(p.current_abilities || {}).map(([k, v]) => `  • ${k.replace(/_/g, ' ')}: ${v ? '✓ CAN do' : '✗ CANNOT do'}`);
+    const abilitiesBlock = abilitiesLines.length > 0
+      ? `\nVerified Abilities (USE THESE TO SELECT EXERCISES — cannot-do items are hard limits):\n${abilitiesLines.join('\n')}`
+      : '';
+
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an expert adaptive fitness coach. Generate a personalized workout for this individual.
+      prompt: `You are an expert adaptive fitness coach. Generate a deeply personalized workout for this individual. Every single data point below was provided by the user and must influence the workout you create.
 
 HOW THIS WORKS:
-The exercise library below has already been hard-filtered using this person's restriction tags. Every exercise listed is confirmed safe for them. Your job is to select from that pool and personalize reps, sets, and intensity based on their full profile. If the library is empty or thin, create new exercises that would NOT violate any of their restriction tags.
+The exercise library below has been hard-filtered for safety. Select from it first. If thin, create new exercises that respect all constraints below. Your job is not just to pick safe exercises — it's to build a workout that genuinely serves THIS person's goals, body, and current state.
 
-═══ USER'S COMPUTED TAGS ═══
-Restriction tags (things this person cannot safely do — already used to filter the library):
+${goalFocusBlock}
+
+═══ USER'S SAFETY TAGS ═══
+Restriction tags (hard limits — already used to filter library):
 ${restrictionTagsList}
 
-Capability tags (conditions/goals to favor when selecting):
+Capability tags (conditions/goals to favor):
 ${capabilityTagsList}
 
-${preferences.workoutType ? `═══ WORKOUT PREFERENCES ═══
+${preferences.workoutType ? `═══ TODAY'S WORKOUT PREFERENCES ═══
 Type: ${preferences.workoutType}
 Intensity: ${preferences.intensity}
 Equipment available: chair, wall${(preferences.equipment || p.equipment || []).filter(e => e !== 'none' && e !== 'chair' && e !== 'wall').length > 0 ? ', ' + (preferences.equipment || p.equipment || []).filter(e => e !== 'none' && e !== 'chair' && e !== 'wall').join(', ') : ''}.
@@ -335,7 +364,7 @@ Name: ${p.display_name || "User"}
 Age: ${p.age || "Unknown"} | Sex: ${p.sex || "Not provided"} | Height: ${heightStr} | Weight: ${p.weight_lbs ? p.weight_lbs + " lbs" : "Not provided"} | BMI: ${bmi || "Unknown"}
 Activity Level: ${p.activity_level || "Unknown"} | Fitness Mode: ${p.fitness_mode || "Standard"}
 Veteran: ${p.is_veteran ? `Yes${p.veteran_details && Object.keys(p.veteran_details).length > 0 ? ' — ' + JSON.stringify(p.veteran_details) : ''}` : "No"}
-Goals: ${(p.goals || []).join(', ') || 'None specified'}
+Goals: ${goals.join(', ') || 'None specified'}
 
 Conditions & Disabilities:
 ${(p.disabilities || []).length > 0 ? (p.disabilities || []).map(d => `  • ${d}`).join('\n') : '  None listed'}
@@ -343,27 +372,26 @@ ${(p.disabilities || []).length > 0 ? (p.disabilities || []).map(d => `  • ${d
 Body Limitations:
 ${(p.body_limitations || []).length > 0 ? (p.body_limitations || []).map(l => `  • ${l}`).join('\n') : '  None listed'}
 
-Pain Areas (0–10):
-${Object.entries(p.pain_areas || {}).length > 0 ? Object.entries(p.pain_areas).map(([area, level]) => `  • ${area}: ${level}/10`).join('\n') : '  None reported'}
-
-Current Abilities:
-${Object.entries(p.current_abilities || {}).map(([k, v]) => `  • ${k.replace(/_/g, ' ')}: ${v ? 'Yes' : 'No'}`).join('\n') || '  Not assessed'}
-
+Pain Areas (0–10 severity):
+${Object.entries(p.pain_areas || {}).length > 0 ? Object.entries(p.pain_areas).map(([area, level]) => `  • ${area}: ${level}/10${level >= 7 ? ' (SEVERE — avoid all loading of this area)' : level >= 4 ? ' (MODERATE — work around carefully)' : ' (mild)'}`).join('\n') : '  None reported'}
+${abilitiesBlock}
 Risk Factors: ${(p.risk_factors || []).join(', ') || 'None'}
 
 Today's check-in — Mood: ${(checkin || todayCheckin)?.mood || 'N/A'} | Energy: ${(checkin || todayCheckin)?.energy || 'N/A'}
 ${coachMemoryBlock}
 
-PERSONALIZATION:
-- Tune reps, sets, duration, and intensity to match this specific person's activity level, weight, age, and today's energy.
-- If mood is "Bad" or energy is "Low"/"Exhausted": 2–3 exercises, short duration.
-- If energy is "High" and mood is "Great"/"Good": up to 6 exercises at appropriate intensity.
-- Match exercise selection to capability tags when possible.
+═══ PERSONALIZATION RULES ═══
+- Age & sex matter: adjust intensity, rest times, and exercise selection accordingly (e.g. older adults need more warmup, women may have different joint considerations, etc.)
+- Weight & BMI matter: high BMI → reduce joint loading, prefer seated/supported exercises; very low weight → don't under-challenge.
+- Activity level sets the baseline intensity ceiling — "Bedridden" means micro-movements only; "Active" means full range.
+- Today's energy & mood: if "Bad/Low/Exhausted" → 2–3 gentle exercises, short duration; if "Great/High" → up to 6 at appropriate intensity.
+- Goals are the NORTH STAR — if only one goal is checked, the entire workout should primarily serve that goal.
+- Abilities checklist: if a person CANNOT do something, never include exercises that require it.
 
 INSTRUCTIONS:
 Generate a complete workout: warmup, 3–6 main exercises, cooldown.
 Each exercise: name, description, sets, reps or duration_seconds, step-by-step instructions, position, muscles_used, safety_notes.
-Title: short, natural, motivating. No clinical terms in the title.
+Title: short, natural, motivating — reflect their primary goal in the title.
 ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
       response_json_schema: {
         type: "object",
