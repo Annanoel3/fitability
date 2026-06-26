@@ -9,7 +9,7 @@ import { base44 } from "@/api/base44Client";
  * - Stops listening while speaking, restarts immediately after speech ends
  * - Handles all voice commands including "repeat", "what can I say", etc.
  */
-export function useWorkoutAudio({ exercises, onNext, onSkip, onBack, noisyMode, onRepeat }) {
+export function useWorkoutAudio({ exercises, onNext, onSkip, onBack, noisyMode, onRepeat, onCommandDetected }) {
   const [audioMode, setAudioMode] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [listening, setListening] = useState(false);
@@ -193,25 +193,47 @@ export function useWorkoutAudio({ exercises, onNext, onSkip, onBack, noisyMode, 
   // Build and register the command handler whenever exercises/callbacks change
   useEffect(() => {
     commandHandlerRef.current = (transcript) => {
-      if (transcript.includes("skip")) {
-        stopAudio();
-        onSkip(activeIdxRef.current);
-      } else if (transcript.includes("next") || transcript.includes("done") || transcript.includes("finish")) {
-        stopAudio();
-        onNext(activeIdxRef.current);
-      } else if (transcript.includes("back") || transcript.includes("previous")) {
-        stopAudio();
-        onBack(activeIdxRef.current);
-      } else if (transcript.includes("repeat") || transcript.includes("again") || transcript.includes("say that") || transcript.includes("instructions")) {
-        stopAudio();
-        if (onRepeat) onRepeat(activeIdxRef.current);
-      } else if (transcript.includes("command") || transcript.includes("what can i say") || transcript.includes("help")) {
-        stopAudio();
-        speakCommands();
+      // "ignore" / "cancel" / "mistake" / "never mind" — user is correcting a mishear
+      if (
+        transcript.includes("ignore") || transcript.includes("cancel") ||
+        transcript.includes("mistake") || transcript.includes("never mind") ||
+        transcript.includes("nevermind") || transcript.includes("didn't say") ||
+        transcript.includes("i didn't") || transcript.includes("not that") ||
+        transcript.includes("wrong") || transcript.includes("no no") ||
+        transcript.includes("stop") || transcript.includes("undo")
+      ) {
+        // Nothing to undo at this point — just acknowledge and keep listening
+        if (onCommandDetected) onCommandDetected(null); // clear any pending confirmation
+        return;
       }
-      // Unknown command — just keep listening (startOneShot's onend restart handles it)
+
+      let label = null;
+      let action = null;
+
+      if (transcript.includes("skip")) {
+        label = "skip";
+        action = () => { stopAudio(); onSkip(activeIdxRef.current); };
+      } else if (transcript.includes("next") || transcript.includes("done") || transcript.includes("finish")) {
+        label = "next";
+        action = () => { stopAudio(); onNext(activeIdxRef.current); };
+      } else if (transcript.includes("back") || transcript.includes("previous")) {
+        label = "back";
+        action = () => { stopAudio(); onBack(activeIdxRef.current); };
+      } else if (transcript.includes("repeat") || transcript.includes("again") || transcript.includes("say that") || transcript.includes("instructions")) {
+        label = "repeat";
+        action = () => { stopAudio(); if (onRepeat) onRepeat(activeIdxRef.current); };
+      } else if (transcript.includes("command") || transcript.includes("what can i say") || transcript.includes("help")) {
+        label = "commands";
+        action = () => { stopAudio(); speakCommands(); };
+      }
+
+      if (action && label) {
+        // Surface the detected command to the UI so user can cancel within a short window
+        if (onCommandDetected) onCommandDetected({ label, action, transcript });
+      }
+      // Unknown transcript — keep listening silently
     };
-  }, [exercises, onNext, onSkip, onBack, onRepeat, stopAudio, speakCommands]);
+  }, [exercises, onNext, onSkip, onBack, onRepeat, onCommandDetected, stopAudio, speakCommands]);
 
   // Start continuous (restart-on-end) listening
   const startListening = useCallback(() => {

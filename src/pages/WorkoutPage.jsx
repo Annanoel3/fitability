@@ -28,6 +28,8 @@ export default function WorkoutPage() {
   const [reviewRating, setReviewRating] = useState(3);
   const [reviewText, setReviewText] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
+  const [pendingVoiceCommand, setPendingVoiceCommand] = useState(null); // { label, action, transcript }
+  const pendingTimerRef = useRef(null);
 
   const exercises = workoutData?.exercises || [];
 
@@ -54,8 +56,26 @@ export default function WorkoutPage() {
   // handleRepeat is defined after the hook — use a ref so the hook can call it safely
   const repeatRef = useRef(null);
 
+  const handleCommandDetected = (cmd) => {
+    // Clear any previous pending command
+    if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
+    if (!cmd) { setPendingVoiceCommand(null); return; }
+
+    setPendingVoiceCommand(cmd);
+    // Auto-execute after 3.5 seconds if user doesn't cancel
+    pendingTimerRef.current = setTimeout(() => {
+      setPendingVoiceCommand(null);
+      cmd.action();
+    }, 3500);
+  };
+
+  const cancelPendingCommand = () => {
+    if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
+    setPendingVoiceCommand(null);
+  };
+
   const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported } =
-    useWorkoutAudio({ exercises, onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode, onRepeat: (idx) => repeatRef.current?.(idx) });
+    useWorkoutAudio({ exercises, onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode, onRepeat: (idx) => repeatRef.current?.(idx), onCommandDetected: handleCommandDetected });
 
   // Keep ref in sync after speakExercise is available
   repeatRef.current = (idx) => {
@@ -64,6 +84,7 @@ export default function WorkoutPage() {
 
   useEffect(() => {
     loadTodayWorkout();
+    return () => { if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current); };
   }, []);
 
   // Elapsed timer — counts up while workout is active and not paused
@@ -412,6 +433,25 @@ export default function WorkoutPage() {
               <button onClick={speakCommands} className="text-xs text-primary underline ml-1">hear all commands</button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Voice command confirmation banner */}
+      {pendingVoiceCommand && (
+        <div className="mb-4 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 flex items-center gap-3">
+          <Mic className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-900">
+              Heard: <span className="font-bold">"{pendingVoiceCommand.label}"</span>
+            </p>
+            <p className="text-xs text-amber-700">Executing in a moment… say "ignore" or tap Cancel to undo.</p>
+          </div>
+          <button
+            onClick={cancelPendingCommand}
+            className="text-xs font-semibold text-amber-700 border border-amber-400 rounded-lg px-3 py-1.5 hover:bg-amber-100 transition-colors flex-shrink-0"
+          >
+            Cancel
+          </button>
         </div>
       )}
 
