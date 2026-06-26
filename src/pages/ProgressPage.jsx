@@ -113,9 +113,9 @@ export default function ProgressPage() {
         {isTourProgressLog && (
           <style>{`
             @keyframes log-btn-pulse {
-              0%   { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.5); }
-              50%  { transform: scale(1.12); box-shadow: 0 0 0 12px hsl(var(--primary) / 0); }
-              100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.5); }
+              0%   { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.7), 0 0 20px hsl(var(--primary) / 0.4); }
+              50%  { transform: scale(1.18); box-shadow: 0 0 0 16px hsl(var(--primary) / 0),  0 0 40px hsl(var(--primary) / 0.2); }
+              100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.7), 0 0 20px hsl(var(--primary) / 0.4); }
             }
             [data-tour-log-button="true"] {
               animation: log-btn-pulse 1.1s ease-in-out infinite !important;
@@ -125,8 +125,9 @@ export default function ProgressPage() {
         <Button
           onClick={() => setShowLogForm(!showLogForm)}
           variant={isTourProgressLog ? "default" : "outline"}
-          size="sm"
+          size={isTourProgressLog ? "lg" : "sm"}
           data-tour-log-button={isTourProgressLog ? "true" : undefined}
+          style={isTourProgressLog ? { fontSize: "1rem", fontWeight: 700, letterSpacing: "0.01em" } : undefined}
         >
           Log Progress
         </Button>
