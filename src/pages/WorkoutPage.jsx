@@ -76,14 +76,15 @@ export default function WorkoutPage() {
     // If Dashboard passed the workout directly via navigation state, use it immediately
     if (location.state?.workout) {
       const w = location.state.workout;
-      setWorkout(w);
-      if (w.completed) setDone(true);
+      const isReplay = w.archived; // "Do Again" on an archived workout — treat as fresh
+      setWorkout({ ...w, completed: isReplay ? false : w.completed });
+      if (w.completed && !isReplay) setDone(true);
       let exList = [];
       try {
         const data = JSON.parse(w.workout_data || "{}");
         setWorkoutData(data);
         exList = data.exercises || [];
-        if (w.completed) setCompletedExercises(new Set(exList.map((_, i) => i)));
+        if (w.completed && !isReplay) setCompletedExercises(new Set(exList.map((_, i) => i)));
       } catch (e) { setWorkoutData({}); }
       setLoading(false);
       return;
@@ -218,6 +219,8 @@ export default function WorkoutPage() {
     window.location.href = "/";
   };
 
+  // User has "reached the end" if they've clicked Next/Done on the last exercise
+  const reachedEnd = exercises.length > 0 && (completedExercises.has(exercises.length - 1) || skippedExercises.has(exercises.length - 1));
   const allDone = exercises.length > 0 && completedExercises.size === exercises.length;
 
   if (loading) {
@@ -562,11 +565,12 @@ export default function WorkoutPage() {
         )}
         <Button
           onClick={handleFinish}
-          disabled={finishing || completedExercises.size === 0 || feedbackState === "listening" || feedbackState === "processing"}
+          disabled={finishing || !reachedEnd || feedbackState === "listening" || feedbackState === "processing"}
           className="w-full h-12 text-base"
+          title={!reachedEnd ? "Complete all exercises to finish" : undefined}
         >
           {finishing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-          {allDone ? "Complete Workout ✓" : `Finish (${completedExercises.size}/${exercises.length} done)`}
+          {reachedEnd ? (allDone ? "Complete Workout ✓" : `Finish (${completedExercises.size}/${exercises.length} done)`) : `Complete exercises to finish (${completedExercises.size + skippedExercises.size}/${exercises.length})`}
         </Button>
       </div>
     </div>

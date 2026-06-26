@@ -8,6 +8,22 @@ function isRunningInCapacitor() {
 
 export default function OneSignalInit({ user }) {
   useEffect(() => {
+    // Request microphone permission on first load (Capacitor native only)
+    if (isRunningInCapacitor()) {
+      try {
+        if (window.Capacitor?.Plugins?.Microphone) {
+          window.Capacitor.Plugins.Microphone.requestPermissions().catch(() => {});
+        } else {
+          // Fallback: use browser API which Capacitor bridges to native
+          navigator.mediaDevices?.getUserMedia({ audio: true })
+            .then(stream => stream.getTracks().forEach(t => t.stop()))
+            .catch(() => {});
+        }
+      } catch (e) {}
+    }
+  }, []);
+
+  useEffect(() => {
     const syncOneSignal = async () => {
       if (!user) return;
       const userEmail = user?.email;

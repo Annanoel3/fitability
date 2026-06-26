@@ -8,6 +8,7 @@ import EmergencyBanner from "@/components/dashboard/EmergencyBanner";
 import { Dumbbell, Clock, Target, Sparkles, ChevronRight, Loader2, TrendingUp } from "lucide-react";
 import WorkoutPickerModal from "@/components/dashboard/WorkoutPickerModal";
 import StaleWorkoutCard from "@/components/dashboard/StaleWorkoutCard.jsx";
+import ArchivedWorkouts from "@/components/dashboard/ArchivedWorkouts";
 // TAG VOCABULARY — shared between buildUserTags() and the tagExistingExercises backend function.
 // Exercise restriction_tags use these exact strings. User tags are generated here and matched against them.
 // When adding a new tag here, also add it to the tagExistingExercises function vocabulary.
@@ -505,7 +506,7 @@ Return the complete corrected workout in the same JSON structure.`,
 
   const today = new Date().toISOString().split("T")[0];
   const todayWorkout = workouts.find(w => w.date === today);
-  const staleWorkout = workouts.find(w => w.date !== today);
+  const staleWorkout = workouts.find(w => w.date < today);
 
   return (
     <div className="space-y-6 pb-20 md:pb-6">
@@ -611,6 +612,11 @@ Return the complete corrected workout in the same JSON structure.`,
 
       {/* Streak */}
       <StreakCard workouts={workouts} />
+
+      {/* Archived Workouts */}
+      <ArchivedWorkouts onReuse={(w) => {
+        setShowWorkoutPicker(true);
+      }} />
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
