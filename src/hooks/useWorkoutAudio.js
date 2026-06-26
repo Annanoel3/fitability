@@ -245,7 +245,7 @@ export function useWorkoutAudio({ exercises, onNext, onSkip, onBack, noisyMode, 
   }, [voiceSupported, startOneShot]);
 
   const askForFeedback = useCallback(async () => {
-    const promptText = "Amazing job finishing your workout! How did it feel? Go ahead and tell me in your own words — something like it was great, or pretty tough today, or give it a rating out of five. I'm listening!";
+    const promptText = "Great job today — let's do this again real soon! Since we're always looking to improve, may I ask how your workout went? If you had to rate it one to five stars, what would you give it, and why? Feel free to share — or just say skip if you'd rather not.";
     await speak(promptText, null);
 
     if (!voiceSupported || noisyRef.current) return null;
@@ -274,8 +274,18 @@ export function useWorkoutAudio({ exercises, onNext, onSkip, onBack, noisyMode, 
         resolve(transcript || null);
       };
 
-      const timeout = setTimeout(() => finish(null), 15000);
-      recognition.onresult = (e) => { clearTimeout(timeout); finish(e.results[0][0].transcript); };
+      const timeout = setTimeout(() => finish(null), 20000);
+      recognition.onresult = (e) => {
+        clearTimeout(timeout);
+        const t = e.results[0][0].transcript;
+        // Treat "skip", "no", "pass", "never mind" as opting out
+        const lower = t.toLowerCase().trim();
+        if (lower === "skip" || lower === "no" || lower === "pass" || lower === "never mind" || lower === "nevermind" || lower === "no thanks") {
+          finish(null);
+        } else {
+          finish(t);
+        }
+      };
       recognition.onerror = () => { clearTimeout(timeout); finish(null); };
       recognition.onend = () => { clearTimeout(timeout); finish(null); };
 

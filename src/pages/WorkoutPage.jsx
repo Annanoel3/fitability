@@ -196,7 +196,7 @@ export default function WorkoutPage() {
         setFeedbackState("processing");
         try {
           const parsed = await base44.integrations.Core.InvokeLLM({
-            prompt: `A user just finished a workout and said: "${transcript}"\n\nExtract a star rating from 1-5 based on how positive they sound. Also extract a short cleaned-up summary of their feedback (1-2 sentences max).\n\nIf they say "one star", "terrible", "awful" → 1. "two stars", "bad", "not great" → 2. "okay", "alright", "fine", "three stars" → 3. "good", "great", "four stars" → 4. "amazing", "perfect", "loved it", "five stars" → 5. If unclear, use 3.`,
+            prompt: `A user just finished a workout and verbally responded to "how did your workout go, rate it 1-5 stars and why?" They said: "${transcript}"\n\nExtract a star rating from 1-5 based on how positive/negative they sound. Also produce a short cleaned-up written summary of their feedback (1-2 sentences).\n\nRating guide: "one star", "terrible", "awful", "hated it" → 1. "two stars", "bad", "not great", "pretty rough" → 2. "okay", "alright", "fine", "three stars", "meh" → 3. "good", "great", "liked it", "four stars" → 4. "amazing", "perfect", "loved it", "five stars", "best ever" → 5. If unclear, use 3.`,
             response_json_schema: {
               type: "object",
               properties: { rating: { type: "number" }, summary: { type: "string" } }
