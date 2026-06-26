@@ -14,27 +14,31 @@ Your job is to help users who have disabilities, chronic pain, or physical limit
 - You are NOT a doctor. Never diagnose conditions or tell users to stop prescribed treatments.
 
 ═══ WHAT YOU CAN DO ═══
-- Adjust workout plans based on user feedback (too hard, too easy, specific exercises causing pain, etc.)
-- Suggest exercise modifications that respect the user's exact limitations and available equipment
+- Listen to user feedback about what worked, what didn't, what felt too easy or too hard
 - Answer questions about exercises and form
 - Provide encouragement and motivation
-- When the user asks to modify their workout plan, you MUST call the update_workout_plan function
+- Remember preferences and pain points in coach_memory so they shape future workout generation
+- Do NOT show specific exercise modifications or claim to update the current/next workout with exact exercises
 
 Always prioritize safety. Never recommend exercises that could aggravate the user's conditions.
 Be warm, encouraging, and concise. Keep responses short and practical.
 
-IMPORTANT TONE: When the user mentions their workout was too hard, too easy, or had issues:
-- Do NOT say "I've adjusted the workout you just completed" — that's in the past.
-- DO say "I'll make sure your next workout..." or "Going forward, I'm adjusting..." or "Here's what I'll change for you next time..."
-- The goal is to help them improve FUTURE workouts, not regret the past one.
-- Encourage them to come back after the next workout with feedback so you can fine-tune further.
+CRITICAL TONE: When the user mentions their workout was too hard, too easy, or had issues:
+- Do NOT list specific exercises you'll put in the next workout — each day is freshly generated
+- Do NOT say "Here's your updated workout with these changes" with a specific list
+- DO acknowledge what they're telling you: "That was too easy, got it" or "Your knee bothered you during that move, I understand"
+- DO say you'll remember it for next time and it will shape how their workouts are built going forward
+- Keep it simple and conversational, not a technical adjustment
+- Encourage them to try the next workout and come back with how it feels
 
 When the user gives feedback about their workout or asks for adjustments:
-- Frame all changes as improvements to FUTURE workouts, not the past one
-- Use language like: "I'll adjust your next workout to..." or "Going forward, I'll..." or "From now on, I'll..."
-- Avoid dwelling on what just happened — focus on what comes next
-- Encourage them to come back after trying the adjusted workout to let you know how it feels
-- When you call update_workout_plan, explain the changes in forward-looking terms
+- IMPORTANT: Each day's workout is freshly generated, so do NOT promise specific exercises in the next workout
+- Instead, acknowledge their feedback and explain you'll remember it for future generations
+- Use language like: "Got it — I'll remember that for next time" or "I hear you, that's important info"
+- If they say an exercise was too hard, too easy, painful, or didn't work — validate and say you'll factor that in
+- DO NOT call update_workout_plan or show a specific list of exercises
+- Encourage them to come back after their next workout to let you know how it feels
+- Keep it conversational and supportive, not technical
 
 If a user asks you to do something that is clearly outside your capabilities (e.g. scheduling appointments, connecting to external devices, features that don't exist in the app, billing questions, account changes, etc.), you MUST:
 1. Call the notify_developer function with category="out_of_scope" and the user's request as the message
@@ -116,39 +120,7 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
       }
     };
 
-    const tools = workoutPlan ? [
-      {
-        type: "function",
-        function: {
-          name: "update_workout_plan",
-          description: "Update the user's current workout plan based on their feedback. Call this when the user wants to modify exercises, difficulty, or duration.",
-          parameters: {
-            type: "object",
-            properties: {
-              exercises: {
-                type: "array",
-                items: { type: "string" },
-                description: "Updated list of exercise strings"
-              },
-              difficulty_level: {
-                type: "string",
-                enum: ["Gentle", "Easy", "Moderate", "Challenging"],
-                description: "New difficulty level if changing"
-              },
-              total_duration_minutes: {
-                type: "number",
-                description: "New total duration in minutes if changing"
-              },
-              safety_notes: {
-                type: "string",
-                description: "Updated safety notes"
-              }
-            }
-          }
-        }
-      },
-      notifyTool
-    ] : [notifyTool];
+    const tools = [notifyTool];
 
     const systemWithContext = SYSTEM_PROMPT + "\n\n" + contextBlock;
 
@@ -175,29 +147,13 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
 
     const choice = response.choices[0];
     let reply = choice.message.content || "";
-    let planUpdated = false;
 
     // Handle tool calls
     if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
       for (const toolCall of choice.message.tool_calls) {
         const args = JSON.parse(toolCall.function.arguments);
 
-        if (toolCall.function.name === "update_workout_plan" && workoutPlan) {
-          await base44.asServiceRole.entities.WorkoutPlan.update(workoutPlan.id, args);
-          planUpdated = true;
-
-          const followUp = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-              ...chatMessages,
-              choice.message,
-              { role: "tool", tool_call_id: toolCall.id, content: "Plan updated successfully." }
-            ],
-            max_tokens: 300
-          });
-          reply = followUp.choices[0].message.content || "Done! I've updated your workout plan.";
-
-        } else if (toolCall.function.name === "notify_developer") {
+        if (toolCall.function.name === "notify_developer") {
           // Fire and forget — send email, don't block the response
           base44.asServiceRole.integrations.Core.SendEmail({
             to: "juliheaton@msn.com",
@@ -246,7 +202,7 @@ Return only the updated memory string, concise and actionable. Keep under 400 ch
       updatedMemory = memoryUpdate.choices[0].message.content?.trim() || updatedMemory;
     }
 
-    return Response.json({ reply, planUpdated, updatedMemory });
+    return Response.json({ reply, updatedMemory });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
