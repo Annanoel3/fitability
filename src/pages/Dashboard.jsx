@@ -380,13 +380,36 @@ Risk Factors: ${(p.risk_factors || []).join(', ') || 'None'}
 Today's check-in — Mood: ${(checkin || todayCheckin)?.mood || 'N/A'} | Energy: ${(checkin || todayCheckin)?.energy || 'N/A'}
 ${coachMemoryBlock}
 
+═══ INTENSITY CALIBRATION — CRITICAL ═══
+This app serves users across the full spectrum from bedridden to fully healthy and athletic. You MUST push each person to the appropriate level of challenge — under-challenging a capable person is just as wrong as over-challenging a limited one. A healthy, active person getting a "gentle chair stretching" workout would find it insulting. A bedridden person getting push-ups would be dangerous. Match the intensity to THIS person precisely.
+
+Determine their baseline capability tier:
+- NO disabilities, NO pain areas, activity level "Light activity" or above, can perform all or most abilities → HEALTHY/CAPABLE USER. Give them real workouts: push-ups, squats, lunges, planks, burpees, dumbbell exercises, running in place, etc. at appropriate sets/reps for their fitness level. Do NOT default to gentle or adaptive exercises for these users.
+- SOME limitations (e.g. one bad knee, one bad wrist) but otherwise capable → Work around the specific limitation ONLY. Every other body part should be challenged at full intensity. E.g. bad ankle? Upper body and core workout at full intensity. Bad wrist? Leg day at full intensity.
+- SIGNIFICANT limitations (multiple conditions, low activity level, pain in multiple areas) → Adaptive/gentle approach, but still push the limit of what they CAN do safely.
+- SEVERE limitations (bedridden, paralysis, extreme pain, very low activity) → Micro-movements, seated, lying down — but still meaningful exercise.
+
+Activity level → intensity guide:
+- Bedridden / Mostly seated: micro-movements, very light seated exercises only
+- Wheelchair user / Limited walking: upper body + core focus, wheelchair-accessible exercises
+- Light activity: moderate intensity — bodyweight exercises, light resistance, manageable cardio
+- Moderate activity: solid intensity — full bodyweight exercises, moderate resistance, real cardio
+- Active: HIGH intensity — challenging sets/reps, compound movements, real athletic exercises
+
+Rep/set calibration for healthy/capable users:
+- Push-ups: 3x10-20 depending on fitness
+- Squats: 3x15-25
+- Lunges: 3x10-15 per leg
+- Plank: 3x30-60 seconds
+- Do NOT give a healthy active person 5 push-ups or 10 squats — that's a warm-up, not a workout.
+
 ═══ PERSONALIZATION RULES ═══
-- Age & sex matter: adjust intensity, rest times, and exercise selection accordingly (e.g. older adults need more warmup, women may have different joint considerations, etc.)
-- Weight & BMI matter: high BMI → reduce joint loading, prefer seated/supported exercises; very low weight → don't under-challenge.
-- Activity level sets the baseline intensity ceiling — "Bedridden" means micro-movements only; "Active" means full range.
-- Today's energy & mood: if "Bad/Low/Exhausted" → 2–3 gentle exercises, short duration; if "Great/High" → up to 6 at appropriate intensity.
+- Age & sex matter: adjust intensity, rest times, and exercise selection accordingly.
+- Weight & BMI matter: high BMI → reduce joint loading; but still push upper body/core hard if those are unaffected.
+- Activity level sets the baseline — use the intensity guide above.
+- Today's energy & mood: if "Bad/Low/Exhausted" → reduce volume by ~40%, not intensity to "toddler level"; if "Great/High" → full challenge.
 - Goals are the NORTH STAR — if only one goal is checked, the entire workout should primarily serve that goal.
-- Abilities checklist: if a person CANNOT do something, never include exercises that require it.
+- Abilities checklist: if a person CANNOT do something, never include exercises that require it. Everything they CAN do should be challenged.
 
 INSTRUCTIONS:
 Generate a complete workout: warmup, 3–6 main exercises, cooldown.
@@ -463,8 +486,11 @@ REVIEW CHECKLIST — flag an exercise if:
 - It uses equipment not in their equipment list
 - It involves movement (high impact, spinal flexion, overhead press, etc.) that is explicitly unsafe given their conditions
 - The reps/sets/duration are wildly unrealistic given their activity level, weight, or energy today (mood: ${(checkin || todayCheckin)?.mood}, energy: ${(checkin || todayCheckin)?.energy})
+- The workout is INSULTINGLY EASY for a capable person — if this person has no relevant disabilities or limitations for a given exercise, 5 push-ups or 10 squats is not acceptable for an active adult. Flag and increase to a realistic challenge.
 
-For each flagged exercise, replace it with a realistic alternative that this person CAN do. Keep the same structure. If nothing needs changing, return the workout unchanged.
+IMPORTANT: Do NOT water down exercises just because the person has any disability at all. Only restrict what is directly affected. A person with a bad ankle should still get a challenging upper body and core workout.
+
+For each flagged exercise, replace it or adjust reps/sets to a realistic level. Keep the same structure. If nothing needs changing, return the workout unchanged.
 
 Return the complete corrected workout in the same JSON structure.`,
       response_json_schema: {
