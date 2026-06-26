@@ -237,18 +237,74 @@ function buildUserTags(p) {
   if (disabilities.includes('diabetes')) {
     capability.add('heart_safe');
   }
+  if (disabilities.includes('muscular dystrophy') || disabilities.includes('muscular dystrophy') || allText.includes('muscular dystrophy')) {
+    restriction.add('no_high_impact');
+    restriction.add('muscular_dystrophy');
+    capability.add('low_mobility');
+    capability.add('fatigue_management');
+  }
+  if (disabilities.includes('ehlers-danlos') || disabilities.includes('ehlers danlos') || disabilities.includes('eds') || allText.includes('hypermobility')) {
+    restriction.add('hypermobility');
+    restriction.add('no_high_impact');
+    capability.add('joint_protection');
+  }
+  if (disabilities.includes('down syndrome') || disabilities.includes('trisomy 21')) {
+    restriction.add('no_high_impact');
+    capability.add('low_mobility');
+    capability.add('balance_training');
+  }
+  if (disabilities.includes('traumatic brain') || disabilities.includes('tbi') || disabilities.includes('brain injury')) {
+    restriction.add('tbi');
+    restriction.add('no_high_impact');
+    capability.add('coordination');
+    capability.add('balance_training');
+    capability.add('stroke_recovery');
+  }
+  if (disabilities.includes('visual impairment') || disabilities.includes('blind') || disabilities.includes('low vision')) {
+    restriction.add('low_vision');
+    capability.add('balance_training');
+  }
+  if (disabilities.includes('intellectual disability') || disabilities.includes('developmental disability') || disabilities.includes('idd')) {
+    capability.add('simple_instructions');
+    capability.add('low_mobility');
+  }
+  if (disabilities.includes('dementia') || disabilities.includes('alzheimer')) {
+    capability.add('simple_instructions');
+    capability.add('low_mobility');
+    capability.add('balance_training');
+  }
+  if (disabilities.includes('frail') || allText.includes('fall risk') || allText.includes('frailty')) {
+    restriction.add('balance_issues');
+    restriction.add('no_high_impact');
+    capability.add('low_mobility');
+    capability.add('balance_training');
+  }
+  if (allText.includes('post-surgery') || allText.includes('post surgery') || allText.includes('post-op') || allText.includes('recovering from surgery')) {
+    restriction.add('no_high_impact');
+    restriction.add('fracture_risk');
+    capability.add('low_mobility');
+  }
 
-  // ── BMI / WEIGHT ──
+  // ── BMI / WEIGHT (obesity detection from height + weight) ──
   const bmi = (p.weight_lbs && p.height_inches)
     ? (p.weight_lbs / (p.height_inches * p.height_inches)) * 703
     : null;
-  if (bmi && bmi >= 35) {
+  if (bmi && bmi >= 40) {
     restriction.add('no_high_impact');
     restriction.add('high_bmi');
+    restriction.add('obesity');
+    capability.add('low_mobility');
+    capability.add('fatigue_management');
+    capability.add('heart_safe');
+  } else if (bmi && bmi >= 35) {
+    restriction.add('no_high_impact');
+    restriction.add('high_bmi');
+    restriction.add('obesity');
     capability.add('low_mobility');
     capability.add('fatigue_management');
   } else if (bmi && bmi >= 30) {
     restriction.add('no_high_impact');
+    restriction.add('obesity');
   }
 
   // ── ACTIVITY LEVEL ──
