@@ -569,7 +569,8 @@ Return the complete corrected workout in the same JSON structure.`,
 
   const today = new Date().toISOString().split("T")[0];
   const todayWorkout = workouts.find(w => w.date === today);
-  const staleWorkout = workouts.find(w => w.date < today);
+  // Only show a stale workout if there's no today's workout — never show both
+  const staleWorkout = !todayWorkout ? workouts.find(w => w.date < today) : null;
 
   return (
     <div className="space-y-6 pb-20 md:pb-6">
