@@ -451,7 +451,7 @@ Return the complete corrected workout in the same JSON structure.`,
           changes_made: { type: "array", items: { type: "string" } }
         }
       },
-      model: "gpt_5_4"
+      model: "gpt_5_mini"
     });
 
     // Merge validated exercises back into result
@@ -463,7 +463,7 @@ Return the complete corrected workout in the same JSON structure.`,
       safety_review: (result.safety_review || '') + (validation.changes_made?.length ? '\n\nValidation changes: ' + validation.changes_made.join('; ') : '')
     };
 
-    await base44.entities.WorkoutPlan.create({
+    const created = await base44.entities.WorkoutPlan.create({
       title: finalResult.title,
       description: finalResult.description,
       plan_type: "Daily",
@@ -478,13 +478,17 @@ Return the complete corrected workout in the same JSON structure.`,
       workout_data: JSON.stringify(finalResult)
     });
 
-    // Pre-generate exercise images in background (non-blocking)
+    // Navigate immediately — don't make the user wait for image generation
+    setGenerating(false);
+    navigate("/workout");
+
+    // Pre-generate exercise images in background (non-blocking, after navigation)
     if (finalResult.exercises?.length) {
       finalResult.exercises.forEach(async (ex) => {
         try {
           const key = ex.name.toLowerCase().trim();
           const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: key });
-          if (cached.length > 0) return; // already cached
+          if (cached.length > 0) return;
           const { url } = await base44.integrations.Core.GenerateImage({
             prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || "standing"}. ${ex.muscles_used?.length ? "Muscles worked: " + ex.muscles_used.slice(0, 3).join(", ") + "." : ""} Simple, clear diagram style, white background, no text.`
           });
@@ -492,8 +496,6 @@ Return the complete corrected workout in the same JSON structure.`,
         } catch (e) { /* silently skip */ }
       });
     }
-
-    setGenerating(false);
   };
 
   if (loading) {
