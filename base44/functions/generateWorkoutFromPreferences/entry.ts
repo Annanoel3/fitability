@@ -52,6 +52,12 @@ Requested intensity: ${preferences.intensity}
 Available equipment: ${(preferences.equipment || []).join(", ") || "bodyweight only"}
 ` : ""}
 
+${p.coach_memory ? `═══ COACH MEMORY (User Feedback & Preferences) ═══
+${p.coach_memory}
+APPLY THIS: Any preferences, difficulty adjustments, pain changes, or feedback in the memory above MUST shape this workout. If user said workouts are too hard/easy, adjust. If they reported new pain or improvement, respect it. This memory represents real user experience.
+
+` : ""}
+
 ═══ CRITICAL SAFETY RULES (NON-NEGOTIABLE) ═══
 - Every listed body limitation, disability, and pain area is a HARD CONSTRAINT. Violating any = unsafe workout.
 - If ANY exercise could aggravate a listed condition, pain area, or limitation → REMOVE IT.
