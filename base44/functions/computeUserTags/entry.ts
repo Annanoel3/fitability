@@ -237,74 +237,81 @@ function buildUserTags(p) {
   if (disabilities.includes('diabetes')) {
     capability.add('heart_safe');
   }
-  if (disabilities.includes('muscular dystrophy') || disabilities.includes('muscular dystrophy') || allText.includes('muscular dystrophy')) {
-    restriction.add('no_high_impact');
+
+  // ── ADDITIONAL NEUROLOGICAL / SYSTEMIC CONDITIONS ──
+  if (disabilities.includes('muscular dystrophy') || disabilities.includes('duchenne') || disabilities.includes('becker')) {
     restriction.add('muscular_dystrophy');
+    restriction.add('no_high_impact');
+    restriction.add('very_low_mobility');
     capability.add('low_mobility');
     capability.add('fatigue_management');
   }
-  if (disabilities.includes('ehlers-danlos') || disabilities.includes('ehlers danlos') || disabilities.includes('eds') || allText.includes('hypermobility')) {
-    restriction.add('hypermobility');
-    restriction.add('no_high_impact');
-    capability.add('joint_protection');
-  }
-  if (disabilities.includes('down syndrome') || disabilities.includes('trisomy 21')) {
-    restriction.add('no_high_impact');
-    capability.add('low_mobility');
-    capability.add('balance_training');
-  }
-  if (disabilities.includes('traumatic brain') || disabilities.includes('tbi') || disabilities.includes('brain injury')) {
+  if (disabilities.includes('tbi') || disabilities.includes('traumatic brain') || disabilities.includes('brain injury')) {
     restriction.add('tbi');
     restriction.add('no_high_impact');
+    restriction.add('balance_issues');
     capability.add('coordination');
     capability.add('balance_training');
     capability.add('stroke_recovery');
   }
+  if (disabilities.includes('ehlers-danlos') || disabilities.includes('eds') || disabilities.includes('hypermobility')) {
+    restriction.add('hypermobility');
+    restriction.add('joint_instability');
+    capability.add('chronic_pain');
+  }
   if (disabilities.includes('visual impairment') || disabilities.includes('blind') || disabilities.includes('low vision')) {
     restriction.add('low_vision');
-    capability.add('balance_training');
+    restriction.add('balance_issues');
+    capability.add('low_mobility');
   }
-  if (disabilities.includes('intellectual disability') || disabilities.includes('developmental disability') || disabilities.includes('idd')) {
-    capability.add('simple_instructions');
+  if (disabilities.includes('intellectual disability') || disabilities.includes('developmental disability') || disabilities.includes('down syndrome')) {
+    restriction.add('intellectual_disability');
+    capability.add('low_mobility');
+    capability.add('coordination');
+  }
+  if (disabilities.includes('brain tumor') || disabilities.includes('glioma') || disabilities.includes('glioblastoma')) {
+    restriction.add('brain_tumor');
+    restriction.add('no_high_impact');
+    restriction.add('balance_issues');
+    capability.add('low_mobility');
+    capability.add('stroke_recovery');
+  }
+  if (allText.includes('frail') || disabilities.includes('frailty') || allText.includes('fall risk')) {
+    restriction.add('balance_issues');
+    restriction.add('fall_risk');
+    restriction.add('no_high_impact');
+    capability.add('low_mobility');
+  }
+  if (allText.includes('post-surgery') || allText.includes('post surgery') || allText.includes('post-op') || allText.includes('recovering from surgery')) {
+    restriction.add('post_surgery');
+    restriction.add('no_high_impact');
     capability.add('low_mobility');
   }
   if (disabilities.includes('dementia') || disabilities.includes('alzheimer')) {
-    capability.add('simple_instructions');
+    restriction.add('cognitive_impairment');
     capability.add('low_mobility');
-    capability.add('balance_training');
-  }
-  if (disabilities.includes('frail') || allText.includes('fall risk') || allText.includes('frailty')) {
-    restriction.add('balance_issues');
-    restriction.add('no_high_impact');
-    capability.add('low_mobility');
-    capability.add('balance_training');
-  }
-  if (allText.includes('post-surgery') || allText.includes('post surgery') || allText.includes('post-op') || allText.includes('recovering from surgery')) {
-    restriction.add('no_high_impact');
-    restriction.add('fracture_risk');
-    capability.add('low_mobility');
+    capability.add('coordination');
   }
 
-  // ── BMI / WEIGHT (obesity detection from height + weight) ──
+  // ── BMI / WEIGHT ──
   const bmi = (p.weight_lbs && p.height_inches)
     ? (p.weight_lbs / (p.height_inches * p.height_inches)) * 703
     : null;
   if (bmi && bmi >= 40) {
     restriction.add('no_high_impact');
     restriction.add('high_bmi');
-    restriction.add('obesity');
     capability.add('low_mobility');
     capability.add('fatigue_management');
-    capability.add('heart_safe');
+    capability.add('obesity');
   } else if (bmi && bmi >= 35) {
     restriction.add('no_high_impact');
     restriction.add('high_bmi');
-    restriction.add('obesity');
     capability.add('low_mobility');
     capability.add('fatigue_management');
+    capability.add('obesity');
   } else if (bmi && bmi >= 30) {
     restriction.add('no_high_impact');
-    restriction.add('obesity');
+    capability.add('obesity');
   }
 
   // ── ACTIVITY LEVEL ──
