@@ -219,19 +219,19 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
 
       if (transcript.includes("skip")) {
         label = "skip";
-        action = () => { stopAudio(); stopListening(); onSkip(activeIdxRef.current); };
+        action = () => { stopAudio(); onSkip(activeIdxRef.current); };
       } else if (transcript.includes("next") || transcript.includes("done") || transcript.includes("finish")) {
         label = "next";
-        action = () => { stopAudio(); stopListening(); onNext(activeIdxRef.current); };
+        action = () => { stopAudio(); onNext(activeIdxRef.current); };
       } else if (transcript.includes("back") || transcript.includes("previous")) {
         label = "back";
-        action = () => { stopAudio(); stopListening(); onBack(activeIdxRef.current); };
+        action = () => { stopAudio(); onBack(activeIdxRef.current); };
       } else if (transcript.includes("repeat") || transcript.includes("again") || transcript.includes("say that") || transcript.includes("instructions")) {
         label = "repeat";
-        action = () => { stopAudio(); stopListening(); if (onRepeat) onRepeat(activeIdxRef.current); };
+        action = () => { stopAudio(); if (onRepeat) onRepeat(activeIdxRef.current); };
       } else if (transcript.includes("command") || transcript.includes("what can i say") || transcript.includes("help")) {
         label = "commands";
-        action = () => { stopAudio(); stopListening(); speakCommands(); };
+        action = () => { stopAudio(); speakCommands(); };
       }
 
       if (action && label) {
@@ -240,7 +240,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       }
       // Unknown transcript — keep listening silently
     };
-  }, [exercises, onNext, onSkip, onBack, onRepeat, onCommandDetected, stopAudio, stopListening, speakCommands]);
+  }, [exercises, onNext, onSkip, onBack, onRepeat, onCommandDetected, stopAudio, speakCommands]);
 
   // Start continuous (restart-on-end) listening
   const startListening = useCallback(() => {
