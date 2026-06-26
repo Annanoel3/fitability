@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     const BATCH = 10;
 
     // Get all exercises (re-tag to include left/right specificity)
-    const all = await base44.asServiceRole.entities.Exercise.list('-created_date', 500);
+    const all = (await base44.asServiceRole.entities.Exercise.list('-created_date', 500)).filter(e => !(e.restriction_tags || []).length);
 
     if (all.length === 0) {
       return Response.json({ success: true, message: 'No exercises to tag', done: true });
@@ -59,7 +59,7 @@ wheelchair_user, seated_only, low_mobility, very_low_mobility, chronic_pain, hea
 
 EQUIPMENT_TAGS: exact equipment needed. Use ONLY: chair, mat, resistance_bands, dumbbells, wall, pillow, towel. Empty array = pure bodyweight (no equipment needed).
 
-Return a JSON array with one object per exercise (in same order), each with fields: name, restriction_tags (array), suitable_for_tags (array), equipment_tags (array).`,
+STRICT VOCABULARY: Use ONLY the exact tag strings listed above. Never output 'epilepsy' (use seizure_risk), 'neck_pain' (use neck_injury), or 'ankle_injury' (use ankle_pain). Use generic joint tags (knee_pain, hip_pain) with NO left_/right_ prefix. Apply no_high_impact to ANY exercise involving jumping, hopping, running, skipping, or jarring impact.\n\nReturn a JSON array with one object per exercise (in same order), each with fields: name, restriction_tags (array), suitable_for_tags (array), equipment_tags (array).`,
       response_json_schema: {
         type: 'object',
         properties: {
@@ -88,9 +88,7 @@ Return a JSON array with one object per exercise (in same order), each with fiel
       if (!tags) { console.log(`No tags for index ${i}`); continue; }
       try {
         await base44.asServiceRole.entities.Exercise.update(batch[i].id, {
-          restriction_tags: tags.restriction_tags || [],
-          suitable_for_tags: tags.suitable_for_tags || [],
-          equipment_tags: tags.equipment_tags || []
+          restriction_tags: tags.restriction_tags || []
         });
         updated++;
       } catch (e) {
