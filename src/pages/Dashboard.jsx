@@ -245,7 +245,7 @@ export default function Dashboard() {
   const handleWorkoutPickerConfirm = (preferences) => {
     setShowWorkoutPicker(false);
     // If tour is active on the workout step, fire the event
-    if (tourStep === "workout") {
+    if (tourStep === "workout" || tourStep === "workout_picking") {
       window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "workout_generated" }));
     }
     const workoutType = preferences.workoutTypes.includes("mixed") 
@@ -670,7 +670,11 @@ Return the complete corrected workout in the same JSON structure.`,
           )}
           {!todayCheckin && !todayWorkout && !generating && (
             tourStep === "workout" ? (
-              <Button data-tour-start-workout="true" onClick={() => setShowWorkoutPicker(true)} className="w-full h-12">
+              <Button data-tour-start-workout="true" onClick={() => {
+                window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "workout_picking" } }));
+                window.fitabilityTourStep = "workout_picking";
+                setShowWorkoutPicker(true);
+              }} className="w-full h-12">
                 <Sparkles className="w-4 h-4 mr-2" /> Start Your First Workout
               </Button>
             ) : (

@@ -61,7 +61,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   // Listen for action events from other pages
   useEffect(() => {
     const handler = (e) => {
-      if (e.detail === "workout_generated" && tourStepRef.current === "workout") {
+      if (e.detail === "workout_generated" && (tourStepRef.current === "workout" || tourStepRef.current === "workout_picking")) {
         advance("workout_generated");
         setShowWorkoutBridge(true);
         setTimeout(() => {
@@ -106,7 +106,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     onComplete();
   };
 
-  if (tourStep === "done" || tourStep === "coach_message") return null;
+  if (tourStep === "done" || tourStep === "coach_message" || tourStep === "workout_picking") return null;
 
   // Bridge overlay shown after workout is generated — block clicks, show message
   if (tourStep === "workout_generated" || showWorkoutBridge) {
