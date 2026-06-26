@@ -257,11 +257,19 @@ export default function ExerciseLibrary() {
   const handleDelete = async (ex) => {
     if (!confirm(`Delete "${ex.name}" from your library? It won't appear in future workouts.`)) return;
     try {
-      await base44.entities.DeletedExercise.create({
-        exercise_id: ex.id,
-        exercise_name: ex.name
-      });
-      setDeleted(new Set([...deleted, ex.id]));
+      if (ex.is_custom) {
+        // User-created exercise: hard delete from the database (they own it)
+        await base44.entities.Exercise.delete(ex.id);
+        setExercises(prev => prev.filter(e => e.id !== ex.id));
+      } else {
+        // Shared library exercise: only hide it for this user via the blocklist
+        await base44.entities.DeletedExercise.create({
+          exercise_id: ex.id,
+          exercise_name: ex.name
+        });
+        setDeleted(new Set([...deleted, ex.id]));
+        setExercises(prev => prev.filter(e => e.id !== ex.id));
+      }
       setSelectedExercise(null);
     } catch (e) {
       alert("Error deleting exercise: " + e.message);
@@ -415,14 +423,12 @@ export default function ExerciseLibrary() {
               <div className="mt-4 space-y-3 border-t border-border pt-4">
                 {ex.description && <p className="text-sm text-muted-foreground">{ex.description}</p>}
 
-                {ex.is_custom && (
-                  <button
-                    onClick={() => handleDelete(ex)}
-                    className="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1"
-                  >
-                    <Trash2 className="w-3 h-3" /> Delete from library
-                  </button>
-                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDelete(ex); }}
+                  className="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1"
+                >
+                  <Trash2 className="w-3 h-3" /> {ex.is_custom ? "Delete exercise" : "Hide from my library"}
+                </button>
 
                 {ex.instructions && (
                   <div>
