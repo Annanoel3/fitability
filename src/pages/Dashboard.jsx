@@ -690,12 +690,12 @@ Return the complete corrected workout in the same JSON structure.`,
 
           {/* Always-visible Start Workout button */}
           {todayCheckin && !todayWorkout && !generating && (
-            <Button data-tour-start-workout="true" onClick={() => setShowWorkoutPicker(true)} className="w-full h-12">
+            <Button data-tour-start-workout="true" onClick={() => { window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "workout_button_clicked" })); setShowWorkoutPicker(true); }} className="w-full h-12">
               <Sparkles className="w-4 h-4 mr-2" /> Choose Today's Workout
             </Button>
           )}
           {todayWorkout && (
-            <Button data-tour-start-workout="true" onClick={() => setShowWorkoutPicker(true)} variant="outline" className="w-full h-11">
+            <Button data-tour-start-workout="true" onClick={() => { window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "workout_button_clicked" })); setShowWorkoutPicker(true); }} variant="outline" className="w-full h-11">
               <Sparkles className="w-4 h-4 mr-2" /> Start a New Workout
             </Button>
           )}

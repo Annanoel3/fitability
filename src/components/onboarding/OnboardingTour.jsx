@@ -75,6 +75,9 @@ export default function OnboardingTour({ profile, onComplete }) {
   // Listen for action events from other pages
   useEffect(() => {
     const handler = (e) => {
+      if (e.detail === "workout_button_clicked" && tourStepRef.current === "workout") {
+        advance("workout_picking");
+      }
       if (e.detail === "workout_generated" && (tourStepRef.current === "workout" || tourStepRef.current === "workout_picking")) {
         advance("workout_generated");
         setShowWorkoutBridge(true);
@@ -199,10 +202,10 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
-  // ── WORKOUT — overlay modal with dark backdrop, pulsing button ──
+  // ── WORKOUT — non-blocking guide, button can be clicked freely ──
   if (tourStep === "workout") {
     return (
-      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
+      <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-32">
         <style>{`
           ${ANIM_STYLE}
           @keyframes workout-btn-pulse {
@@ -218,7 +221,7 @@ export default function OnboardingTour({ profile, onComplete }) {
             z-index: 101;
           }
         `}</style>
-        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <span className="text-3xl">💪</span>
           </div>
