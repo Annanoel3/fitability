@@ -7,8 +7,10 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { profile_id } = await req.json().catch(() => ({}));
-    if (!profile_id) return Response.json({ error: 'Missing profile_id' }, { status: 400 });
+    const body = await req.json().catch(() => ({}));
+    // Support both direct calls (with profile_id) and automation calls (with event data)
+    let profile_id = body.profile_id || body.event?.entity_id;
+    if (!profile_id) return Response.json({ error: 'Missing profile_id or event.entity_id' }, { status: 400 });
 
     // Fetch the profile
     const profile = await base44.entities.UserProfile.get(profile_id);
