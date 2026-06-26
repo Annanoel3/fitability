@@ -59,24 +59,11 @@ export default function OnboardingTour({ profile, onComplete }) {
     }
   }, [location.pathname, tourStep]);
 
-  // Listen for tour step changes and apply them immediately
-  useEffect(() => {
-    const stepHandler = (e) => {
-      const newStep = e.detail?.tourStep;
-      if (newStep !== undefined && newStep !== null) {
-        tourStepRef.current = newStep;
-        setTourStep(newStep);
-      }
-    };
-    window.addEventListener("fitability-tour-step-change", stepHandler);
-    return () => window.removeEventListener("fitability-tour-step-change", stepHandler);
-  }, []);
-
   // Listen for tour step changes from other components
   useEffect(() => {
     const stepHandler = (e) => {
       const newStep = e.detail?.tourStep;
-      if (newStep) {
+      if (newStep !== undefined && newStep !== null) {
         tourStepRef.current = newStep;
         setTourStep(newStep);
       }
@@ -118,19 +105,6 @@ export default function OnboardingTour({ profile, onComplete }) {
     window.addEventListener("fitability-tour-action", handler);
     return () => window.removeEventListener("fitability-tour-action", handler);
   }, [navigate]);
-
-  // Listen for tour step changes from Dashboard (when picker opens, etc.)
-  useEffect(() => {
-    const stepHandler = (e) => {
-      const newStep = e.detail?.tourStep;
-      if (newStep) {
-        tourStepRef.current = newStep;
-        setTourStep(newStep);
-      }
-    };
-    window.addEventListener("fitability-tour-step-change", stepHandler);
-    return () => window.removeEventListener("fitability-tour-step-change", stepHandler);
-  }, []);
 
   // Broadcast initial step on mount
   useEffect(() => {
