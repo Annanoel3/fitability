@@ -211,6 +211,13 @@ export default function ExerciseLibrary() {
         // Must not require equipment the user doesn't have
         const requiredEquip = (ex.equipment_tags || []);
         if (requiredEquip.length > 0 && !requiredEquip.every(eq => userEquipment.has(eq))) return false;
+        // Exclude exercises that are ONLY suitable for conditions the user doesn't have (e.g., wheelchair_user when user is not)
+        const suitableTags = (ex.suitable_for_tags || []);
+        const mobilitySpecificTags = new Set(['wheelchair_user', 'very_low_mobility', 'low_mobility', 'seated_only']);
+        const hasMobilityTag = suitableTags.some(tag => mobilitySpecificTags.has(tag));
+        if (hasMobilityTag && userRestrictionTags.has('wheelchair_user') === false && userRestrictionTags.has('very_low_mobility') === false && userRestrictionTags.has('cannot_stand') === false) {
+          return false;
+        }
       }
       return true;
     });
