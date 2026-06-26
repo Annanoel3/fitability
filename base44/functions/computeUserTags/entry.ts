@@ -10,7 +10,13 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     // Support both direct calls (with profile_id) and automation calls (with event data)
     let profile_id = body.profile_id || body.event?.entity_id;
-    if (!profile_id) return Response.json({ error: 'Missing profile_id or event.entity_id' }, { status: 400 });
+    
+    // If no profile_id, fetch it for the current user
+    if (!profile_id) {
+      const userProfiles = await base44.entities.UserProfile.filter({ created_by_id: user.id });
+      if (userProfiles.length === 0) return Response.json({ error: 'No profile found for user' }, { status: 404 });
+      profile_id = userProfiles[0].id;
+    }
 
     // Fetch the profile
     const profile = await base44.entities.UserProfile.get(profile_id);
