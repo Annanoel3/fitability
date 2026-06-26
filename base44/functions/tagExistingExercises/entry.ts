@@ -12,15 +12,14 @@ Deno.serve(async (req) => {
     const { offset = 0 } = await req.json().catch(() => ({}));
     const BATCH = 10;
 
-    // Get untagged exercises
+    // Get all exercises (re-tag to include left/right specificity)
     const all = await base44.asServiceRole.entities.Exercise.list('-created_date', 500);
-    const untagged = all.filter(e => !e.restriction_tags || e.restriction_tags.length === 0);
 
-    if (untagged.length === 0) {
-      return Response.json({ success: true, message: 'All exercises already tagged', done: true });
+    if (all.length === 0) {
+      return Response.json({ success: true, message: 'No exercises to tag', done: true });
     }
 
-    const batch = untagged.slice(offset, offset + BATCH);
+    const batch = all.slice(offset, offset + BATCH);
     if (batch.length === 0) {
       return Response.json({ success: true, message: 'No more to tag', done: true });
     }
@@ -42,8 +41,8 @@ ${exerciseList}
 RESTRICTION_TAGS — use ONLY these exact strings. Tag an exercise if the condition CONTRAINDICATES it (i.e., someone with this condition should NOT do this exercise):
 
 MOBILITY: cannot_stand, wheelchair_user, no_legs, single_leg_amputation, no_arms, single_arm_amputation, no_bilateral_arms, paraplegia, very_low_mobility, bedridden
-JOINTS: knee_pain, knee_replacement, hip_pain, hip_replacement, back_pain, neck_injury, shoulder_injury, wrist_injury, elbow_injury, ankle_pain
-MOVEMENT RESTRICTIONS: no_high_impact, no_spinal_flexion, no_overhead_press, no_neck_flexion, no_head_inversion, balance_issues
+JOINTS: knee_pain, left_knee_pain, right_knee_pain, knee_replacement, left_knee_replacement, right_knee_replacement, hip_pain, left_hip_pain, right_hip_pain, hip_replacement, left_hip_replacement, right_hip_replacement, back_pain, neck_injury, shoulder_injury, left_shoulder_injury, right_shoulder_injury, wrist_injury, left_wrist_injury, right_wrist_injury, elbow_injury, left_elbow_injury, right_elbow_injury, ankle_pain, left_ankle_pain, right_ankle_pain
+MOVEMENT RESTRICTIONS: no_high_impact, no_spinal_flexion, left_no_overhead_press, right_no_overhead_press, no_neck_flexion, no_head_inversion, balance_issues
 CARDIAC/PULMONARY: heart_condition, copd, breathing_difficulty
 BONE/STRUCTURAL: osteoporosis, fracture_risk, scoliosis
 NEUROLOGICAL: multiple_sclerosis, parkinsons, cerebral_palsy, seizure_risk, vertigo
@@ -99,7 +98,7 @@ Return a JSON array with one object per exercise (in same order), each with fiel
       }
     }
 
-    const remaining = untagged.length - offset - batch.length;
+    const remaining = all.length - offset - batch.length;
     return Response.json({
       success: true,
       updated,
