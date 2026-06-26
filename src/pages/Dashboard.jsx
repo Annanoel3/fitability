@@ -7,6 +7,7 @@ import StreakCard from "@/components/dashboard/StreakCard";
 import EmergencyBanner from "@/components/dashboard/EmergencyBanner";
 import { Dumbbell, Clock, Target, Sparkles, ChevronRight, Loader2, TrendingUp } from "lucide-react";
 import WorkoutPickerModal from "@/components/dashboard/WorkoutPickerModal";
+import StaleWorkoutCard from "@/components/dashboard/StaleWorkoutCard.jsx";
 // TAG VOCABULARY — shared between buildUserTags() and the tagExistingExercises backend function.
 // Exercise restriction_tags use these exact strings. User tags are generated here and matched against them.
 // When adding a new tag here, also add it to the tagExistingExercises function vocabulary.
@@ -248,11 +249,6 @@ export default function Dashboard() {
     setGenerating(true);
     const today = new Date().toISOString().split("T")[0];
     
-    const existingToday = workouts.find(w => w.date === today);
-    if (existingToday) {
-      return;
-    }
-
     // Fetch recent workouts to avoid repeating exercises
     const recentWorkouts = await base44.entities.WorkoutPlan.filter({ completed: true }, "-date", 5);
     const recentExerciseNames = new Set();
@@ -509,6 +505,7 @@ Return the complete corrected workout in the same JSON structure.`,
 
   const today = new Date().toISOString().split("T")[0];
   const todayWorkout = workouts.find(w => w.date === today);
+  const staleWorkout = workouts.find(w => w.date !== today);
 
   return (
     <div className="space-y-6 pb-20 md:pb-6">
@@ -545,6 +542,14 @@ Return the complete corrected workout in the same JSON structure.`,
           </p>
           <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
         </div>
+      )}
+
+      {/* Stale workout from a previous day — ask to rate + archive/delete */}
+      {!generating && staleWorkout && (
+        <StaleWorkoutCard
+          workout={staleWorkout}
+          onDone={() => setWorkouts(prev => prev.filter(w => w.id !== staleWorkout.id))}
+        />
       )}
 
       {/* Check-in or Today's Workout */}
@@ -587,10 +592,19 @@ Return the complete corrected workout in the same JSON structure.`,
             </Link>
           )}
 
+          {/* Always-visible Start Workout button */}
           {todayCheckin && !todayWorkout && !generating && (
             <Button onClick={() => setShowWorkoutPicker(true)} className="w-full h-12">
               <Sparkles className="w-4 h-4 mr-2" /> Choose Today's Workout
             </Button>
+          )}
+          {todayWorkout && (
+            <Button onClick={() => setShowWorkoutPicker(true)} variant="outline" className="w-full h-11">
+              <Sparkles className="w-4 h-4 mr-2" /> Start a New Workout
+            </Button>
+          )}
+          {!todayCheckin && !todayWorkout && !generating && (
+            <p className="text-center text-xs text-muted-foreground">Complete your check-in above to unlock today's workout.</p>
           )}
         </>
       )}
