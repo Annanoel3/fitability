@@ -376,7 +376,7 @@ export default function ExerciseLibrary() {
                 // Immediately hide the popup, let user read for 3s, then advance
                 window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "first_exercise_clicked" }));
                 setTimeout(() => {
-                  firstExerciseRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  firstExerciseRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
                 }, 100);
                 setTimeout(() => {
                   window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "exercise_read_done" }));
