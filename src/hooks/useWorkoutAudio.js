@@ -74,6 +74,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript.toLowerCase().trim();
+      console.log("[Voice] Heard:", transcript);
       onResult(transcript);
     };
 
@@ -236,7 +237,10 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
 
       if (action && label) {
         // Surface the detected command to the UI so user can cancel within a short window
+        console.log("[Command] Detected:", label, "from:", transcript);
         if (onCommandDetected) onCommandDetected({ label, action, transcript });
+      } else {
+        console.log("[Command] No match for:", transcript);
       }
       // Unknown transcript — keep listening silently
     };
