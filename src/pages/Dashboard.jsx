@@ -204,7 +204,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData();
-    const handler = (e) => setTourStep(e.detail?.tourStep || null);
+    const handler = (e) => {
+      const newStep = e.detail?.tourStep || null;
+      setTourStep(newStep);
+      window.fitabilityTourStep = newStep;
+    };
     window.addEventListener("fitability-tour-step-change", handler);
     return () => window.removeEventListener("fitability-tour-step-change", handler);
   }, []);
@@ -573,7 +577,7 @@ Return the complete corrected workout in the same JSON structure.`,
   const staleWorkout = !todayWorkout ? workouts.find(w => w.date < today) : null;
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
+    <div className="space-y-6 pb-32 md:pb-6">
       {showWorkoutPicker && (
         <WorkoutPickerModal 
           onConfirm={handleWorkoutPickerConfirm}
