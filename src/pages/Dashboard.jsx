@@ -561,7 +561,7 @@ Return the complete corrected workout in the same JSON structure.`,
           )}
 
           {todayWorkout && (
-            <Link to="/workout" className="block">
+            <Link to="/workout" state={{ workout: todayWorkout }} className="block">
               <div className="bg-card rounded-2xl border border-border p-6 hover:border-primary/30 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -586,7 +586,7 @@ Return the complete corrected workout in the same JSON structure.`,
                 </div>
                 {todayWorkout.completed && (
                   <div className="mt-3 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-medium text-center">
-                    ✓ Completed
+                    ✓ Completed — tap to restart
                   </div>
                 )}
               </div>

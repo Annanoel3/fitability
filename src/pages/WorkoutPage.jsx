@@ -76,15 +76,14 @@ export default function WorkoutPage() {
     // If Dashboard passed the workout directly via navigation state, use it immediately
     if (location.state?.workout) {
       const w = location.state.workout;
-      const isReplay = w.archived; // "Do Again" on an archived workout — treat as fresh
-      setWorkout({ ...w, completed: isReplay ? false : w.completed });
-      if (w.completed && !isReplay) setDone(true);
+      // Treat as fresh/restart if: archived ("Do Again") OR completed today (restart same day)
+      const isFresh = w.archived || w.completed;
+      setWorkout({ ...w, completed: false });
       let exList = [];
       try {
         const data = JSON.parse(w.workout_data || "{}");
         setWorkoutData(data);
         exList = data.exercises || [];
-        if (w.completed && !isReplay) setCompletedExercises(new Set(exList.map((_, i) => i)));
       } catch (e) { setWorkoutData({}); }
       setLoading(false);
       return;
