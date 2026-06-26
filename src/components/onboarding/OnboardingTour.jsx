@@ -34,6 +34,12 @@ export default function OnboardingTour({ profile, onComplete }) {
     setTourStep(step);
     window.fitabilityTourStep = step;
     window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: step } }));
+    // Ensure user is on the correct page for each step
+    if (step === "welcome" || step === "workout") navigate("/");
+    if (step === "coach") navigate("/coach");
+    if (step === "library" || step === "library_exercise") navigate("/exercises");
+    if (step === "progress" || step === "progress_log") navigate("/progress");
+    if (step === "home_end") navigate("/");
   };
 
   // When user navigates to the correct page, advance the step
