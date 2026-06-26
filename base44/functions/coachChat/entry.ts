@@ -56,8 +56,8 @@ Deno.serve(async (req) => {
       const plans = await base44.asServiceRole.entities.WorkoutPlan.filter({ id: workoutPlanId, created_by_id: user.id });
       workoutPlan = plans[0] || null;
     } else {
-      // Get most recent incomplete workout plan for this user
-      const plans = await base44.asServiceRole.entities.WorkoutPlan.filter({ created_by_id: user.id, completed: false });
+      // Get the most recent workout (today preferred, then recent past)
+      const plans = await base44.asServiceRole.entities.WorkoutPlan.filter({ created_by_id: user.id }, '-date', 5);
       workoutPlan = plans[0] || null;
     }
 
