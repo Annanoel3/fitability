@@ -518,11 +518,11 @@ export default function WorkoutPage() {
                 <div className="flex-1 min-w-0">
                   <p className={`font-semibold text-sm ${skipped ? "line-through text-amber-600" : completed ? "line-through text-muted-foreground" : "text-foreground"}`}>{ex.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {ex.sets && `${ex.sets} sets`}
-                    {ex.sets && ex.reps && " · "}
-                    {ex.reps && `${ex.reps} reps`}
-                    {ex.duration_seconds && `${ex.duration_seconds}s`}
-                    {ex.position && ` · ${ex.position}`}
+                    {[
+                      ex.sets ? `${ex.sets} sets` : null,
+                      ex.reps ? `${ex.reps} reps` : ex.duration_seconds ? `${ex.duration_seconds}s` : null,
+                      ex.position || null
+                    ].filter(Boolean).join(' · ')}
                   </p>
                 </div>
                 <button onClick={() => setExpandedExercise(expanded ? null : idx)} className="p-1 text-muted-foreground">
