@@ -58,6 +58,19 @@ export default function OnboardingTour({ profile, onComplete }) {
     }
   }, [location.pathname, tourStep]);
 
+  // Listen for tour step changes from other components
+  useEffect(() => {
+    const stepHandler = (e) => {
+      const newStep = e.detail?.tourStep;
+      if (newStep) {
+        tourStepRef.current = newStep;
+        setTourStep(newStep);
+      }
+    };
+    window.addEventListener("fitability-tour-step-change", stepHandler);
+    return () => window.removeEventListener("fitability-tour-step-change", stepHandler);
+  }, []);
+
   // Listen for action events from other pages
   useEffect(() => {
     const handler = (e) => {

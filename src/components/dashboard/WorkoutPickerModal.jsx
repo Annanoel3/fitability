@@ -33,7 +33,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-card rounded-2xl border border-border w-full max-w-md shadow-xl flex flex-col max-h-[90vh] my-auto md:my-0 mb-20 md:mb-0">
+      <div className="bg-card rounded-2xl border border-border w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] my-auto md:my-0 mb-20 md:mb-0">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
           <h2 className="font-heading font-bold text-lg">Choose Your Workout</h2>
