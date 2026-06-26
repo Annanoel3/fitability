@@ -137,13 +137,21 @@ export default function ProgressPage() {
           <h3 className="font-heading font-semibold">Log Today's Progress</h3>
 
           <div>
-            <Label className="text-sm">Activity Completed ({logData.activity_pct ?? 50}%)</Label>
-            <Slider
-              min={0} max={100} step={5}
-              value={[logData.activity_pct ?? 50]}
-              onValueChange={([v]) => setLogData(p => ({ ...p, activity_pct: v }))}
-              className="mt-2"
-            />
+            <Label className="text-sm">Activity Completed Today?</Label>
+            <div className="flex gap-3 mt-2">
+              <button
+                onClick={() => setLogData(p => ({ ...p, activity_pct: 100 }))}
+                className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${logData.activity_pct === 100 ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+              >
+                ✅ Yes
+              </button>
+              <button
+                onClick={() => setLogData(p => ({ ...p, activity_pct: 0 }))}
+                className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${logData.activity_pct === 0 ? "bg-destructive text-destructive-foreground border-destructive" : "border-border text-muted-foreground hover:border-destructive/50"}`}
+              >
+                ❌ No
+              </button>
+            </div>
           </div>
 
           <div>
