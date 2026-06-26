@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -51,8 +51,16 @@ export default function WorkoutPage() {
     if (prevIdx >= 0) setExpandedExercise(prevIdx);
   };
 
-  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, askForFeedback, stopAudio, stopListening, speaking, listeningForVoice, listeningForFeedback, voiceSupported } =
-    useWorkoutAudio({ exercises, onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode });
+  // handleRepeat is defined after the hook — use a ref so the hook can call it safely
+  const repeatRef = useRef(null);
+
+  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported } =
+    useWorkoutAudio({ exercises, onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode, onRepeat: (idx) => repeatRef.current?.(idx) });
+
+  // Keep ref in sync after speakExercise is available
+  repeatRef.current = (idx) => {
+    if (idx != null && exercises[idx]) speakExercise(idx);
+  };
 
   useEffect(() => {
     loadTodayWorkout();
@@ -377,22 +385,33 @@ export default function WorkoutPage() {
 
       {/* Audio mode status banner */}
       {audioMode && (
-        <div className="mb-4 bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 flex items-center gap-3">
-          {speaking ? (
-            <Volume2 className="w-5 h-5 text-primary animate-pulse flex-shrink-0" />
-          ) : listeningForVoice ? (
-            <Mic className="w-5 h-5 text-primary animate-pulse flex-shrink-0" />
-          ) : (
-            <Volume2 className="w-5 h-5 text-primary flex-shrink-0" />
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">
-              {speaking ? "Reading instructions…" : noisyMode ? "Audio coaching on — use buttons to navigate" : listeningForVoice ? 'Listening — say "next", "skip", or "back"' : "Audio coaching on"}
-            </p>
+        <div className="mb-4 bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 space-y-2">
+          <div className="flex items-center gap-3">
+            {speaking ? (
+              <Volume2 className="w-5 h-5 text-primary animate-pulse flex-shrink-0" />
+            ) : listening ? (
+              <Mic className="w-5 h-5 text-emerald-500 animate-pulse flex-shrink-0" />
+            ) : (
+              <Volume2 className="w-5 h-5 text-primary flex-shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">
+                {speaking ? "Reading instructions…" : noisyMode ? "Audio on — tap buttons to navigate" : listening ? "Listening…" : "Audio coaching on"}
+              </p>
+            </div>
+            <button onClick={disableAudioMode} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button onClick={disableAudioMode} className="text-muted-foreground hover:text-foreground flex-shrink-0">
-            <X className="w-4 h-4" />
-          </button>
+          {!noisyMode && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground">Say:</span>
+              {['"next"', '"skip"', '"back"', '"repeat"'].map(cmd => (
+                <span key={cmd} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-mono">{cmd}</span>
+              ))}
+              <button onClick={speakCommands} className="text-xs text-primary underline ml-1">hear all commands</button>
+            </div>
+          )}
         </div>
       )}
 
