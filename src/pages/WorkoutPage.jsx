@@ -30,6 +30,8 @@ export default function WorkoutPage() {
   const [hoverRating, setHoverRating] = useState(0);
   const [pendingVoiceCommand, setPendingVoiceCommand] = useState(null); // { label, action, transcript }
   const pendingTimerRef = useRef(null);
+  const [started, setStarted] = useState(false); // timer doesn't run until user taps Start
+  const isRestart = location.state?.workout?.completed === true; // came from a completed workout
 
   const exercises = workoutData?.exercises || [];
 
@@ -87,12 +89,12 @@ export default function WorkoutPage() {
     return () => { if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current); };
   }, []);
 
-  // Elapsed timer — counts up while workout is active and not paused
+  // Elapsed timer — only runs after user taps Start, and not while paused
   useEffect(() => {
-    if (done || paused) return;
+    if (!started || done || paused) return;
     const interval = setInterval(() => setElapsedSeconds(s => s + 1), 1000);
     return () => clearInterval(interval);
-  }, [done, paused]);
+  }, [started, done, paused]);
 
   // Auto-speak when expanded exercise changes (audio mode only)
   useEffect(() => {
@@ -255,6 +257,33 @@ export default function WorkoutPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Pre-start screen — shown when workout page first loads
+  if (!started && !done) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center px-4 max-w-sm mx-auto w-full">
+        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <Timer className="w-10 h-10 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-heading font-bold text-foreground">{workout?.title}</h2>
+          <p className="text-muted-foreground mt-2">{workout?.total_duration_minutes} min · {workout?.difficulty_level}</p>
+          {isRestart && (
+            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800 text-left">
+              <p className="font-semibold">🔄 Restarting this workout</p>
+              <p className="mt-1 text-amber-700">You already completed this one today. Your previous progress will be reset.</p>
+            </div>
+          )}
+        </div>
+        <Button className="w-full h-13 text-base" onClick={() => setStarted(true)}>
+          {isRestart ? "Restart Workout 🔄" : "Start Workout 💪"}
+        </Button>
+        <button onClick={() => navigate("/")} className="text-sm text-muted-foreground hover:text-foreground">
+          Go back
+        </button>
       </div>
     );
   }
