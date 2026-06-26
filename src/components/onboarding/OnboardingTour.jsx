@@ -55,7 +55,7 @@ export default function OnboardingTour({ profile, onComplete }) {
       setTimeout(() => advance("library_exercise"), 400);
     }
     if (tourStep === "progress" && location.pathname === "/progress") {
-      setTimeout(() => advance("progress_log"), 400);
+      setTimeout(() => advance("progress_log"), 100);
     }
   }, [location.pathname, tourStep]);
 
@@ -97,12 +97,12 @@ export default function OnboardingTour({ profile, onComplete }) {
         }, 4000);
       }
       if (e.detail === "progress_logged" && tourStepRef.current === "progress_log") {
-        // Immediately hide popup, block clicks for 4s, then navigate home and show final overlay
+        // Hide popup, navigate home quickly and show final overlay
         advance("navigating_home");
         setTimeout(() => {
           navigate("/");
-          setTimeout(() => advance("home_end"), 600);
-        }, 4000);
+          setTimeout(() => advance("home_end"), 300);
+        }, 500);
       }
     };
     window.addEventListener("fitability-tour-action", handler);
@@ -291,16 +291,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
-  // ── PROGRESS — pulse Progress icon, wait for user to tap ──
-  if (tourStep === "progress") {
-    return (
-      <NavSpotlight
-        icon={<TrendingUp className="w-7 h-7 text-primary" />}
-        title="Track Your Progress"
-        message="Watch your strength, mobility, and consistency grow over time. Tap Progress below!"
-      />
-    );
-  }
+
 
   // ── PROGRESS LOG — popup, disappears immediately when user saves ──
   if (tourStep === "progress_log") {
