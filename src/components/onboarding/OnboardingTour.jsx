@@ -177,10 +177,10 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
-  // ── WORKOUT — highlight "Start Workout" / "Choose Today's Workout" button ──
+  // ── WORKOUT — overlay modal with dark backdrop, pulsing button ──
   if (tourStep === "workout") {
     return (
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-48">
+      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
         <style>{`
           ${ANIM_STYLE}
           @keyframes workout-btn-pulse {
@@ -192,20 +192,21 @@ export default function OnboardingTour({ profile, onComplete }) {
             outline: 3px solid hsl(var(--primary)) !important;
             outline-offset: 3px !important;
             pointer-events: auto !important;
+            position: relative;
+            z-index: 101;
           }
-          main, main * { pointer-events: none !important; }
-          [data-tour-start-workout="true"], [data-tour-start-workout="true"] * { pointer-events: auto !important; }
         `}</style>
-        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-6 shadow-2xl text-center space-y-3 pointer-events-auto">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <span className="text-2xl">💪</span>
+        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <span className="text-3xl">💪</span>
           </div>
           <div>
-            <h3 className="font-heading font-bold text-base text-foreground">Start your first workout!</h3>
-            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-              Tap the glowing button to choose your workout type and intensity.
+            <h3 className="font-heading font-bold text-xl text-foreground">Start your first workout!</h3>
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+              Tap the glowing button above to choose your workout type and intensity.
             </p>
           </div>
+          <p className="text-xs text-muted-foreground">The button is highlighted at the top of the screen.</p>
         </div>
       </div>
     );
