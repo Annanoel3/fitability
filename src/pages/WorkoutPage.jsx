@@ -34,17 +34,8 @@ export default function WorkoutPage() {
   const isRestart = location.state?.workout?.completed === true; // came from a completed workout
   const [savedProgress, setSavedProgress] = useState(null); // mid-workout progress from localStorage
   const [userProfile, setUserProfile] = useState(null); // user profile with restriction_tags
-  const [restrictionWarningIdx, setRestrictionWarningIdx] = useState(null); // index of exercise with restriction warning
 
   const exercises = workoutData?.exercises || [];
-
-  // Get matching restrictions for current exercise
-  const getMatchingRestrictions = (exerciseIdx) => {
-    if (!userProfile?.restriction_tags || !exercises[exerciseIdx]) return [];
-    const ex = exercises[exerciseIdx];
-    const exRestrictions = ex.restriction_tags || [];
-    return exRestrictions.filter(tag => userProfile.restriction_tags.includes(tag));
-  };
 
   const handleNext = (currentIdx) => {
     const nextIdx = (currentIdx ?? -1) + 1;
@@ -577,23 +568,7 @@ export default function WorkoutPage() {
         </div>
       )}
 
-      {/* Restriction warning modal */}
-      {restrictionWarningIdx !== null && exercises[restrictionWarningIdx] && (
-        <div className="fixed inset-0 z-40 bg-black/50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-card rounded-2xl border border-border w-full max-w-sm shadow-xl p-6 space-y-5">
-            <div className="flex items-start gap-3">
-              <Shield className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-heading font-bold text-lg text-foreground">Heads up!</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {getMatchingRestrictions(restrictionWarningIdx).map(tag => tag.replace(/_/g, ' ')).join(', ')} — if this is too much, feel free to skip or modify.
-                </p>
-              </div>
-            </div>
-            <Button className="w-full h-11" onClick={() => setRestrictionWarningIdx(null)}>Got it, let's go</Button>
-          </div>
-        </div>
-      )}
+
 
       {workout?.description && (
         <p className="text-sm text-muted-foreground mb-5 bg-muted/50 rounded-xl p-4">{workout.description}</p>
@@ -654,12 +629,7 @@ export default function WorkoutPage() {
                     ].filter(Boolean).join(' · ')}
                   </p>
                 </div>
-                <button onClick={() => {
-                  if (!expanded && getMatchingRestrictions(idx).length > 0 && !audioMode) {
-                    setRestrictionWarningIdx(idx);
-                  }
-                  setExpandedExercise(expanded ? null : idx);
-                }} className="p-1 text-muted-foreground">
+                <button onClick={() => setExpandedExercise(expanded ? null : idx)} className="p-1 text-muted-foreground">
                     {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
               </div>
