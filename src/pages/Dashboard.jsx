@@ -366,7 +366,7 @@ export default function Dashboard() {
     } catch (e) { /* library may be empty, LLM will generate from scratch */ }
 
     const libraryContext = candidateExercises.length > 0
-      ? `\n\nEXERCISE LIBRARY — ALREADY HARD-FILTERED FOR THIS USER'S SPECIFIC TAGS:\nEvery exercise below has been verified safe for this individual. Select from this list first. You may also create new exercises that would pass the same tag filter.\n${candidateExercises.slice(0, 70).map(ex => `• ${ex.name} [${ex.category}, ${ex.position}, ${ex.difficulty}]${ex.description ? ' — ' + ex.description.slice(0, 80) : ''}`).join('\n')}`
+      ? `\n\nEXERCISE LIBRARY — ALREADY HARD-FILTERED FOR THIS USER'S SPECIFIC TAGS:\nEvery exercise below has been verified safe for this individual. Select from this list first. Strongly prefer exercises that need NO equipment — bodyweight only, or at most a chair or wall; only choose equipment-based exercises (resistance bands, dumbbells, mat) when they add clear, specific value for this user. You may also create new exercises that would pass the same tag filter.\n${candidateExercises.slice(0, 70).map(ex => `• ${ex.name} [${ex.category}, ${ex.position}, ${ex.difficulty}]${ex.description ? ' — ' + ex.description.slice(0, 80) : ''}`).join('\n')}`
       : "";
 
     const restrictionTagsList = Array.from(userRestrictionTags).join(', ') || 'none';
