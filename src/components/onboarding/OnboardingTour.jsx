@@ -205,7 +205,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   // ── WORKOUT — non-blocking guide, button can be clicked freely ──
   if (tourStep === "workout") {
     return (
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-24">
+      <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-6">
         <style>{`
           ${ANIM_STYLE}
           @keyframes workout-btn-pulse {
