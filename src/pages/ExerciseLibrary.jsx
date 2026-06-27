@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { buildUserTags } from "@/lib/userTags";
+import { buildUserTags, difficultyAllowed } from "@/lib/userTags";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -109,6 +109,7 @@ export default function ExerciseLibrary() {
       if (!ex.is_custom) {
         const hasRestricted = (ex.restriction_tags || []).some(tag => userRestrictionTags.has(tag));
         if (hasRestricted) return false;
+        if (!difficultyAllowed(ex.difficulty, userRestrictionTags)) return false;
         // Must not require equipment the user doesn't have
         const requiredEquip = (ex.equipment_tags || []);
         if (requiredEquip.length > 0 && !requiredEquip.every(eq => userEquipment.has(eq))) return false;
