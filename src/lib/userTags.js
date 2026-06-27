@@ -200,7 +200,9 @@ export function buildUserTags(profile) {
     const rf = r.toLowerCase();
     if (rf.includes('fall')) restriction.add('balance_issues');
     if (rf.includes('surgery') && (rf.includes('recent') || rf.includes('post'))) restriction.add('fracture_risk');
-    if (rf.includes('pacemaker') || rf.includes('defibrillator')) { restriction.add('heart_condition'); restriction.add('breathing_difficulty'); }
+    if (rf.includes('pacemaker') || rf.includes('defibrillator')) { restriction.add('heart_condition'); restriction.add('no_high_impact'); restriction.add('breathing_difficulty'); capability.add('heart_safe'); }
+    if (rf.includes('heart') || rf.includes('cardiac') || rf.includes('cardiovascular')) { restriction.add('heart_condition'); restriction.add('no_high_impact'); capability.add('heart_safe'); }
+    if (rf.includes('copd') || rf.includes('asthma') || rf.includes('respiratory') || rf.includes('pulmonary')) restriction.add('breathing_difficulty');
     if (rf.includes('blood pressure') || rf.includes('hypertension')) restriction.add('breathing_difficulty');
     if (rf.includes('immune') || rf.includes('immunocompromised')) restriction.add('immune_compromised');
   });
