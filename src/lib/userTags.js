@@ -207,3 +207,15 @@ export function buildUserTags(profile) {
 
   return { restriction, capability };
 }
+
+export const DIFFICULTY_RANK = { Beginner: 1, Easy: 2, Moderate: 3, Advanced: 4 };
+
+// Deterministic difficulty ceiling — a safety backstop on top of the AI's calibration.
+// Genuinely low-capability users (very_low_mobility = bedridden / mostly seated / frail)
+// should never be served Moderate or Advanced exercises, even if the AI under-adapts.
+// We intentionally do NOT cap other tiers, because many low-mobility users
+// (e.g. athletic wheelchair users) are highly capable and capping them would be insulting.
+export function difficultyAllowed(exerciseDifficulty, restrictionSet) {
+  const cap = restrictionSet.has('very_low_mobility') ? 2 : 4;
+  return (DIFFICULTY_RANK[exerciseDifficulty] || 1) <= cap;
+}
