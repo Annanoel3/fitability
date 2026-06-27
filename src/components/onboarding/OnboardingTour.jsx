@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 // Shared smooth entrance animation injected once
 const ANIM_STYLE = `
   @keyframes tour-pop-in {
-    0%   { opacity: 0; transform: scale(0.88) translateY(12px); }
+    0%   { opacity: 0; transform: scale(0.96) translateY(8px); }
     100% { opacity: 1; transform: scale(1)    translateY(0); }
   }
   .tour-card {
-    animation: tour-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: tour-pop-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   @keyframes tour-fade-in {
     0%   { opacity: 0; }
