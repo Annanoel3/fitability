@@ -22,6 +22,14 @@ const ANIM_STYLE = `
   }
 `;
 
+// Inject the shared tour animation styles once, when this module first loads
+if (typeof document !== "undefined" && !document.getElementById("fitability-tour-anim")) {
+  const styleEl = document.createElement("style");
+  styleEl.id = "fitability-tour-anim";
+  styleEl.textContent = ANIM_STYLE;
+  document.head.appendChild(styleEl);
+}
+
 export default function OnboardingTour({ profile, onComplete }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -113,18 +121,6 @@ export default function OnboardingTour({ profile, onComplete }) {
   useEffect(() => {
     window.fitabilityTourStep = "welcome";
     window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "welcome" } }));
-  }, []);
-
-  useEffect(() => {
-    if (document.getElementById("fitability-tour-anim")) return;
-    const styleEl = document.createElement("style");
-    styleEl.id = "fitability-tour-anim";
-    styleEl.textContent = ANIM_STYLE;
-    document.head.appendChild(styleEl);
-    return () => {
-      const existing = document.getElementById("fitability-tour-anim");
-      if (existing) existing.remove();
-    };
   }, []);
 
   const completeTour = async () => {
