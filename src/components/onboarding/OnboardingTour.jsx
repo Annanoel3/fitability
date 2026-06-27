@@ -63,7 +63,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   useEffect(() => {
     const stepHandler = (e) => {
       const newStep = e.detail?.tourStep;
-      if (newStep !== undefined && newStep !== null) {
+      if (newStep !== undefined && newStep !== null && newStep !== tourStepRef.current) {
         tourStepRef.current = newStep;
         setTourStep(newStep);
       }
@@ -115,6 +115,18 @@ export default function OnboardingTour({ profile, onComplete }) {
     window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "welcome" } }));
   }, []);
 
+  useEffect(() => {
+    if (document.getElementById("fitability-tour-anim")) return;
+    const styleEl = document.createElement("style");
+    styleEl.id = "fitability-tour-anim";
+    styleEl.textContent = ANIM_STYLE;
+    document.head.appendChild(styleEl);
+    return () => {
+      const existing = document.getElementById("fitability-tour-anim");
+      if (existing) existing.remove();
+    };
+  }, []);
+
   const completeTour = async () => {
     advance("done");
     if (profile?.id) {
@@ -129,7 +141,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   if (tourStep === "workout_generated" || showWorkoutBridge) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
-        <style>{ANIM_STYLE}</style>
+        
         <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-7 shadow-2xl text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
             <span className="text-3xl">🎉</span>
@@ -169,7 +181,7 @@ export default function OnboardingTour({ profile, onComplete }) {
 
     return (
       <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
-        <style>{ANIM_STYLE}</style>
+        
         <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-7 shadow-2xl text-center space-y-5">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto cursor-pointer" onClick={handleEmojiClick}>
             <span className="text-3xl">🎉</span>
@@ -207,7 +219,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     return (
       <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-6">
         <style>{`
-          ${ANIM_STYLE}
+          
           @keyframes workout-btn-pulse {
             0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.8); }
             50%       { transform: scale(1.06); box-shadow: 0 0 0 16px hsl(var(--primary) / 0); }
@@ -263,7 +275,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     return (
       <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-20">
         <style>{`
-          ${ANIM_STYLE}
+          
           @keyframes exercise-pulse {
             0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.35); }
             50%       { transform: scale(1.06); box-shadow: 0 0 0 14px hsl(var(--primary) / 0); }
@@ -297,7 +309,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     return (
       <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-32">
         <style>{`
-          ${ANIM_STYLE}
+          
           @keyframes button-pulse {
             0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.5); }
             50%       { transform: scale(1.05); box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
@@ -327,7 +339,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   if (tourStep === "home_end") {
     return (
       <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
-        <style>{ANIM_STYLE}</style>
+        
         <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-8 shadow-2xl text-center space-y-5">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <span className="text-3xl">🎯</span>
@@ -352,7 +364,7 @@ export default function OnboardingTour({ profile, onComplete }) {
 function NavSpotlight({ icon, title, message }) {
   return (
     <div className="fixed inset-0 z-[99] pointer-events-none flex items-center justify-center px-5 pb-24">
-      <style>{ANIM_STYLE}</style>
+      
       <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
           {icon}
