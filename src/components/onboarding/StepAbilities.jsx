@@ -50,13 +50,7 @@ export default function StepAbilities({ data, onChange }) {
   const markedPainAreas = data.marked_zones || [];
   const athletic = isAthleticTier(data);
 
-  const checklist = athletic
-    ? ABILITIES_CHECKLIST_ATHLETIC
-    : ABILITIES_CHECKLIST.filter(ability => {
-        if (markedPainAreas.length === 0) return true;
-        const relatedAreas = ABILITY_PAIN_MAP[ability.key] || [];
-        return relatedAreas.some(area => markedPainAreas.includes(area));
-      });
+  const checklist = athletic ? ABILITIES_CHECKLIST_ATHLETIC : ABILITIES_CHECKLIST;
 
   const setAbility = (key, value) => {
     onChange({ current_abilities: { ...abilities, [key]: value } });
