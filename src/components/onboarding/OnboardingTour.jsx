@@ -205,17 +205,17 @@ export default function OnboardingTour({ profile, onComplete }) {
   // ── WORKOUT — non-blocking guide, button can be clicked freely ──
   if (tourStep === "workout") {
     return (
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-32">
+      <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-24">
         <style>{`
           ${ANIM_STYLE}
           @keyframes workout-btn-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.5); }
-            50%       { transform: scale(1.04); box-shadow: 0 0 0 12px hsl(var(--primary) / 0); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.8); }
+            50%       { transform: scale(1.06); box-shadow: 0 0 0 16px hsl(var(--primary) / 0); }
           }
           [data-tour-start-workout="true"] {
-            animation: workout-btn-pulse 1.4s ease-in-out infinite !important;
-            outline: 3px solid hsl(var(--primary)) !important;
-            outline-offset: 3px !important;
+            animation: workout-btn-pulse 1.2s ease-in-out infinite !important;
+            outline: 4px solid hsl(var(--primary)) !important;
+            outline-offset: 4px !important;
             pointer-events: auto !important;
             position: relative;
             z-index: 101;
@@ -228,10 +228,9 @@ export default function OnboardingTour({ profile, onComplete }) {
           <div>
             <h3 className="font-heading font-bold text-xl text-foreground">Start your first workout!</h3>
             <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-              Tap the glowing button above to choose your workout type and intensity.
+              Tap the glowing button below to choose your workout type and intensity.
             </p>
           </div>
-          <p className="text-xs text-muted-foreground">The button is highlighted at the top of the screen.</p>
         </div>
       </div>
     );
