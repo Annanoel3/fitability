@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { buildUserTags } from "@/lib/userTags";
+import { buildUserTags, difficultyAllowed } from "@/lib/userTags";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import CheckInCard from "@/components/dashboard/CheckInCard";
@@ -151,6 +151,7 @@ export default function Dashboard() {
       candidateExercises = allExercises.filter(ex => {
         const restricted = (ex.restriction_tags || []).some(tag => userRestrictionTags.has(tag));
         if (restricted) return false;
+        if (!difficultyAllowed(ex.difficulty, userRestrictionTags)) return false;
         const requiredEquip = (ex.equipment_tags || []);
         if (requiredEquip.length > 0 && !requiredEquip.every(eq => userEquipment.includes(eq))) return false;
         if (recentExerciseNames.has(ex.name)) return false;
