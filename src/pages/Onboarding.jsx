@@ -32,6 +32,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [data, setData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const [existingProfileId, setExistingProfileId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [savedStep, setSavedStep] = useState(null); // non-null = show resume prompt
@@ -125,9 +126,11 @@ export default function Onboarding() {
   };
 
   const handleNext = async () => {
+    setNavigating(true);
     const next = step + 1;
     await saveProgress(next, data);
     setStep(next);
+    setTimeout(() => setNavigating(false), 500);
   };
 
   const handleFinish = async () => {
@@ -272,7 +275,7 @@ export default function Onboarding() {
           {step < STEPS.length - 1 ? (
             <Button
               onClick={handleNext}
-              disabled={!canProceed()}
+              disabled={!canProceed() || navigating}
               className="gap-2 px-8 h-12 text-base"
             >
               Continue <ArrowRight className="w-4 h-4" />
