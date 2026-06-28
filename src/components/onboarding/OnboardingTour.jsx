@@ -123,6 +123,26 @@ export default function OnboardingTour({ profile, onComplete }) {
     window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "welcome" } }));
   }, []);
 
+  // Persistent dimming layer: stays mounted across steps so the backdrop
+  // fades smoothly instead of flashing when a step changes the page.
+  useEffect(() => {
+    let el = document.getElementById("tour-backdrop");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "tour-backdrop";
+      el.style.cssText = "position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0);transition:background 0.3s ease;";
+      document.body.appendChild(el);
+    }
+    const dark = tourStep === "welcome" || tourStep === "workout_generated" || tourStep === "home_end" || showWorkoutBridge;
+    el.style.background = dark ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0)";
+    el.style.pointerEvents = dark ? "auto" : "none";
+  }, [tourStep, showWorkoutBridge]);
+
+  useEffect(() => () => {
+    const el = document.getElementById("tour-backdrop");
+    if (el) el.remove();
+  }, []);
+
   const completeTour = async () => {
     advance("done");
     if (profile?.id) {
@@ -136,7 +156,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   // Bridge overlay shown after workout is generated — block clicks, show message
   if (tourStep === "workout_generated" || showWorkoutBridge) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center px-5">
         
         <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-7 shadow-2xl text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
@@ -176,7 +196,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     };
 
     return (
-      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
+      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5">
         
         <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-7 shadow-2xl text-center space-y-5">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto cursor-pointer" onClick={handleEmojiClick}>
@@ -334,7 +354,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   // ── HOME END — final "You're all set!" modal ──
   if (tourStep === "home_end") {
     return (
-      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-5">
+      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5">
         
         <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-8 shadow-2xl text-center space-y-5">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
