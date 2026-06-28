@@ -138,6 +138,24 @@ export default function OnboardingTour({ profile, onComplete }) {
     if (el) el.remove();
   }, []);
 
+  // Page-content blocker for nav-prompt steps. Sits at z-40, below the nav (z-50),
+  // so the page is unclickable but the highlighted, unlocked nav icon still works.
+  useEffect(() => {
+    let el = document.getElementById("tour-nav-blocker");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "tour-nav-blocker";
+      el.style.cssText = "position:fixed;inset:0;z-index:40;background:transparent;";
+      document.body.appendChild(el);
+    }
+    const navStep = tourStep === "coach" || tourStep === "library" || tourStep === "progress";
+    el.style.pointerEvents = navStep ? "auto" : "none";
+    return () => {
+      const e = document.getElementById("tour-nav-blocker");
+      if (e) e.remove();
+    };
+  }, [tourStep]);
+
   const completeTour = async () => {
     advance("done");
     if (profile?.id) {
