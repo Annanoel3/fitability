@@ -87,12 +87,7 @@ export default function OnboardingTour({ profile, onComplete }) {
         advance("workout_picking");
       }
       if (e.detail === "workout_generated" && (tourStepRef.current === "workout" || tourStepRef.current === "workout_picking")) {
-        advance("workout_generated");
-        setShowWorkoutBridge(true);
-        setTimeout(() => {
-          setShowWorkoutBridge(false);
-          advance("coach");
-        }, 4000);
+        advance("coach");
       }
       if (e.detail === "coach_message_sent" && tourStepRef.current === "coach_message") {
         advance("library");
@@ -291,7 +286,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   // ── LIBRARY EXERCISE — popup at top, pulse first exercise, disappears on tap ──
   if (tourStep === "library_exercise") {
     return (
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-20">
+      <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-10">
         <style>{`
           
           @keyframes exercise-pulse {
