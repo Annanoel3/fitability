@@ -155,10 +155,14 @@ export default function AppLayout() {
             const isPulsingLibrary = item.label === "Library" && tourStep === "library";
             const isPulsingProgress = item.label === "Progress" && tourStep === "progress";
             const isPulsingHome = item.label === "Home" && tourStep === "home_end";
+            const navTourActive = ["coach", "library", "progress", "home_end"].includes(tourStep);
+            const navLocked = navTourActive && !(isPulsingCoach || isPulsingLibrary || isPulsingProgress || isPulsingHome);
             return (
               <Link
                 key={item.path}
                 to={item.path}
+                onClick={navLocked ? (e) => e.preventDefault() : undefined}
+                style={navLocked ? { opacity: 0.4 } : undefined}
                 data-tour-nav={item.label}
                 data-tour-coach-nav={isPulsingCoach ? "true" : undefined}
                 data-tour-library-nav={isPulsingLibrary ? "true" : undefined}
