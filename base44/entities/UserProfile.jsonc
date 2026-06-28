@@ -134,6 +134,14 @@
       },
       "description": "Computed exercise capability tags for exercises this user is well-suited for"
     },
+    "self_reported_fitness": {
+      "type": "string",
+      "description": "User's self-reported current fitness level (e.g. Just starting out, Light, Medium, Strong, Athletic)"
+    },
+    "condition_severity": {
+      "type": "string",
+      "description": "How much user's conditions or pain limit daily activities (e.g. Not at all, A little, Moderately, Severely)"
+    },
     "onboarding_completed": {
       "type": "boolean",
       "default": false

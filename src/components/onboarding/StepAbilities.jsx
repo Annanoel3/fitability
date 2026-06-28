@@ -45,12 +45,19 @@ function isAthleticTier(data) {
   return true;
 }
 
+const FITNESS_OPTIONS = ["Just starting out", "Light", "Medium", "Strong", "Athletic"];
+const SEVERITY_OPTIONS = ["Not at all", "A little", "Moderately", "Severely"];
+
 export default function StepAbilities({ data, onChange }) {
   const abilities = data.current_abilities || {};
-  const markedPainAreas = data.marked_zones || [];
   const athletic = isAthleticTier(data);
-
   const checklist = athletic ? ABILITIES_CHECKLIST_ATHLETIC : ABILITIES_CHECKLIST;
+
+  const hasConditions =
+    (data.disabilities || []).length > 0 ||
+    (data.body_limitations || []).length > 0 ||
+    Object.keys(data.pain_areas || {}).length > 0 ||
+    (data.marked_zones || []).length > 0;
 
   const setAbility = (key, value) => {
     onChange({ current_abilities: { ...abilities, [key]: value } });
@@ -67,7 +74,53 @@ export default function StepAbilities({ data, onChange }) {
         </p>
       </div>
 
+      {/* Q1: Self-reported fitness level */}
       <div className="space-y-3">
+        <p className="text-sm font-semibold text-foreground">How would you describe your fitness right now?</p>
+        <div className="space-y-2">
+          {FITNESS_OPTIONS.map(option => (
+            <button
+              key={option}
+              onClick={() => onChange({ self_reported_fitness: option })}
+              className={`w-full p-3.5 rounded-xl border-2 transition-all text-left font-medium text-sm ${
+                data.self_reported_fitness === option
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-card text-foreground hover:border-primary/30"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Q2: Condition severity — only if user has conditions/pain */}
+      {hasConditions && (
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-foreground">How much do your conditions or pain limit your daily activities?</p>
+          <div className="space-y-2">
+            {SEVERITY_OPTIONS.map(option => (
+              <button
+                key={option}
+                onClick={() => onChange({ condition_severity: option })}
+                className={`w-full p-3.5 rounded-xl border-2 transition-all text-left font-medium text-sm ${
+                  data.condition_severity === option
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/30"
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Abilities checklist */}
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-foreground">
+          {athletic ? "Check everything you can currently do:" : "Check the activities you are able to do:"}
+        </p>
         {checklist.map(({ key, label }) => {
           const val = abilities[key] === true;
           return (

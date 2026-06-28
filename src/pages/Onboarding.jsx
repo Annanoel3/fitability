@@ -114,6 +114,8 @@ export default function Onboarding() {
       is_veteran: currentData.is_veteran || false,
       veteran_details: currentData.veteran_details || {},
       equipment: currentData.equipment || [],
+      self_reported_fitness: currentData.self_reported_fitness || undefined,
+      condition_severity: currentData.condition_severity || undefined,
       onboarding_completed: false,
       onboarding_step: nextStep,
     };
@@ -173,6 +175,8 @@ export default function Onboarding() {
       veteran_details: data.veteran_details || {},
       equipment: data.equipment || [],
       fitness_mode: fitnessMode,
+      self_reported_fitness: data.self_reported_fitness || undefined,
+      condition_severity: data.condition_severity || undefined,
       onboarding_completed: true,
       onboarding_step: STEPS.length
     };
