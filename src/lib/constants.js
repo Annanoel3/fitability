@@ -347,6 +347,14 @@ export const ABILITIES_CHECKLIST_ATHLETIC = [
   { key: "reach_overhead", label: "Reach overhead with both arms" }
 ];
 
+export const ABILITIES_CHECKLIST_GRADED = [
+  { id: "pushups", question: "How many push-ups can you do in a row?", options: ["None", "1-5", "6-15", "16+"] },
+  { id: "plank", question: "How long can you hold a plank?", options: ["Cannot", "Under 20 sec", "20-60 sec", "Over 60 sec"] },
+  { id: "cardio", question: "How long can you jog or run without stopping?", options: ["Cannot", "Under 5 min", "5-20 min", "20+ min"] },
+  { id: "lift", question: "How much can you comfortably lift?", options: ["Light only", "10-25 lbs", "25-50 lbs", "50+ lbs"] },
+  { id: "stairs", question: "How many flights of stairs can you climb without stopping?", options: ["Less than 1", "1-2", "3-5", "6+"] },
+];
+
 export const RISK_FACTORS = [
   "History of falls", "Recent surgery (last 6 months)",
   "Osteoporosis", "Heart condition", "Dizziness/Vertigo",

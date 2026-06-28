@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Info } from "lucide-react";
-import { ABILITIES_CHECKLIST, ABILITIES_CHECKLIST_ATHLETIC, ABILITIES_CHECKLIST_LOW } from "@/lib/constants";
+import { ABILITIES_CHECKLIST, ABILITIES_CHECKLIST_ATHLETIC, ABILITIES_CHECKLIST_LOW, ABILITIES_CHECKLIST_GRADED } from "@/lib/constants";
 
 // Map abilities to relevant pain areas (used for filtering in the adaptive tier)
 const ABILITY_PAIN_MAP = {
@@ -159,27 +159,54 @@ export default function StepAbilities({ data, onChange }) {
       )}
 
       {/* Abilities checklist */}
-      <div className="space-y-3">
-        <p className="text-sm font-semibold text-foreground">
-          {athletic ? "Check everything you can currently do:" : "Check the activities you are able to do:"}
-        </p>
-        {checklist.map(({ key, label }) => {
-          const val = abilities[key] === true;
-          return (
-            <button
-              key={key}
-              onClick={() => setAbility(key, !val)}
-              className={`w-full p-4 rounded-xl border-2 transition-all text-left font-medium text-sm ${
-                val
-                  ? "border-primary bg-primary/10 text-foreground"
-                  : "border-border bg-card text-foreground hover:border-primary/30"
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      {athletic ? (
+        <div className="space-y-5">
+          <p className="text-sm font-semibold text-foreground">Rate your current fitness level:</p>
+          {ABILITIES_CHECKLIST_GRADED.map(({ id, question, options }) => (
+            <div key={id} className="space-y-2">
+              <p className="text-sm font-medium text-foreground">{question}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {options.map(opt => {
+                  const selected = abilities[id] === opt;
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() => setAbility(id, opt)}
+                      className={`p-3 rounded-xl border-2 transition-all text-center font-medium text-sm ${
+                        selected
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border bg-card text-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-foreground">Check the activities you are able to do:</p>
+          {checklist.map(({ key, label }) => {
+            const val = abilities[key] === true;
+            return (
+              <button
+                key={key}
+                onClick={() => setAbility(key, !val)}
+                className={`w-full p-4 rounded-xl border-2 transition-all text-left font-medium text-sm ${
+                  val
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border bg-card text-foreground hover:border-primary/30"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
