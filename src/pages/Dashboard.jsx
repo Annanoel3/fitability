@@ -159,8 +159,9 @@ export default function Dashboard() {
       });
     } catch (e) { /* library may be empty, LLM will generate from scratch */ }
 
+    candidateExercises.sort((a, b) => ((b.suitable_for_tags || []).some(t => userCapabilityTags.has(t)) ? 1 : 0) - ((a.suitable_for_tags || []).some(t => userCapabilityTags.has(t)) ? 1 : 0));
     const libraryContext = candidateExercises.length > 0
-      ? `\n\nEXERCISE LIBRARY — ALREADY HARD-FILTERED FOR THIS USER'S SPECIFIC TAGS:\nEvery exercise below has been verified safe for this individual. Select from this list first. Strongly prefer exercises that need NO equipment — bodyweight only, or at most a chair or wall; only choose equipment-based exercises (resistance bands, dumbbells, mat) when they add clear, specific value for this user. You may also create new exercises that would pass the same tag filter.\n${candidateExercises.slice(0, 70).map(ex => `• ${ex.name} [${ex.category}, ${ex.position}, ${ex.difficulty}]${ex.description ? ' — ' + ex.description.slice(0, 80) : ''}`).join('\n')}`
+      ? `\n\nEXERCISE LIBRARY — ALREADY HARD-FILTERED FOR THIS USER'S SPECIFIC TAGS:\nEvery exercise below has been verified safe for this individual. Select from this list first. Exercises marked [BEST FIT] are especially well-suited to this person — prioritize including several of them. Strongly prefer exercises that need NO equipment — bodyweight only, or at most a chair or wall; only choose equipment-based exercises (resistance bands, dumbbells, mat) when they add clear, specific value for this user. You may also create new exercises that would pass the same tag filter.\n${candidateExercises.slice(0, 70).map(ex => `${(ex.suitable_for_tags || []).some(t => userCapabilityTags.has(t)) ? "[BEST FIT] " : "• "}${ex.name} [${ex.category}, ${ex.position}, ${ex.difficulty}]${ex.description ? ' — ' + ex.description.slice(0, 80) : ''}`).join('\n')}`
       : "";
 
     const restrictionTagsList = Array.from(userRestrictionTags).join(', ') || 'none';
