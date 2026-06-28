@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Info } from "lucide-react";
 import { ABILITIES_CHECKLIST, ABILITIES_CHECKLIST_ATHLETIC, ABILITIES_CHECKLIST_LOW } from "@/lib/constants";
 
 // Map abilities to relevant pain areas (used for filtering in the adaptive tier)
@@ -60,10 +61,19 @@ function isLowCapabilityTier(data) {
   return disabilities.some(d => SEVERE_DISABILITIES.some(s => d.toLowerCase().includes(s)));
 }
 
+const FITNESS_DESCRIPTIONS = {
+  "Just starting out": "New to exercise or returning after a long break; everyday activities can feel tiring.",
+  "Light": "You manage daily life fine but rarely exercise; light effort is plenty.",
+  "Medium": "You exercise sometimes and can handle moderate effort like brisk walks or bodyweight work.",
+  "Strong": "You exercise regularly and can handle challenging strength and cardio.",
+  "Athletic": "Very fit; you train hard and can handle intense, advanced workouts.",
+};
+
 export default function StepAbilities({ data, onChange }) {
+  const [showFitnessInfo, setShowFitnessInfo] = useState(false);
   const abilities = data.current_abilities || {};
   const lowCap = isLowCapabilityTier(data);
-  const athletic = !lowCap && isAthleticTier(data);
+  const athletic = !lowCap && (["Strong", "Athletic"].includes(data.self_reported_fitness) || isAthleticTier(data));
   const checklist = lowCap ? ABILITIES_CHECKLIST_LOW : athletic ? ABILITIES_CHECKLIST_ATHLETIC : ABILITIES_CHECKLIST;
 
   const hasConditions =
@@ -89,7 +99,26 @@ export default function StepAbilities({ data, onChange }) {
 
       {/* Q1: Self-reported fitness level */}
       <div className="space-y-3">
-        <p className="text-sm font-semibold text-foreground">How would you describe your fitness right now?</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-foreground">How would you describe your fitness right now?</p>
+          <button
+            type="button"
+            onClick={() => setShowFitnessInfo(v => !v)}
+            className="w-5 h-5 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-colors flex-shrink-0"
+            aria-label="Fitness level descriptions"
+          >
+            <Info className="w-3 h-3" />
+          </button>
+        </div>
+        {showFitnessInfo && (
+          <div className="bg-muted/60 border border-border rounded-xl p-3 space-y-1.5">
+            {FITNESS_OPTIONS.map(opt => (
+              <p key={opt} className="text-xs text-foreground leading-snug">
+                <span className="font-semibold">{opt}:</span> {FITNESS_DESCRIPTIONS[opt]}
+              </p>
+            ))}
+          </div>
+        )}
         <div className="space-y-2">
           {FITNESS_OPTIONS.map(option => (
             <button
