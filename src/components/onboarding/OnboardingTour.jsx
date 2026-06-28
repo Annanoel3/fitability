@@ -238,11 +238,13 @@ export default function OnboardingTour({ profile, onComplete }) {
           
           @keyframes workout-btn-pulse {
             0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.8); }
-            50%       { transform: scale(1.06); box-shadow: 0 0 0 16px hsl(var(--primary) / 0); }
+            50%       { transform: scale(1.10); box-shadow: 0 0 0 26px hsl(var(--primary) / 0); }
           }
           [data-tour-start-workout="true"] {
             animation: workout-btn-pulse 1.2s ease-in-out infinite !important;
-            outline: 4px solid hsl(var(--primary)) !important;
+            outline: 5px solid hsl(var(--primary)) !important;
+          outline-offset: 4px !important;
+          
             outline-offset: 4px !important;
             pointer-events: auto !important;
             position: relative;
@@ -294,11 +296,14 @@ export default function OnboardingTour({ profile, onComplete }) {
           
           @keyframes exercise-pulse {
             0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.35); }
-            50%       { transform: scale(1.06); box-shadow: 0 0 0 14px hsl(var(--primary) / 0); }
+            50%       { transform: scale(1.10); box-shadow: 0 0 0 24px hsl(var(--primary) / 0); }
           }
           [data-tour-first-exercise="true"] {
             animation: exercise-pulse 1.5s ease-in-out infinite !important;
-            border-color: hsl(var(--primary)) !important;
+            border: 3px solid hsl(var(--primary)) !important;
+            outline: 5px solid hsl(var(--primary)) !important;
+            outline-offset: 4px !important;
+            
             pointer-events: auto !important;
           }
           main, main * { pointer-events: auto !important; }
@@ -328,10 +333,12 @@ export default function OnboardingTour({ profile, onComplete }) {
           
           @keyframes button-pulse {
             0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.5); }
-            50%       { transform: scale(1.05); box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
+            50%       { transform: scale(1.05); box-shadow: 0 0 0 22px hsl(var(--primary) / 0); }
           }
           [data-tour-log-button="true"] {
             animation: button-pulse 1.5s ease-in-out infinite !important;
+          outline: 5px solid hsl(var(--primary)) !important;
+          outline-offset: 4px !important;
             pointer-events: auto !important;
           }
           main, main * { pointer-events: auto !important; }
