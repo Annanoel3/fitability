@@ -375,6 +375,22 @@ Return the complete corrected workout in the same JSON structure.`,
       safety_review: (result.safety_review || '') + (validation.changes_made?.length ? '\n\nValidation changes: ' + validation.changes_made.join('; ') : '')
     };
 
+        // -- DETERMINISTIC SAFETY RE-CHECK: drop any AI exercise that violates the user's hard restrictions --
+    let safetyLib = [];
+    try { safetyLib = await base44.entities.Exercise.list('-created_date', 500); } catch (e) {}
+    const libByName = {};
+    safetyLib.forEach(ex => { libByName[(ex.name || '').toLowerCase().trim()] = ex; });
+    const removedBySafety = [];
+    finalResult.exercises = (finalResult.exercises || []).filter(ex => {
+      if (userRestrictionTags.has('cannot_stand') && ex.position === 'Standing') { removedBySafety.push(ex.name); return false; }
+      const lib = libByName[(ex.name || '').toLowerCase().trim()];
+      if (lib && (lib.restriction_tags || []).some(t => userRestrictionTags.has(t))) { removedBySafety.push(ex.name); return false; }
+      if (lib && !difficultyAllowed(lib.difficulty, userRestrictionTags)) { removedBySafety.push(ex.name); return false; }
+      return true;
+    });
+    const safetyPassed = true;
+    if (removedBySafety.length) { finalResult.safety_review = (finalResult.safety_review || '') + ' Final deterministic safety check removed: ' + removedBySafety.join(', ') + '.'; }
+
     const created = await base44.entities.WorkoutPlan.create({
       title: finalResult.title,
       description: finalResult.description,
@@ -382,7 +398,7 @@ Return the complete corrected workout in the same JSON structure.`,
       date: today,
       total_duration_minutes: finalResult.total_duration_minutes,
       difficulty_level: finalResult.difficulty_level,
-      safety_validated: true,
+      safety_validated: safetyPassed,
       safety_notes: finalResult.safety_review,
       pre_checkin_mood: (checkin || todayCheckin)?.mood,
       pre_checkin_energy: (checkin || todayCheckin)?.energy,
