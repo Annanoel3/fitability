@@ -305,6 +305,18 @@ export const BODY_AREAS = [
   "Left Knee", "Right Knee", "Left Ankle/Foot", "Right Ankle/Foot"
 ];
 
+// For severely-limited users (bedridden, mostly seated, severe conditions)
+export const ABILITIES_CHECKLIST_LOW = [
+  { key: "sit_unsupported", label: "Sit upright without support" },
+  { key: "hold_head_up", label: "Hold your head up" },
+  { key: "raise_arm", label: "Raise an arm to shoulder height" },
+  { key: "open_close_hand", label: "Open and close your hand" },
+  { key: "grip_squeeze", label: "Grip and squeeze a light object" },
+  { key: "stand_with_support", label: "Stand for 10 seconds holding support" },
+  { key: "shift_weight_seated", label: "Shift your weight while seated" },
+  { key: "transfer_bed_chair", label: "Move from bed to chair" }
+];
+
 // For users with significant limitations / low activity
 export const ABILITIES_CHECKLIST = [
   { key: "stand_from_chair", label: "Stand from a chair without help" },

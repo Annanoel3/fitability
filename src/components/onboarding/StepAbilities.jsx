@@ -1,5 +1,5 @@
 import React from "react";
-import { ABILITIES_CHECKLIST, ABILITIES_CHECKLIST_ATHLETIC } from "@/lib/constants";
+import { ABILITIES_CHECKLIST, ABILITIES_CHECKLIST_ATHLETIC, ABILITIES_CHECKLIST_LOW } from "@/lib/constants";
 
 // Map abilities to relevant pain areas (used for filtering in the adaptive tier)
 const ABILITY_PAIN_MAP = {
@@ -48,10 +48,23 @@ function isAthleticTier(data) {
 const FITNESS_OPTIONS = ["Just starting out", "Light", "Medium", "Strong", "Athletic"];
 const SEVERITY_OPTIONS = ["Not at all", "A little", "Moderately", "Severely"];
 
+const SEVERE_DISABILITIES = [
+  "wheelchair", "paralysis", "amputee", "cannot stand", "bedridden",
+  "stroke", "parkinson", "multiple sclerosis", "cerebral palsy"
+];
+
+function isLowCapabilityTier(data) {
+  if (data.condition_severity === "Severely") return true;
+  if (data.activity_level === "Bedridden" || data.activity_level === "Mostly seated") return true;
+  const disabilities = (data.disabilities || []);
+  return disabilities.some(d => SEVERE_DISABILITIES.some(s => d.toLowerCase().includes(s)));
+}
+
 export default function StepAbilities({ data, onChange }) {
   const abilities = data.current_abilities || {};
-  const athletic = isAthleticTier(data);
-  const checklist = athletic ? ABILITIES_CHECKLIST_ATHLETIC : ABILITIES_CHECKLIST;
+  const lowCap = isLowCapabilityTier(data);
+  const athletic = !lowCap && isAthleticTier(data);
+  const checklist = lowCap ? ABILITIES_CHECKLIST_LOW : athletic ? ABILITIES_CHECKLIST_ATHLETIC : ABILITIES_CHECKLIST;
 
   const hasConditions =
     (data.disabilities || []).length > 0 ||
