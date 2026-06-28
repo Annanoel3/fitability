@@ -221,6 +221,7 @@ HARD RULE: Only use listed equipment. Violating this is a critical error.
 Name: ${p.display_name || "User"}
 Age: ${p.age || "Unknown"} | Sex: ${p.sex || "Not provided"} | Height: ${heightStr} | Weight: ${p.weight_lbs ? p.weight_lbs + " lbs" : "Not provided"} | BMI: ${bmi || "Unknown"}
 Activity Level: ${p.activity_level || "Unknown"} | Fitness Mode: ${p.fitness_mode || "Standard"}
+Self-reported fitness: ${p.self_reported_fitness || "Not provided"} | How much conditions limit daily life: ${p.condition_severity || "Not provided"}
 Veteran: ${p.is_veteran ? `Yes${p.veteran_details && Object.keys(p.veteran_details).length > 0 ? ' — ' + JSON.stringify(p.veteran_details) : ''}` : "No"}
 Goals: ${goals.join(', ') || 'None specified'}
 
@@ -240,6 +241,8 @@ ${coachMemoryBlock}
 
 ═══ INTENSITY CALIBRATION — CRITICAL ═══
 This app serves users across the full spectrum from bedridden to fully healthy and athletic. You MUST push each person to the appropriate level of challenge — under-challenging a capable person is just as wrong as over-challenging a limited one. A healthy, active person getting a "gentle chair stretching" workout would find it insulting. A bedridden person getting push-ups would be dangerous. Match the intensity to THIS person precisely.
+
+PRIMARY SIGNAL — self-reported fitness is "${p.self_reported_fitness || "not provided"}". If it is Medium, Strong, or Athletic, give real, challenging work (compound strength, resistance, real cardio) on every body part that is NOT directly limited; do NOT default to gentle, seated, or adaptive exercises for them even if much of the library is gentle — create harder exercises if needed. Condition severity is "${p.condition_severity || "not provided"}"; use it only to scale back around the specific limitation, not to make the whole workout gentle.
 
 Determine their baseline capability tier:
 - NO disabilities, NO pain areas, activity level "Light activity" or above, can perform all or most abilities → HEALTHY/CAPABLE USER. Give them real workouts: push-ups, squats, lunges, planks, burpees, dumbbell exercises, running in place, etc. at appropriate sets/reps for their fitness level. Do NOT default to gentle or adaptive exercises for these users.
