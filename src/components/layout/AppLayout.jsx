@@ -186,46 +186,19 @@ export default function AppLayout() {
       {/* Tour pulsing styles for library, progress and home */}
       <style key={tourStep}>{`
         @keyframes icon-pulse {
-          0%   { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.25); border-radius: 12px; }
-          50%  { transform: scale(1.45); box-shadow: 0 0 0 10px hsl(var(--primary) / 0);  border-radius: 12px; }
-          100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.25); border-radius: 12px; }
+          0%, 100% { transform: scale(1.06); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7); }
+          50%      { transform: scale(1.14); box-shadow: 0 0 0 16px hsl(var(--primary) / 0); }
         }
-        ${["coach", "library", "progress", "home_end"].includes(tourStep) ? `
-        nav > div > a {
-          pointer-events: none !important;
-          opacity: 0.35 !important;
-        }
-        nav > div > a[data-tour-coach-nav],
-        nav > div > a[data-tour-library-nav],
-        nav > div > a[data-tour-progress-nav],
-        nav > div > a[data-tour-home-nav] {
-          pointer-events: auto !important;
-          opacity: 1 !important;
-        }
-        ` : ""}
-        [data-tour-coach-nav] {
-          animation: ${tourStep === "coach" ? "icon-pulse 1.1s ease-in-out infinite" : "none"} !important;
-          color: ${tourStep === "coach" ? "hsl(var(--primary))" : "inherit"} !important;
-          background: ${tourStep === "coach" ? "hsl(var(--primary) / 0.15)" : "transparent"} !important;
-          border-radius: 12px !important;
-        }
-        [data-tour-library-nav] {
-          animation: ${tourStep === "library" ? "icon-pulse 1.1s ease-in-out infinite" : "none"} !important;
-          color: ${tourStep === "library" ? "hsl(var(--primary))" : "inherit"} !important;
-          background: ${tourStep === "library" ? "hsl(var(--primary) / 0.15)" : "transparent"} !important;
-          border-radius: 12px !important;
-        }
-        [data-tour-progress-nav] {
-          animation: ${tourStep === "progress" ? "icon-pulse 1.1s ease-in-out infinite" : "none"} !important;
-          color: ${tourStep === "progress" ? "hsl(var(--primary))" : "inherit"} !important;
-          background: ${tourStep === "progress" ? "hsl(var(--primary) / 0.15)" : "transparent"} !important;
-          border-radius: 12px !important;
-        }
-        [data-tour-home-nav] {
-          animation: ${tourStep === "home_end" ? "icon-pulse 1.1s ease-in-out infinite" : "none"} !important;
-          color: ${tourStep === "home_end" ? "hsl(var(--primary))" : "inherit"} !important;
-          background: ${tourStep === "home_end" ? "hsl(var(--primary) / 0.15)" : "transparent"} !important;
-          border-radius: 12px !important;
+        nav a[data-tour-coach-nav],
+        nav a[data-tour-library-nav],
+        nav a[data-tour-progress-nav],
+        nav a[data-tour-home-nav] {
+          animation: icon-pulse 1.1s ease-in-out infinite !important;
+          background: hsl(var(--primary) / 0.18) !important;
+          outline: 3px solid hsl(var(--primary)) !important;
+          outline-offset: 2px !important;
+          border-radius: 14px !important;
+          color: hsl(var(--primary)) !important;
         }
       `}</style>
     </div>);
