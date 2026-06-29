@@ -155,7 +155,7 @@ export default function AppLayout() {
             const isPulsingLibrary = item.label === "Library" && tourStep === "library";
             const isPulsingProgress = item.label === "Progress" && tourStep === "progress";
             const isPulsingHome = item.label === "Home" && tourStep === "home_end";
-            const navTourActive = ["coach", "library", "progress", "home_end"].includes(tourStep);
+            const navTourActive = !!tourStep && tourStep !== "done";
             const navLocked = navTourActive && !(isPulsingCoach || isPulsingLibrary || isPulsingProgress || isPulsingHome);
             return (
               <Link
