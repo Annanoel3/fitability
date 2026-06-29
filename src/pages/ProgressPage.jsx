@@ -118,7 +118,7 @@ export default function ProgressPage() {
               100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.7), 0 0 20px hsl(var(--primary) / 0.4); }
             }
             [data-tour-log-button="true"] {
-              animation: log-btn-pulse 1.1s ease-in-out infinite !important;
+              animation: log-btn-pulse 1.1s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
             }
           `}</style>
         )}
@@ -210,7 +210,7 @@ export default function ProgressPage() {
               [data-tour-save-btn="true"] {
                 outline: 3px solid hsl(var(--primary)) !important;
                 outline-offset: 3px !important;
-                animation: save-btn-pulse 1.1s ease-in-out infinite !important;
+                animation: save-btn-pulse 1.1s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
               }
             `}</style>
           )}
