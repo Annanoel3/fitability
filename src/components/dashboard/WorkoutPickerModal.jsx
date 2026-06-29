@@ -21,6 +21,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
   const [types, setTypes] = useState([]);
   const [intensity, setIntensity] = useState(null);
   const [demoCaption, setDemoCaption] = useState("");
+  const [demoPressing, setDemoPressing] = useState(false);
   const timersRef = useRef([]);
 
   const isTourPicking = typeof window !== "undefined" &&
@@ -28,16 +29,13 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
 
   useEffect(() => {
     if (!isTourPicking) return;
-    const t1 = setTimeout(() => setDemoCaption("Pick the kinds of movement you want — you can choose more than one."), 400);
-    const t2 = setTimeout(() => setTypes(["strength"]), 1500);
-    const t3 = setTimeout(() => setTypes(["strength", "cardio"]), 2700);
-    const t4 = setTimeout(() => setDemoCaption("Then choose how hard to push today."), 3700);
-    const t5 = setTimeout(() => setIntensity("easy"), 4700);
-    const t6 = setTimeout(() => setDemoCaption("That's it — tap Start and your workout gets built. Here we go!"), 5800);
-    const t7 = setTimeout(() => {
-      onConfirm({ workoutTypes: ["strength", "cardio"], intensity: "easy" });
-      onClose();
-    }, 7000);
+    const t1 = setTimeout(() => setDemoCaption("Pick the kinds of movement you want — you can choose more than one."), 150);
+    const t2 = setTimeout(() => setTypes(["strength"]), 600);
+    const t3 = setTimeout(() => setTypes(["strength", "cardio"]), 1700);
+    const t4 = setTimeout(() => setDemoCaption("Then choose how hard to push today."), 2700);
+    const t5 = setTimeout(() => setIntensity("easy"), 3700);
+    const t6 = setTimeout(() => { setDemoCaption("Now tapping Start to build it…"); setDemoPressing(true); }, 4900);
+    const t7 = setTimeout(() => { onConfirm({ workoutTypes: ["strength", "cardio"], intensity: "easy" }); onClose(); }, 5800);
     timersRef.current = [t1, t2, t3, t4, t5, t6, t7];
     return () => timersRef.current.forEach(clearTimeout);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -56,6 +54,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
+      {isTourPicking && <div className="absolute inset-0 z-[60]" aria-hidden="true" />}
       <div className="bg-card rounded-2xl border border-border w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] my-auto md:my-0 mb-20 md:mb-0">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
@@ -132,7 +131,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
           <Button
             onClick={handleConfirm}
             disabled={!canConfirm}
-            className="w-full h-12 text-base"
+            className={"w-full h-12 text-base transition-transform duration-150 " + (demoPressing ? "scale-95 ring-4 ring-primary/40 brightness-110" : "")}
           >
             Generate My Workout ✨
           </Button>
