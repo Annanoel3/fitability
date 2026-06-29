@@ -19,7 +19,7 @@ const SEVERE_DISABILITIES = [
 ];
 
 // Determine if a user is non-ambulatory based on MOBILITY signals only (not condition_severity)
-function isNonAmbulatory(data) {
+export function isNonAmbulatory(data) {
   if (data.activity_level === "Bedridden" || data.activity_level === "Mostly seated" || data.activity_level === "Wheelchair user") return true;
   if (data.fitness_mode === "Wheelchair") return true;
   const disabilities = (data.disabilities || []);

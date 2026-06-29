@@ -11,7 +11,7 @@ import StepActivityLevel from "@/components/onboarding/StepActivityLevel";
 import StepBodyMap from "@/components/onboarding/StepBodyMap";
 import StepZoneConditions from "@/components/onboarding/StepZoneConditions";
 
-import StepAbilities from "@/components/onboarding/StepAbilities";
+import StepAbilities, { isNonAmbulatory } from "@/components/onboarding/StepAbilities";
 import StepRiskFactors from "@/components/onboarding/StepRiskFactors";
 import StepVeteran from "@/components/onboarding/StepVeteran";
 import StepEquipment from "@/components/onboarding/StepEquipment";
@@ -99,8 +99,8 @@ export default function Onboarding() {
     // Step 4: Body Map / Disabilities — require at least one marked zone
     if (step === 4) return (data.marked_zones || []).length > 0;
     
-    // Step 5: Body Limitations — require at least one selected
-    if (step === 5) return (data.body_limitations || []).length > 0;
+    // Step 5: Zone Descriptions — optional, always allow continue
+    if (step === 5) return true;
     
     // Step 6: Abilities — require self_reported_fitness, condition_severity (if applicable), and all shown ability questions answered
     if (step === 6) {
@@ -116,22 +116,7 @@ export default function Onboarding() {
       if (hasConditions && !data.condition_severity) return false;
       
       // All shown ability questions must be answered
-      const SEVERE_DISABILITIES = [
-        "wheelchair", "paralysis", "amputee", "cannot stand", "bedridden",
-        "stroke", "parkinson", "multiple sclerosis", "cerebral palsy"
-      ];
-      
-      const isNonAmbulatory =
-        data.activity_level === "Bedridden" ||
-        data.activity_level === "Mostly seated" ||
-        data.activity_level === "Wheelchair user" ||
-        data.fitness_mode === "Wheelchair" ||
-        (data.disabilities || []).some(d => SEVERE_DISABILITIES.some(s => d.toLowerCase().includes(s))) ||
-        ((data.body_limitations || []).join(' ').toLowerCase().includes('cannot stand') ||
-         (data.body_limitations || []).join(' ').toLowerCase().includes('wheelchair') ||
-         (data.body_limitations || []).join(' ').toLowerCase().includes('paralyz'));
-      
-      const checklist = isNonAmbulatory ? ABILITIES_CHECKLIST_GRADED_SEATED : ABILITIES_CHECKLIST_GRADED;
+      const checklist = isNonAmbulatory(data) ? ABILITIES_CHECKLIST_GRADED_SEATED : ABILITIES_CHECKLIST_GRADED;
       const abilities = data.current_abilities || {};
       
       // Every question in the active checklist must have a value
