@@ -99,13 +99,17 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       }
     };
 
+    recognition.onstart = () => {
+      setListening(true);
+    };
+
     recognitionRef.current = recognition;
     try {
       recognition.start();
-      setListening(true);
     } catch (e) {
-      // start() can throw if already started — ignore
+      // start() can throw if already started or not allowed — clean up
       recognitionRef.current = null;
+      setListening(false);
     }
   }, [voiceSupported]);
 
