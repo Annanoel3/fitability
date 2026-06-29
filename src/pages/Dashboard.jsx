@@ -412,8 +412,9 @@ Return the complete corrected workout in the same JSON structure.`,
     const updatedWorkouts = await base44.entities.WorkoutPlan.filter({ created_by_id: (await base44.auth.me()).id }, "-date", 10);
     setWorkouts(updatedWorkouts);
     
-    // Auto-navigate only if user stayed on the Dashboard
-    if (pageVisibleRef.current) {
+    // Auto-navigate only if user stayed on the Dashboard and the tour is not active
+    const tourActive = window.fitabilityTourStep && window.fitabilityTourStep !== "done";
+    if (pageVisibleRef.current && !tourActive) {
       navigate("/workout", { state: { workout: { ...created, workout_data: JSON.stringify(finalResult) } } });
     }
 
