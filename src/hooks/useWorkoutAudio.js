@@ -80,8 +80,19 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       onResult(transcript);
     };
 
-    recognition.onerror = () => {
-      // Silently ignore — onend will handle restart
+    let fatalError = false;
+    recognition.onerror = (e) => {
+      console.log("[Voice] Error:", e.error);
+      // not-allowed / service-not-allowed = permission denied, don't restart
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        fatalError = true;
+        listeningStoppedRef.current = true;
+      }
+      // network / audio-capture = hardware issue, don't restart
+      if (e.error === "audio-capture" || e.error === "network") {
+        fatalError = true;
+      }
+      // no-speech / aborted — normal, onend will restart
     };
 
     recognition.onend = () => {
@@ -89,6 +100,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
         recognitionRef.current = null;
       }
       setListening(false);
+      if (fatalError) return;
       // Auto-restart unless intentionally stopped or currently speaking
       if (!listeningStoppedRef.current && !speakingRef.current && audioModeRef.current) {
         setTimeout(() => {
