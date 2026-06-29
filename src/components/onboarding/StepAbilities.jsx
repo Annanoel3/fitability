@@ -55,7 +55,7 @@ const SEVERE_DISABILITIES = [
 ];
 
 function isLowCapabilityTier(data) {
-  if (data.condition_severity === "Severely") return true;
+  // "Severely" alone routes to the SUPPORTED set; only the profound cases below force the LOW set
   if (data.activity_level === "Bedridden" || data.activity_level === "Mostly seated") return true;
   const disabilities = (data.disabilities || []);
   return disabilities.some(d => SEVERE_DISABILITIES.some(s => d.toLowerCase().includes(s)));
