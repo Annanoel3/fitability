@@ -177,6 +177,24 @@ export default function SettingsPage() {
         </Button>
       </div>
 
+      {/* App Tour */}
+      <div className="bg-card rounded-2xl border border-border p-6 space-y-3">
+        <h2 className="font-heading font-semibold">App Tour</h2>
+        <p className="text-sm text-muted-foreground">Take a quick guided walkthrough of the app.</p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            if (profile?.id) {
+              await base44.entities.UserProfile.update(profile.id, { onboarding_tour_completed: false });
+            }
+            window.location.href = "/";
+          }}
+        >
+          Take the tour
+        </Button>
+      </div>
+
       {/* Appearance */}
       <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
         <div className="flex items-center gap-3 mb-2">
