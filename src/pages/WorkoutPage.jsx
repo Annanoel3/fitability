@@ -373,6 +373,12 @@ export default function WorkoutPage() {
           <p className="text-sm text-muted-foreground mt-1">
             {isVoicePath ? "Here's what I heard — feel free to adjust." : "Rate your workout and leave a note."}
           </p>
+        <button
+          onClick={() => navigate("/coach")}
+          className="text-xs font-medium text-primary hover:underline underline-offset-2 mt-1"
+        >
+          Too hard or too easy? Tell your Coach to adjust your next workouts →
+        </button>
         </div>
 
         {/* Star rating */}
