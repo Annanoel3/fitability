@@ -96,8 +96,11 @@ export default function OnboardingTour({ profile, onComplete }) {
         // Immediately hide popup, block clicks for 4s so user can read, then move on
         advance("library_exercise_clicked");
         setTimeout(() => {
-          if (tourStepRef.current === "library_exercise_clicked") advance("progress");
+          if (tourStepRef.current === "library_exercise_clicked") advance("create_exercise");
         }, 4000);
+      }
+      if (e.detail === "create_exercise_filled" && tourStepRef.current === "create_exercise") {
+        setTimeout(() => advance("progress"), 2000);
       }
       if (e.detail === "progress_logged" && tourStepRef.current === "progress_log") {
         // Hide popup, navigate home quickly and show final overlay
@@ -328,6 +331,26 @@ export default function OnboardingTour({ profile, onComplete }) {
 
 
   // ── PROGRESS LOG — popup, disappears immediately when user saves ──
+  if (tourStep === "create_exercise") {
+    return (
+      <div className="fixed inset-0 z-[100] pointer-events-none">
+        <style>{`
+          @keyframes create-pulse {
+            0%, 100% { transform: scale(1.04); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7); }
+            50%      { transform: scale(1.10); box-shadow: 0 0 0 22px hsl(var(--primary) / 0); }
+          }
+          [data-tour-create-exercise="true"] {
+            animation: create-pulse 1.3s ease-in-out infinite !important;
+            outline: 5px solid hsl(var(--primary)) !important;
+            outline-offset: 4px !important;
+            pointer-events: auto !important;
+          }
+          main, main * { pointer-events: auto !important; }
+        `}</style>
+      </div>
+    );
+  }
+
   if (tourStep === "progress") {
     return (
       <NavSpotlight
