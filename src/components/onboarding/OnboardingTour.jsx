@@ -321,17 +321,6 @@ export default function OnboardingTour({ profile, onComplete }) {
           }
           main, main * { pointer-events: auto !important; }
         `}</style>
-        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-6 shadow-2xl text-center space-y-3 pointer-events-auto">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <BookOpen className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-heading font-bold text-base text-foreground">Your Exercise Library</h3>
-            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-              Scroll down and tap the first exercise to see its details and modifications.
-            </p>
-          </div>
-        </div>
       </div>
     );
   }
@@ -366,17 +355,6 @@ export default function OnboardingTour({ profile, onComplete }) {
           }
           main, main * { pointer-events: auto !important; }
         `}</style>
-        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <TrendingUp className="w-7 h-7 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-heading font-bold text-lg text-foreground">Log your progress</h3>
-            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-              Tap "Log Progress" to record your activity and how you're feeling today.
-            </p>
-          </div>
-        </div>
       </div>
     );
   }
