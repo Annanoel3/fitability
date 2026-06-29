@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ const DIFFICULTIES = ["Beginner", "Easy", "Moderate", "Advanced"];
 
 export default function CreateExerciseModal({ onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
+  const [tourFilling, setTourFilling] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -24,6 +25,24 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
     default_duration_seconds: "",
     muscles_used: ""
   });
+
+  useEffect(() => {
+    if (window.fitabilityTourStep !== "create_exercise") return;
+    setTourFilling(true);
+    const steps = [
+      [300,  () => setForm(f => ({ ...f, name: "Seated Marches" }))],
+      [700,  () => setForm(f => ({ ...f, default_sets: 3 }))],
+      [1100, () => setForm(f => ({ ...f, default_reps: 12 }))],
+      [1500, () => setForm(f => ({ ...f, description: "Gentle warm-up, move at your own pace." }))],
+      [1800, () => {
+        setTourFilling(false);
+        onClose();
+        window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "create_exercise_filled" }));
+      }],
+    ];
+    const timers = steps.map(([delay, fn]) => setTimeout(fn, delay));
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
   const handleSubmit = async () => {
     if (!form.name || !form.category || !form.position) {
@@ -52,7 +71,10 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
       <div className="bg-card rounded-2xl border border-border w-full max-w-md shadow-xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
-          <h2 className="font-heading font-bold text-lg">Create Exercise</h2>
+          <div>
+            <h2 className="font-heading font-bold text-lg">Create Exercise</h2>
+            {tourFilling && <p className="text-xs text-primary font-medium mt-0.5">Filling this in for you...</p>}
+          </div>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-muted text-muted-foreground">
             <X className="w-5 h-5" />
           </button>

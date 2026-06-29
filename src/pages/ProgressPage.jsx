@@ -201,8 +201,27 @@ export default function ProgressPage() {
             />
           </div>
 
+          {isTourProgressLog && (
+            <style>{`
+              @keyframes save-btn-pulse {
+                0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7), 0 0 16px hsl(var(--primary) / 0.4); }
+                50%      { box-shadow: 0 0 0 10px hsl(var(--primary) / 0), 0 0 32px hsl(var(--primary) / 0.2); }
+              }
+              [data-tour-save-btn="true"] {
+                outline: 3px solid hsl(var(--primary)) !important;
+                outline-offset: 3px !important;
+                animation: save-btn-pulse 1.1s ease-in-out infinite !important;
+              }
+            `}</style>
+          )}
           <div className="flex gap-2">
-            <Button onClick={saveProgress} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+            <Button
+              onClick={saveProgress}
+              disabled={saving}
+              data-tour-save-btn={isTourProgressLog ? "true" : undefined}
+            >
+              {saving ? "Saving..." : "Save"}
+            </Button>
             <Button variant="ghost" onClick={() => setShowLogForm(false)}>Cancel</Button>
           </div>
         </div>

@@ -75,10 +75,23 @@ export default function ExerciseLibrary() {
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleted, setDeleted] = useState(new Set());
+  const [tourStep, setTourStep] = useState(() => window.fitabilityTourStep || null);
   const firstExerciseRef = React.useRef(null);
 
   useEffect(() => {
     loadExercises();
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      const step = e.detail.tourStep;
+      setTourStep(step);
+      if (step === "create_exercise") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    };
+    window.addEventListener("fitability-tour-step-change", handler);
+    return () => window.removeEventListener("fitability-tour-step-change", handler);
   }, []);
 
 
@@ -203,7 +216,11 @@ export default function ExerciseLibrary() {
             {sorted.length} exercises available.
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)} className="gap-2">
+        <Button
+          onClick={() => setShowCreateModal(true)}
+          className="gap-2"
+          data-tour-create-exercise={tourStep === "create_exercise" ? "true" : undefined}
+        >
           <Plus className="w-4 h-4" /> Create Exercise
         </Button>
       </div>
