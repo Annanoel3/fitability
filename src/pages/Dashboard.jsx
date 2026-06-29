@@ -37,11 +37,8 @@ export default function Dashboard() {
     };
     window.addEventListener("fitability-tour-step-change", handler);
     
-    // Restore generating state from localStorage if present
-    const savedGenerating = localStorage.getItem('fitability_generating');
-    if (savedGenerating === 'true') {
-      setGenerating(true);
-    }
+    // Clear any stale "generating" flag - it can get stuck across sessions/accounts
+    localStorage.removeItem('fitability_generating');
     
     // Track visibility
     const handleVisibilityChange = () => {
