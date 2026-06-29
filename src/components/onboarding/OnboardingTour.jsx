@@ -97,7 +97,7 @@ export default function OnboardingTour({ profile, onComplete }) {
         advance("library_exercise_clicked");
         setTimeout(() => {
           if (tourStepRef.current === "library_exercise_clicked") advance("create_exercise");
-        }, 4000);
+        }, 2000);
       }
       if (e.detail === "create_exercise_filled" && tourStepRef.current === "create_exercise") {
         setTimeout(() => advance("progress"), 2000);
@@ -121,43 +121,27 @@ export default function OnboardingTour({ profile, onComplete }) {
     window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "welcome" } }));
   }, []);
 
-  // Persistent dimming layer: stays mounted across steps so the backdrop
-  // fades smoothly instead of flashing when a step changes the page.
+  // Dim + lock overlay: one light scrim behind every tour popup, at z-45 (below the
+  // nav at z-50 and below the popup cards / pulsing targets) so the rest of the page
+  // is dimmed and blocked while the highlighted element stays bright and clickable.
   useEffect(() => {
     let el = document.getElementById("tour-backdrop");
     if (!el) {
       el = document.createElement("div");
       el.id = "tour-backdrop";
-      el.style.cssText = "position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0);transition:background 0.3s ease;";
+      el.style.cssText = "position:fixed;inset:0;z-index:45;background:rgba(0,0,0,0);transition:background 0.25s ease;";
       document.body.appendChild(el);
     }
-    const dark = tourStep === "welcome" || tourStep === "workout_generated" || tourStep === "home_end" || showWorkoutBridge;
-    el.style.background = dark ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0)";
-    el.style.pointerEvents = dark ? "auto" : "none";
-  }, [tourStep, showWorkoutBridge]);
-
-  useEffect(() => () => {
-    const el = document.getElementById("tour-backdrop");
-    if (el) el.remove();
-  }, []);
-
-  // Page-content blocker for nav-prompt steps. Sits at z-40, below the nav (z-50),
-  // so the page is unclickable but the highlighted, unlocked nav icon still works.
-  useEffect(() => {
-    let el = document.getElementById("tour-nav-blocker");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "tour-nav-blocker";
-      el.style.cssText = "position:fixed;inset:0;z-index:40;background:transparent;";
-      document.body.appendChild(el);
-    }
-    const navStep = tourStep === "coach" || tourStep === "library" || tourStep === "progress";
-    el.style.pointerEvents = navStep ? "auto" : "none";
+    const hiddenSteps = ["done", "coach_message", "workout_picking", "library_exercise_clicked", "navigating_home"];
+    const visible = tourStep && !hiddenSteps.includes(tourStep);
+    el.style.background = visible ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0)";
+    const allowScroll = tourStep === "library_exercise";
+    el.style.pointerEvents = (visible && !allowScroll) ? "auto" : "none";
     return () => {
-      const e = document.getElementById("tour-nav-blocker");
+      const e = document.getElementById("tour-backdrop");
       if (e) e.remove();
     };
-  }, [tourStep]);
+  }, [tourStep, showWorkoutBridge]);
 
   const completeTour = async () => {
     advance("done");
@@ -252,7 +236,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   // ── WORKOUT — non-blocking guide, button can be clicked freely ──
   if (tourStep === "workout") {
     return (
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-6">
+      <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
         <style>{`
           
           @keyframes workout-btn-pulse {
@@ -318,7 +302,7 @@ export default function OnboardingTour({ profile, onComplete }) {
             50%       { transform: scale(1.10); box-shadow: 0 0 0 24px hsl(var(--primary) / 0); }
           }
           [data-tour-first-exercise="true"] {
-            animation: exercise-pulse 1.5s ease-in-out infinite !important;
+            animation: exercise-pulse 1.5s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
             border: 3px solid hsl(var(--primary)) !important;
             outline: 5px solid hsl(var(--primary)) !important;
             outline-offset: 4px !important;
@@ -343,7 +327,7 @@ export default function OnboardingTour({ profile, onComplete }) {
             50%      { transform: scale(1.10); box-shadow: 0 0 0 22px hsl(var(--primary) / 0); }
           }
           [data-tour-create-exercise="true"] {
-            animation: create-pulse 1.3s ease-in-out infinite !important;
+            animation: create-pulse 1.3s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
             outline: 5px solid hsl(var(--primary)) !important;
             outline-offset: 4px !important;
             pointer-events: auto !important;
@@ -374,7 +358,7 @@ export default function OnboardingTour({ profile, onComplete }) {
             50%       { transform: scale(1.05); box-shadow: 0 0 0 22px hsl(var(--primary) / 0); }
           }
           [data-tour-log-button="true"] {
-            animation: button-pulse 1.5s ease-in-out infinite !important;
+            animation: button-pulse 1.5s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
           outline: 5px solid hsl(var(--primary)) !important;
           outline-offset: 4px !important;
             pointer-events: auto !important;
