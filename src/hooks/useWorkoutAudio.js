@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { isSpeechSupported, createSpeechRecognizer } from "@/lib/speechEngine";
 
 /**
  * Manages TTS audio playback and voice command recognition for workouts.
@@ -17,7 +18,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   const [voiceError, setVoiceError] = useState(null);
   const [voiceSupported] = useState(() => {
     try {
-      return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      return isSpeechSupported();
     } catch (e) { return false; }
   });
 
@@ -64,16 +65,8 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   const startOneShot = useCallback((onResult) => {
     if (!voiceSupported || noisyRef.current || listeningStoppedRef.current) return;
 
-    let SpeechRecognition;
-    try {
-      SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    } catch (e) { return; }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;       // CRITICAL: must be false on iOS/WKWebView
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-    recognition.maxAlternatives = 1;
+    const recognition = createSpeechRecognizer();
+    if (!recognition) return;
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript.toLowerCase().trim();
@@ -297,16 +290,8 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
     if (!voiceSupported || noisyRef.current) return null;
 
     return new Promise((resolve) => {
-      let SpeechRecognition;
-      try {
-        SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      } catch (e) { resolve(null); return; }
-
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
-      recognition.maxAlternatives = 1;
+      const recognition = createSpeechRecognizer();
+      if (!recognition) { resolve(null); return; }
 
       let resolved = false;
       const finish = (transcript) => {
