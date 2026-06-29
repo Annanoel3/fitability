@@ -6,6 +6,39 @@ export function buildUserTags(profile) {
   const disabilities = (p.disabilities || []).join(' ').toLowerCase();
   const allText = limitations + ' ' + disabilities;
 
+  // ── ABILITIES CHECKLIST TAGS ──
+  const ca = p.current_abilities || {};
+
+  // SUPPORTED set (condition_severity === "Severely"): derive mobility restrictions from what they can't do
+  if (p.condition_severity === 'Severely') {
+    const canWalkRoom = ca.walk_across_room === true;
+    const canStepUnaided = ca.take_few_steps_unaided === true;
+    const canStandFromChair = ca.stand_from_chair_support === true;
+    if (!canWalkRoom && !canStepUnaided) {
+      restriction.add('cannot_stand'); restriction.add('no_high_impact'); restriction.add('very_low_mobility');
+    } else if (!canStandFromChair) {
+      restriction.add('cannot_stand'); restriction.add('no_high_impact');
+    } else {
+      restriction.add('no_high_impact'); restriction.add('very_low_mobility');
+    }
+    // If only seated abilities checked, enforce seated focus
+    const onlySeatedChecked = (ca.seated_arm_raise === true || ca.seated_leg_march === true || ca.reach_forward_seated === true)
+      && !canWalkRoom && !canStepUnaided;
+    if (onlySeatedChecked) {
+      restriction.add('cannot_stand');
+    }
+  }
+
+  // HIGH set (condition_severity === "A little"): positive capability signals — no extra restrictions
+  if (p.condition_severity === 'A little') {
+    if (ca.brisk_walk_or_jog === true) capability.add('cardiovascular');
+    if (ca.lift_25_lbs === true) capability.add('moderate_lifting');
+    if (ca.squat_down === true) capability.add('lower_body_strength');
+    if (ca.balance_30_sec === true) capability.add('balance_training');
+    if (ca.get_up_from_floor_no_hands === true) capability.add('full_body_mobility');
+    if (ca.walk_30_min === true) capability.add('endurance');
+  }
+
   // ── MOBILITY / POSITION ──
   if (p.fitness_mode === 'Wheelchair' || p.current_abilities?.can_stand === false) {
     restriction.add('cannot_stand'); restriction.add('wheelchair_user');

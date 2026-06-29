@@ -331,6 +331,30 @@ export const ABILITIES_CHECKLIST = [
   { key: "open_jar", label: "Open a jar" }
 ];
 
+// For users whose conditions affect them "A little" — high capability with some limits
+export const ABILITIES_CHECKLIST_HIGH = [
+  { key: "walk_30_min", label: "Walk for 30 minutes without stopping" },
+  { key: "climb_several_flights", label: "Climb several flights of stairs without stopping" },
+  { key: "lift_25_lbs", label: "Lift 25 pounds" },
+  { key: "get_up_from_floor_no_hands", label: "Get up from the floor without using your hands" },
+  { key: "brisk_walk_or_jog", label: "Brisk-walk or jog for a few minutes" },
+  { key: "carry_heavy_load", label: "Carry a heavy bag a short distance" },
+  { key: "squat_down", label: "Squat down and stand back up" },
+  { key: "balance_30_sec", label: "Balance on one foot for 30 seconds" },
+];
+
+// For users whose conditions affect them "Severely" — supported / seated focus
+export const ABILITIES_CHECKLIST_SUPPORTED = [
+  { key: "stand_from_chair_support", label: "Stand up from a chair (using your hands or armrests is fine)" },
+  { key: "stand_1_min_support", label: "Stand for about a minute holding onto something" },
+  { key: "walk_across_room", label: "Walk across a room, with or without a walker or cane" },
+  { key: "take_few_steps_unaided", label: "Take a few steps without support" },
+  { key: "lift_light_object", label: "Lift something light, like a water bottle" },
+  { key: "seated_arm_raise", label: "Raise your arms out to the side while seated" },
+  { key: "seated_leg_march", label: "March your legs while seated" },
+  { key: "reach_forward_seated", label: "Reach forward to pick something up" },
+];
+
 // For more capable users with light/no limitations
 export const ABILITIES_CHECKLIST_ATHLETIC = [
   { key: "walk_30_min", label: "Walk for 30 minutes without stopping" },

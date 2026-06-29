@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Info } from "lucide-react";
-import { ABILITIES_CHECKLIST, ABILITIES_CHECKLIST_ATHLETIC, ABILITIES_CHECKLIST_LOW, ABILITIES_CHECKLIST_GRADED } from "@/lib/constants";
+import { ABILITIES_CHECKLIST, ABILITIES_CHECKLIST_ATHLETIC, ABILITIES_CHECKLIST_LOW, ABILITIES_CHECKLIST_GRADED, ABILITIES_CHECKLIST_HIGH, ABILITIES_CHECKLIST_SUPPORTED } from "@/lib/constants";
 
 // Map abilities to relevant pain areas (used for filtering in the adaptive tier)
 const ABILITY_PAIN_MAP = {
@@ -73,8 +73,19 @@ export default function StepAbilities({ data, onChange }) {
   const [showFitnessInfo, setShowFitnessInfo] = useState(false);
   const abilities = data.current_abilities || {};
   const lowCap = isLowCapabilityTier(data);
-  const athletic = !lowCap && (["Strong", "Athletic"].includes(data.self_reported_fitness) || isAthleticTier(data));
-  const checklist = lowCap ? ABILITIES_CHECKLIST_LOW : athletic ? ABILITIES_CHECKLIST_ATHLETIC : ABILITIES_CHECKLIST;
+
+  // Route by condition_severity (low-capability tier wins first)
+  const severity = data.condition_severity;
+  const isGraded = !lowCap && severity === "Not at all";
+  const checklist = lowCap
+    ? ABILITIES_CHECKLIST_LOW
+    : severity === "Not at all"
+      ? null // uses graded UI
+      : severity === "A little"
+        ? ABILITIES_CHECKLIST_HIGH
+        : severity === "Severely"
+          ? ABILITIES_CHECKLIST_SUPPORTED
+          : ABILITIES_CHECKLIST; // "Moderately" or unanswered / no conditions
 
   const hasConditions =
     (data.disabilities || []).length > 0 ||
@@ -90,11 +101,7 @@ export default function StepAbilities({ data, onChange }) {
     <div className="space-y-6">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-heading font-bold text-foreground">Current Abilities</h2>
-        <p className="text-muted-foreground mt-2">
-          {athletic
-            ? "Check everything you can currently do"
-            : "Check the activities you are able to do"}
-        </p>
+        <p className="text-muted-foreground mt-2">Check the activities you are able to do</p>
       </div>
 
       {/* Q1: Self-reported fitness level */}
@@ -159,9 +166,9 @@ export default function StepAbilities({ data, onChange }) {
       )}
 
       {/* Abilities checklist */}
-      {athletic ? (
+      {isGraded ? (
         <div className="space-y-5">
-          <p className="text-sm font-semibold text-foreground">Rate your current fitness level:</p>
+          <p className="text-sm font-semibold text-foreground">Rate your current ability level:</p>
           {ABILITIES_CHECKLIST_GRADED.map(({ id, question, options }) => (
             <div key={id} className="space-y-2">
               <p className="text-sm font-medium text-foreground">{question}</p>
@@ -189,7 +196,7 @@ export default function StepAbilities({ data, onChange }) {
       ) : (
         <div className="space-y-3">
           <p className="text-sm font-semibold text-foreground">Check the activities you are able to do:</p>
-          {checklist.map(({ key, label }) => {
+          {(checklist || ABILITIES_CHECKLIST).map(({ key, label }) => {
             const val = abilities[key] === true;
             return (
               <button
