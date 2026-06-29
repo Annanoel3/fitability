@@ -117,6 +117,14 @@ export default function CoachChat() {
   };
 
   const sendWelcome = async (prof) => {
+    // Instant intro during the onboarding tour (skip the slow LLM round-trip)
+    if (window.fitabilityTourStep === "coach") {
+      setMessages([{ role: "assistant", content: `Hi ${prof?.display_name || "there"}! I am your FitAbility Coach. I can tweak your workouts, answer questions about your conditions, and keep you moving safely - just message me anytime.` }]);
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "coach_message" } }));
+      }, 300);
+      return;
+    }
     setSending(true);
     try {
       const res = await base44.functions.invoke("coachChat", {
@@ -167,7 +175,7 @@ export default function CoachChat() {
       if (isTourCoachMessage && userText.toLowerCase().includes("sounds good")) {
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "coach_message_sent" }));
-        }, 2000);
+        }, 4000);
       }
     } catch (e) {
       setMessages((prev) => [...prev, {
@@ -275,8 +283,22 @@ export default function CoachChat() {
             data-tour-coach-input
             style={{ minHeight: '2.25rem', fontFamily: 'inherit', fontSize: 'inherit' }} />
           
+          {isTourCoachMessage && (
+            <style>{`
+              @keyframes coach-send-pulse {
+                0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7); transform: scale(1.06); }
+                50%      { box-shadow: 0 0 0 14px hsl(var(--primary) / 0); transform: scale(1.14); }
+              }
+              [data-tour-send-btn="true"] {
+                animation: coach-send-pulse 1.1s ease-in-out infinite !important;
+                outline: 3px solid hsl(var(--primary)) !important;
+                outline-offset: 3px !important;
+              }
+            `}</style>
+          )}
           <Button
             onClick={() => sendMessage()}
+            data-tour-send-btn={isTourCoachMessage ? "true" : undefined}
             disabled={sendButtonDisabled()}
             size="icon"
             className="rounded-xl my-2 flex-shrink-0"
