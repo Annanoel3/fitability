@@ -132,7 +132,7 @@ export default function OnboardingTour({ profile, onComplete }) {
       el.style.cssText = "position:fixed;inset:0;z-index:45;background:rgba(0,0,0,0);transition:background 0.25s ease;";
       document.body.appendChild(el);
     }
-    const hiddenSteps = ["done", "coach_message", "workout_picking", "library_exercise_clicked", "navigating_home"];
+    const hiddenSteps = ["done", "coach_message", "workout_picking", "library_exercise_clicked", "navigating_home", "progress_log"];
     const visible = tourStep && !hiddenSteps.includes(tourStep);
     el.style.background = visible ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0)";
     const allowScroll = tourStep === "library_exercise";
