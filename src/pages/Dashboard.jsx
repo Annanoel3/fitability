@@ -102,6 +102,8 @@ export default function Dashboard() {
   const handleGenerateWorkout = async (checkin, preferences = {}) => {
     setGenerating(true);
     localStorage.setItem('fitability_generating', 'true');
+    // Capture tour state at generation START so the workout-ready auto-nav is never triggered for the tour's workout, even if it finishes after the tour ends
+    const startedDuringTour = !!window.fitabilityTourStep && window.fitabilityTourStep !== "done";
     const today = new Date().toISOString().split("T")[0];
     
     // Fetch recent workouts to avoid repeating exercises
@@ -413,7 +415,7 @@ Return the complete corrected workout in the same JSON structure.`,
     setWorkouts(updatedWorkouts);
     
     // Auto-navigate only if user stayed on the Dashboard and the tour is not active
-    const tourActive = window.fitabilityTourStep && window.fitabilityTourStep !== "done";
+    const tourActive = startedDuringTour;
     if (pageVisibleRef.current && !tourActive) {
       navigate("/workout", { state: { workout: { ...created, workout_data: JSON.stringify(finalResult) } } });
     }
