@@ -30,11 +30,11 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
     if (window.fitabilityTourStep !== "create_exercise") return;
     setTourFilling(true);
     const steps = [
-      [300,  () => setForm(f => ({ ...f, name: "Seated Marches" }))],
-      [700,  () => setForm(f => ({ ...f, default_sets: 3 }))],
-      [1100, () => setForm(f => ({ ...f, default_reps: 12 }))],
-      [1500, () => setForm(f => ({ ...f, description: "Gentle warm-up, move at your own pace." }))],
-      [1800, () => {
+      [700,  () => setForm(f => ({ ...f, name: "Seated Marches" }))],
+      [1700,  () => setForm(f => ({ ...f, default_sets: 3 }))],
+      [2700, () => setForm(f => ({ ...f, default_reps: 12 }))],
+      [3700, () => setForm(f => ({ ...f, description: "Gentle warm-up, move at your own pace." }))],
+      [5000, () => {
         setTourFilling(false);
         onClose();
         window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "create_exercise_filled" }));
