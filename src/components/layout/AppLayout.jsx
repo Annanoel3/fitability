@@ -27,6 +27,8 @@ export default function AppLayout() {
   useEffect(() => {
     const initTour = async () => {
       const profiles = await base44.entities.UserProfile.filter({});
+      const onboardingDone = profiles.length > 0 && profiles[0].onboarding_completed === true;
+      if (!onboardingDone && !/onboarding/i.test(window.location.pathname)) { window.location.href = "/onboarding"; return; }
       if (profiles.length > 0 && profiles[0].onboarding_completed && profiles[0].onboarding_tour_completed !== true) {
         setTourProfile(profiles[0]);
         setShowTour(true);
