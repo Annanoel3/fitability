@@ -35,8 +35,8 @@ export default function StepRiskFactors({ data, onChange }) {
               onClick={() => toggle(item)}
               className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${
                 active
-                  ? "border-amber-400 bg-amber-50"
-                  : "border-border bg-card hover:border-primary/30"
+                  ? "border-amber-400 bg-amber-50 text-amber-900"
+                  : "border-border bg-card text-foreground hover:border-primary/30"
               }`}
             >
               <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${
