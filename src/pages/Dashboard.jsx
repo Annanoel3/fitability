@@ -165,6 +165,7 @@ export default function Dashboard() {
 
     const restrictionTagsList = Array.from(userRestrictionTags).join(', ') || 'none';
     const capabilityTagsList = Array.from(userCapabilityTags).join(', ') || 'none';
+    const riskDetailBlock = (p.risk_factor_details && Object.keys(p.risk_factor_details).length) ? ("\n\nHEALTH CONDITIONS - PER-ITEM DETAIL\nThe user rated how much each selected risk factor affects them:" + Object.entries(p.risk_factor_details).map(function(e){ var k=e[0], d=e[1]||{}; return "\n- " + k + ": " + (d.severity || "severity not specified") + (d.note ? (" (note: '" + d.note + "')") : ""); }).join("") + "\nCalibrate intensity and pacing from this. A condition the user manages well must NOT make the whole workout gentle - scale back only around that specific limitation. A condition rated 'A lot' warrants gentler progression and extra modifications. Keep ALL hard safety exclusions no matter how mildly they rate something (e.g. no high-impact with heart conditions).") : "";
     const coachMemoryBlock = p.coach_memory
       ? `\n\n═══ COACH MEMORY — MANDATORY ═══\nThe user has previously told their coach these preferences. You MUST honor every item below — they are non-negotiable rules, not suggestions:\n${p.coach_memory}`
       : '';
@@ -237,7 +238,7 @@ ${abilitiesBlock}
 Risk Factors: ${(p.risk_factors || []).join(', ') || 'None'}
 
 Today's check-in — Mood: ${(checkin || todayCheckin)?.mood || 'N/A'} | Energy: ${(checkin || todayCheckin)?.energy || 'N/A'}
-${coachMemoryBlock}
+${coachMemoryBlock}${riskDetailBlock}
 
 ═══ INTENSITY CALIBRATION — CRITICAL ═══
 This app serves users across the full spectrum from bedridden to fully healthy and athletic. You MUST push each person to the appropriate level of challenge — under-challenging a capable person is just as wrong as over-challenging a limited one. A healthy, active person getting a "gentle chair stretching" workout would find it insulting. A bedridden person getting push-ups would be dangerous. Match the intensity to THIS person precisely.
