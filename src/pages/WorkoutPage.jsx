@@ -128,12 +128,31 @@ export default function WorkoutPage() {
     }
   }, [audioMode, expandedExercise]);
 
+  const loadExerciseImages = (exList) => {
+    if (!exList || exList.length === 0) return;
+    exList.forEach(async (ex, idx) => {
+      try {
+        const key = ex.name.toLowerCase().trim();
+        const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: key });
+        if (cached.length > 0) {
+          setExerciseImages(prev => ({ ...prev, [idx]: cached[0].image_url }));
+        } else {
+          setLoadingImages(prev => ({ ...prev, [idx]: true }));
+          const { url } = await base44.integrations.Core.GenerateImage({
+            prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || "standing"}. ${ex.muscles_used?.length ? "Muscles worked: " + ex.muscles_used.slice(0, 3).join(", ") + "." : ""} Simple, clear diagram style, white background, no text.`
+          });
+          setExerciseImages(prev => ({ ...prev, [idx]: url }));
+          await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: url });
+          setLoadingImages(prev => ({ ...prev, [idx]: false }));
+        }
+      } catch (e) {}
+    });
+  };
+
   const loadTodayWorkout = async () => {
     // If Dashboard passed the workout directly via navigation state, use it immediately
     if (location.state?.workout) {
       const w = location.state.workout;
-      // Treat as fresh/restart if: archived ("Do Again") OR completed today (restart same day)
-      const isFresh = w.archived || w.completed;
       setWorkout({ ...w, completed: false });
       let exList = [];
       try {
@@ -152,6 +171,7 @@ export default function WorkoutPage() {
         }
       }
       setLoading(false);
+      loadExerciseImages(exList);
       return;
     }
     // Fallback: fetch from DB (e.g. user navigates directly to /workout)
@@ -169,26 +189,7 @@ export default function WorkoutPage() {
       if (w.completed) setCompletedExercises(new Set(exList.map((_, i) => i)));
     } catch (e) { setWorkoutData({}); }
     setLoading(false);
-
-    if (exList.length > 0) {
-      exList.forEach(async (ex, idx) => {
-        try {
-          const key = ex.name.toLowerCase().trim();
-          const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: key });
-          if (cached.length > 0) {
-            setExerciseImages(prev => ({ ...prev, [idx]: cached[0].image_url }));
-          } else {
-            setLoadingImages(prev => ({ ...prev, [idx]: true }));
-            const { url } = await base44.integrations.Core.GenerateImage({
-              prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || "standing"}. ${ex.muscles_used?.length ? "Muscles worked: " + ex.muscles_used.slice(0, 3).join(", ") + "." : ""} Simple, clear diagram style, white background, no text.`
-            });
-            setExerciseImages(prev => ({ ...prev, [idx]: url }));
-            await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: url });
-            setLoadingImages(prev => ({ ...prev, [idx]: false }));
-          }
-        } catch (e) {}
-      });
-    }
+    loadExerciseImages(exList);
   };
 
   const handleStartAudio = () => {
