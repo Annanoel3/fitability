@@ -44,8 +44,15 @@ export async function showInterstitialAd() {
 }
 
 export async function maybeShowAdOnOpen() {
+  // Never show an ad on the very first open, or if onboarding hasn't been completed yet
   const count = parseInt(localStorage.getItem(OPEN_COUNT_KEY) || '0') + 1;
   localStorage.setItem(OPEN_COUNT_KEY, String(count));
+  if (count <= 1) return; // skip first-ever open
+  try {
+    const { base44 } = await import('@/api/base44Client');
+    const profiles = await base44.entities.UserProfile.filter({});
+    if (!profiles[0]?.onboarding_completed) return; // skip if onboarding not done
+  } catch (e) { return; }
   if (count % SHOW_EVERY_N_OPENS === 0) {
     await new Promise(resolve => setTimeout(resolve, AD_DELAY_MS));
     await showInterstitialAd();
