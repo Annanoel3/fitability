@@ -94,9 +94,6 @@ function createNativeSpeechShim(plugin) {
           popup: false
         });
       } catch (e) {
-        if (this.onerror) {
-          this.onerror({ error: 'network' });
-        }
         if (this.onend) {
           this.onend();
         }
