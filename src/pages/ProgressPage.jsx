@@ -20,6 +20,7 @@ export default function ProgressPage() {
   const [saving, setSaving] = useState(false);
   const [tourStep, setTourStep] = useState(null);
   const [demoCaption, setDemoCaption] = useState("");
+  const [demoPressing, setDemoPressing] = useState(false);
   const demoTimersRef = useRef([]);
   const isTourProgressLog = tourStep === "progress_log";
 
@@ -44,17 +45,19 @@ export default function ProgressPage() {
     if (!showLogForm || tourStep !== "progress_log") return;
     demoTimersRef.current.forEach(clearTimeout);
     setDemoCaption("Here's how you'll log each day...");
-    const t1 = setTimeout(() => setLogData(p => ({ ...p, activity_pct: 100 })), 900);
-    const t2 = setTimeout(() => setLogData(p => ({ ...p, energy_level: 7 })), 1900);
-    const t3 = setTimeout(() => setLogData(p => ({ ...p, overall_pain: 2 })), 2900);
-    const t4 = setTimeout(() => setLogData(p => ({ ...p, mood_score: 4 })), 3900);
-    const t5 = setTimeout(() => {
+    const t1 = setTimeout(() => setLogData(p => ({ ...p, activity_pct: 100 })), 350);
+    const t2 = setTimeout(() => setLogData(p => ({ ...p, energy_level: 7 })), 1100);
+    const t3 = setTimeout(() => setLogData(p => ({ ...p, overall_pain: 2 })), 1850);
+    const t4 = setTimeout(() => setLogData(p => ({ ...p, mood_score: 4 })), 2600);
+    const t5 = setTimeout(() => { setDemoCaption("Saving your check-in…"); setDemoPressing(true); }, 3400);
+    const t6 = setTimeout(() => {
+      setDemoPressing(false);
       setDemoCaption("");
       setShowLogForm(false);
       setLogData({});
       window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "progress_logged" }));
-    }, 5500);
-    demoTimersRef.current = [t1, t2, t3, t4, t5];
+    }, 4400);
+    demoTimersRef.current = [t1, t2, t3, t4, t5, t6];
     return () => demoTimersRef.current.forEach(clearTimeout);
   }, [showLogForm, tourStep]);
 
@@ -238,11 +241,13 @@ export default function ProgressPage() {
               }
             `}</style>
           )}
+          {isTourProgressLog && showLogForm && <div className="fixed inset-0 z-[60]" aria-hidden="true" />}
           <div className="flex gap-2">
             <Button
               onClick={saveProgress}
               disabled={saving}
               data-tour-save-btn={isTourProgressLog ? "true" : undefined}
+              className={demoPressing ? "scale-95 ring-4 ring-primary/40 brightness-110 transition-transform" : "transition-transform"}
             >
               {saving ? "Saving..." : "Save"}
             </Button>
