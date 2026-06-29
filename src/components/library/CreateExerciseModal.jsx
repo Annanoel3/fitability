@@ -13,6 +13,7 @@ const DIFFICULTIES = ["Beginner", "Easy", "Moderate", "Advanced"];
 export default function CreateExerciseModal({ onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [tourFilling, setTourFilling] = useState(false);
+  const [demoPressing, setDemoPressing] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -30,12 +31,16 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
     if (window.fitabilityTourStep !== "create_exercise") return;
     setTourFilling(true);
     const steps = [
-      [700,  () => setForm(f => ({ ...f, name: "Seated Marches" }))],
-      [1700,  () => setForm(f => ({ ...f, default_sets: 3 }))],
+      [250,  () => setForm(f => ({ ...f, name: "Seated Marches" }))],
+      [900,  () => setForm(f => ({ ...f, category: "Cardio" }))],
+      [1500, () => setForm(f => ({ ...f, position: "Seated" }))],
+      [2100, () => setForm(f => ({ ...f, default_sets: 3 }))],
       [2700, () => setForm(f => ({ ...f, default_reps: 12 }))],
-      [3700, () => setForm(f => ({ ...f, description: "Gentle warm-up, move at your own pace." }))],
-      [5000, () => {
+      [3400, () => setForm(f => ({ ...f, description: "Gentle warm-up — march in place at your own pace." }))],
+      [4300, () => setDemoPressing(true)],
+      [5200, () => {
         setTourFilling(false);
+        setDemoPressing(false);
         onClose();
         window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "create_exercise_filled" }));
       }],
@@ -69,6 +74,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
+      {tourFilling && <div className="absolute inset-0 z-[60]" aria-hidden="true" />}
       <div className="bg-card rounded-2xl border border-border w-full max-w-md shadow-xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
           <div>
@@ -196,7 +202,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading} className="flex-1">
+          <Button onClick={handleSubmit} disabled={loading} className={"flex-1 transition-transform duration-150 " + (demoPressing ? "scale-95 ring-4 ring-primary/40 brightness-110" : "")}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             Create
           </Button>
