@@ -86,6 +86,8 @@ Deno.serve(async (req) => {
       ? `\n\nCOACH MEMORY (persistent preferences this user has stated in previous sessions — always honor these):\n${profile.coach_memory}`
       : '';
 
+    const riskBlock = (profile?.risk_factor_details && Object.keys(profile.risk_factor_details).length) ? ("\n\nHEALTH CONDITIONS THIS USER FLAGGED (with how much each affects them):" + Object.entries(profile.risk_factor_details).map(function(e){ var k=e[0]; var d:any = e[1] || {}; return "\n- " + k + ": " + (d.severity || "severity not specified") + (d.note ? (" (their note: '" + d.note + "')") : ""); }).join("") + "\nFactor this in when they ask you to adjust. You can reassure them and remember preferences, but never tell them to do something their flagged conditions make unsafe.") : "";
+
     const contextBlock = `
 USER PROFILE:
 - Name: ${profile?.display_name || 'Unknown'}
@@ -95,7 +97,7 @@ USER PROFILE:
 - Body limitations and injuries: ${(profile?.body_limitations || []).join(' | ') || 'None reported'}
 - Goals: ${(profile?.goals || []).join(', ') || 'Not set'}
 - Equipment: ${(profile?.equipment || []).join(', ') || 'Bodyweight only'}
-${memoryBlock}
+${memoryBlock}${riskBlock}
 
 CURRENT WORKOUT PLAN:
 ${workoutPlan ? `- Title: ${workoutPlan.title}
