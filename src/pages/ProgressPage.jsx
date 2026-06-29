@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Loader2, TrendingUp, Dumbbell, Calendar, Activity } from "lucide-react";
+import { Loader2, TrendingUp, Dumbbell, Calendar, Activity, Check } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -247,9 +247,21 @@ export default function ProgressPage() {
               onClick={saveProgress}
               disabled={saving}
               data-tour-save-btn={isTourProgressLog ? "true" : undefined}
-              className={demoPressing ? "scale-95 ring-4 ring-primary/40 brightness-110 transition-transform" : "transition-transform"}
+              className={demoPressing ? "bg-green-600 text-white hover:bg-green-600" : ""}
             >
-              {saving ? "Saving..." : "Save"}
+              {demoPressing ? (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Saved!
+                </>
+              ) : saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
             </Button>
             <Button variant="ghost" onClick={() => setShowLogForm(false)}>Cancel</Button>
           </div>

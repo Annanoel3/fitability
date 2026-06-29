@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Check } from "lucide-react";
 
 const CATEGORIES = ["Warmup", "Strength", "Cardio", "Balance", "Flexibility", "Cooldown", "Breathing", "Recovery"];
 const POSITIONS = ["Seated", "Standing", "Wheelchair", "Lying down"];
@@ -208,9 +208,20 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading || demoPressing} className={"flex-1 transition-transform duration-150 " + (demoPressing ? "scale-95 ring-4 ring-primary/40 brightness-110" : "")}>
-            {demoPressing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            {demoPressing ? "Saving…" : loading ? "Saving…" : "Create"}
+          <Button onClick={handleSubmit} disabled={loading || demoPressing} className={demoPressing ? "flex-1 bg-green-600 text-white hover:bg-green-600" : "flex-1"}>
+            {demoPressing ? (
+              <>
+                <Check className="w-4 h-4 mr-2" />
+                Saved!
+              </>
+            ) : loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Saving…
+              </>
+            ) : (
+              "Create"
+            )}
           </Button>
         </div>
       </div>

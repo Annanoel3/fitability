@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Dumbbell, Heart, Wind, Zap, Layers } from "lucide-react";
+import { X, Dumbbell, Heart, Wind, Zap, Layers, Check } from "lucide-react";
 
 const WORKOUT_TYPES = [
   { id: "strength", label: "Strength", icon: Dumbbell, desc: "Build muscle & power" },
@@ -127,15 +127,22 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
         </div>
 
         {/* Sticky footer button */}
-        <div className="px-5 pb-5 pt-3 flex-shrink-0 border-t border-border">
-          <Button
-            onClick={handleConfirm}
-            disabled={!canConfirm}
-            className={"w-full h-12 text-base transition-transform duration-150 " + (demoPressing ? "scale-95 ring-4 ring-primary/40 brightness-110" : "")}
-          >
-            Generate My Workout ✨
-          </Button>
-        </div>
+         <div className="px-5 pb-5 pt-3 flex-shrink-0 border-t border-border">
+           <Button
+             onClick={handleConfirm}
+             disabled={!canConfirm}
+             className={demoPressing ? "w-full h-12 text-base bg-green-600 text-white hover:bg-green-600" : "w-full h-12 text-base"}
+           >
+             {demoPressing ? (
+               <>
+                 <Check className="w-5 h-5 mr-2" />
+                 Got it!
+               </>
+             ) : (
+               "Generate My Workout ✨"
+             )}
+           </Button>
+         </div>
       </div>
     </div>
   );
