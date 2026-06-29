@@ -219,7 +219,7 @@ export default function ExerciseLibrary() {
         <Button
           onClick={() => setShowCreateModal(true)}
           className="gap-2"
-          data-tour-create-exercise={tourStep === "create_exercise" ? "true" : undefined}
+          data-tour-create-exercise={tourStep === "create_exercise" && !showCreateModal ? "true" : undefined}
         >
           <Plus className="w-4 h-4" /> Create Exercise
         </Button>
