@@ -21,7 +21,7 @@ const STEPS = [
   { key: "goals", label: "Goals", component: StepGoals },
   { key: "activity", label: "Activity", component: StepActivityLevel },
   { key: "disabilities", label: "Body Map", component: StepBodyMap },
-  { key: "limitations", label: "Conditions", component: StepZoneConditions },
+  { key: "limitations", label: "Your Body", component: StepZoneConditions },
   { key: "abilities", label: "Abilities", component: StepAbilities },
   { key: "risk", label: "Risk Factors", component: StepRiskFactors },
   { key: "equipment", label: "Equipment", component: StepEquipment },

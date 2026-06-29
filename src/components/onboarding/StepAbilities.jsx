@@ -26,15 +26,15 @@ function isAthleticTier(data) {
   const bodyLimitations = (data.body_limitations || []);
   const painAreas = data.pain_areas || {};
 
-  // If they have significant disabilities, use adaptive questions
+  // If they have significant physical conditions, use adaptive questions
   const severeLimitations = [
     "wheelchair", "paralysis", "amputee", "cannot stand", "bedridden",
     "stroke", "parkinson", "multiple sclerosis", "cerebral palsy"
   ];
-  const hasSevereDisability = disabilities.some(d =>
+  const hasSevereCondition = disabilities.some(d =>
     severeLimitations.some(s => d.toLowerCase().includes(s))
   );
-  if (hasSevereDisability) return false;
+  if (hasSevereCondition) return false;
 
   // If they have many body limitations, adaptive
   if (bodyLimitations.length >= 4) return false;
@@ -139,7 +139,7 @@ export default function StepAbilities({ data, onChange }) {
       {/* Q2: Condition severity — only if user has conditions/pain */}
       {hasConditions && (
         <div className="space-y-3">
-          <p className="text-sm font-semibold text-foreground">How much do your conditions or pain limit your daily activities?</p>
+          <p className="text-sm font-semibold text-foreground">How much do your conditions or pain affect your daily activities?</p>
           <div className="space-y-2">
             {SEVERITY_OPTIONS.map(option => (
               <button
