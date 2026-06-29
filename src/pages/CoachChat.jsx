@@ -106,9 +106,14 @@ export default function CoachChat() {
 
   // Pre-fill message and disable input during coach message tour step
   useEffect(() => {
-    if (isTourCoachMessage) {
-      setInput("Sounds good!");
+    if (!isTourCoachMessage) return;
+    const full = "Sounds good!";
+    setInput("");
+    const timers = [];
+    for (let k = 1; k <= full.length; k++) {
+      timers.push(setTimeout(() => setInput(full.slice(0, k)), 1000 + k * 70));
     }
+    return () => timers.forEach(clearTimeout);
   }, [isTourCoachMessage]);
 
   // Auto-disable send button during coach message step
