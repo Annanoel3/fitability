@@ -116,8 +116,6 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   // Stops listening before speaking, restarts listening after
   const speak = useCallback((text, cacheKey) => {
     return new Promise(async (resolve) => {
-      const myId = ++speakIdRef.current;
-
       // Pause listening while speaking
       if (recognitionRef.current) {
         const r = recognitionRef.current;
@@ -128,7 +126,8 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
         setListening(false);
       }
 
-      stopAudio();
+      stopAudio(); // invalidates any prior in-flight speak()
+      const myId = ++speakIdRef.current; // capture AFTER stopAudio so this call is the newest
       speakingRef.current = true;
       setSpeaking(true);
 
