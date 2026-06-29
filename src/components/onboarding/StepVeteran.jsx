@@ -34,7 +34,7 @@ export default function StepVeteran({ data, onChange }) {
           <Shield className="w-8 h-8 text-primary" />
         </div>
         <h2 className="text-2xl font-heading font-bold text-foreground">Are you a veteran?</h2>
-        <p className="text-muted-foreground mt-2">Veterans receive free access to FitAbility — no payment required, ever.</p>
+        <p className="text-muted-foreground mt-2">We'd like to recognize those who have served.</p>
       </div>
 
       <div className="flex gap-4">
@@ -62,14 +62,6 @@ export default function StepVeteran({ data, onChange }) {
         <div className="space-y-4 mt-2 p-5 bg-secondary/40 rounded-xl border border-primary/20">
           <div className="flex items-center gap-2 text-primary font-semibold text-sm">
             <Shield className="w-4 h-4" /> Thank you for your service 🇺🇸
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              You have <strong>free lifetime access</strong> to FitAbility.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Plus, you'll see <strong>significantly fewer ads</strong> — one every few uses instead of daily.
-            </p>
           </div>
 
           {/* Organizations — optional */}
