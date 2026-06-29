@@ -28,14 +28,17 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
 
   useEffect(() => {
     if (!isTourPicking) return;
-    const t1 = setTimeout(() => setDemoCaption("Building a sample workout for you..."), 200);
-    const t2 = setTimeout(() => setTypes(["mixed"]), 500);
-    const t3 = setTimeout(() => setIntensity("easy"), 900);
-    const t4 = setTimeout(() => {
-      onConfirm({ workoutTypes: ["mixed"], intensity: "easy" });
+    const t1 = setTimeout(() => setDemoCaption("Pick the kinds of movement you want — you can choose more than one."), 400);
+    const t2 = setTimeout(() => setTypes(["strength"]), 1500);
+    const t3 = setTimeout(() => setTypes(["strength", "cardio"]), 2700);
+    const t4 = setTimeout(() => setDemoCaption("Then choose how hard to push today."), 3700);
+    const t5 = setTimeout(() => setIntensity("easy"), 4700);
+    const t6 = setTimeout(() => setDemoCaption("That's it — tap Start and your workout gets built. Here we go!"), 5800);
+    const t7 = setTimeout(() => {
+      onConfirm({ workoutTypes: ["strength", "cardio"], intensity: "easy" });
       onClose();
-    }, 1400);
-    timersRef.current = [t1, t2, t3, t4];
+    }, 7000);
+    timersRef.current = [t1, t2, t3, t4, t5, t6, t7];
     return () => timersRef.current.forEach(clearTimeout);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
