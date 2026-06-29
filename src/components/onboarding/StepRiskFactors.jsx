@@ -22,7 +22,7 @@ export default function StepRiskFactors({ data, onChange }) {
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
         <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
         <p className="text-sm text-amber-800">
-          This information is critical for your safety. Certain risk factors will automatically exclude exercises that could be dangerous.
+          This keeps you safe. We only leave out the specific moves that could be risky for you — everything else still scales to what you’re capable of, and you can ask your Coach to adjust anytime.
         </p>
       </div>
 
