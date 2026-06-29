@@ -39,6 +39,7 @@ export default function StepBodyMap({ data, onChange }) {
   const marked = data.marked_zones || [];
   const frontMarked = data.front_marked_zones || [];
   const backMarked = data.back_marked_zones || [];
+  const noBodyAreas = data.no_body_areas || false;
   const toggleRef = useRef(null);
 
   useEffect(() => {
@@ -61,6 +62,16 @@ export default function StepBodyMap({ data, onChange }) {
       marked_zones: nextAllMarked,
       front_marked_zones: nextFrontMarked,
       back_marked_zones: nextBackMarked,
+      no_body_areas: false,
+    });
+  };
+
+  const toggleNoAreas = () => {
+    onChange({
+      marked_zones: [],
+      front_marked_zones: [],
+      back_marked_zones: [],
+      no_body_areas: !noBodyAreas,
     });
   };
 
@@ -80,6 +91,18 @@ export default function StepBodyMap({ data, onChange }) {
         <Shield className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
         <p className="text-xs text-muted-foreground">Used <strong>only</strong> to keep unsafe exercises out of your workouts.</p>
       </div>
+
+      <button
+        type="button"
+        onClick={toggleNoAreas}
+        className={`w-full p-4 rounded-xl border-2 transition-all text-center font-medium text-sm ${
+          noBodyAreas
+            ? "border-primary bg-primary/10 text-foreground"
+            : "border-border bg-card text-foreground hover:border-primary/30"
+        }`}
+      >
+        ✓ No affected areas
+      </button>
 
       <div ref={toggleRef} className="flex justify-center gap-3 relative z-10">
          {["front", "back"].map(v => (

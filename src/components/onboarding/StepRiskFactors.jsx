@@ -11,6 +11,7 @@ const SEVERITY_OPTIONS = [
 export default function StepRiskFactors({ data, onChange }) {
   const selected = data.risk_factors || [];
   const details = data.risk_factor_details || {};
+  const noRiskFactors = data.no_risk_factors || false;
 
   const toggle = (item) => {
     const isSel = selected.includes(item);
@@ -21,7 +22,11 @@ export default function StepRiskFactors({ data, onChange }) {
     } else if (!nextDetails[item]) {
       nextDetails[item] = { severity: "", note: "" };
     }
-    onChange({ risk_factors: next, risk_factor_details: nextDetails });
+    onChange({ risk_factors: next, risk_factor_details: nextDetails, no_risk_factors: false });
+  };
+
+  const toggleNoRiskFactors = () => {
+    onChange({ risk_factors: [], risk_factor_details: {}, no_risk_factors: !noRiskFactors });
   };
 
   const setDetail = (item, field, value) => {
@@ -46,6 +51,18 @@ export default function StepRiskFactors({ data, onChange }) {
           This keeps you safe. We only leave out the specific moves that could be risky for you — everything else still scales to what you're capable of, and you can ask your Coach to adjust anytime.
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={toggleNoRiskFactors}
+        className={`w-full rounded-xl border transition-all p-4 text-left font-medium text-sm ${
+          noRiskFactors
+            ? "border-primary bg-primary/10 text-foreground"
+            : "border-border bg-card hover:border-primary/30 text-foreground"
+        }`}
+      >
+        ✓ None of these apply
+      </button>
 
       <div className="space-y-3">
         {RISK_FACTORS.map((item) => {

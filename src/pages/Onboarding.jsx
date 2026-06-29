@@ -96,8 +96,8 @@ export default function Onboarding() {
     if (step === 2) return (data.goals || []).length > 0;
     if (step === 3) return !!data.activity_level;
     
-    // Step 4: Body Map / Disabilities — require at least one marked zone
-    if (step === 4) return (data.marked_zones || []).length > 0;
+    // Step 4: Body Map — require at least one marked zone OR no_body_areas selected
+    if (step === 4) return (data.marked_zones || []).length > 0 || data.no_body_areas;
     
     // Step 5: Zone Descriptions — optional, always allow continue
     if (step === 5) return true;
@@ -127,8 +127,8 @@ export default function Onboarding() {
       return true;
     }
     
-    // Step 7: Risk Factors — require at least one selected (severity/notes optional)
-    if (step === 7) return (data.risk_factors || []).length > 0;
+    // Step 7: Risk Factors — require at least one selected OR no_risk_factors selected
+    if (step === 7) return (data.risk_factors || []).length > 0 || data.no_risk_factors;
     
     // Step 8: Equipment — require at least one selected
     if (step === 8) return (data.equipment || []).length > 0;
