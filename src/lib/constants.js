@@ -377,6 +377,18 @@ export const ABILITIES_CHECKLIST_GRADED = [
   { id: "cardio", question: "How long can you jog or run without stopping?", options: ["Cannot", "Under 5 min", "5-20 min", "20+ min"] },
   { id: "lift", question: "How much can you comfortably lift?", options: ["Light only", "10-25 lbs", "25-50 lbs", "50+ lbs"] },
   { id: "stairs", question: "How many flights of stairs can you climb without stopping?", options: ["Less than 1", "1-2", "3-5", "6+"] },
+  { id: "balance", question: "How long can you balance on one foot?", options: ["Can't", "Under 10 sec", "10-30 sec", "30+ sec"] },
+  { id: "sit_to_stand", question: "How many times can you stand up from a chair in a row, without using your hands?", options: ["Can't", "1-5", "6-15", "16+"] },
+];
+
+// Graded capability questions for non-ambulatory users (wheelchair, bedridden, mostly-seated)
+export const ABILITIES_CHECKLIST_GRADED_SEATED = [
+  { id: "seated_arm_raise", question: "How many times can you raise both arms to shoulder height while seated?", options: ["Cannot", "1-5", "6-15", "16+"] },
+  { id: "seated_push", question: "Can you push your palms together firmly and hold for 5 seconds?", options: ["Cannot", "With difficulty", "Yes, briefly", "Yes, easily"] },
+  { id: "seated_grip", question: "How is your grip strength (e.g. squeezing a water bottle)?", options: ["Very weak / none", "Weak", "Moderate", "Strong"] },
+  { id: "seated_trunk", question: "Can you sit upright without leaning on a backrest for support?", options: ["Cannot", "Under 30 sec", "30 sec–2 min", "2+ min"] },
+  { id: "seated_lift", question: "How much can you lift and hold while seated?", options: ["Cannot lift anything", "Under 2 lbs", "2-10 lbs", "10+ lbs"] },
+  { id: "seated_endurance", question: "How long can you do light seated exercise (e.g. arm circles) without stopping?", options: ["Under 1 min", "1-5 min", "5-15 min", "15+ min"] },
 ];
 
 export const RISK_FACTORS = [

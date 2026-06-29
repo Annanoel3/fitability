@@ -9,35 +9,56 @@ export function buildUserTags(profile) {
   // ── ABILITIES CHECKLIST TAGS ──
   const ca = p.current_abilities || {};
 
-  // SUPPORTED set (condition_severity === "Severely"): derive mobility restrictions from what they can't do
-  if (p.condition_severity === 'Severely') {
-    const canWalkRoom = ca.walk_across_room === true;
-    const canStepUnaided = ca.take_few_steps_unaided === true;
-    const canStandFromChair = ca.stand_from_chair_support === true;
-    if (!canWalkRoom && !canStepUnaided) {
-      restriction.add('cannot_stand'); restriction.add('no_high_impact'); restriction.add('very_low_mobility');
-    } else if (!canStandFromChair) {
-      restriction.add('cannot_stand'); restriction.add('no_high_impact');
-    } else {
-      restriction.add('no_high_impact'); restriction.add('very_low_mobility');
-    }
-    // If only seated abilities checked, enforce seated focus
-    const onlySeatedChecked = (ca.seated_arm_raise === true || ca.seated_leg_march === true || ca.reach_forward_seated === true)
-      && !canWalkRoom && !canStepUnaided;
-    if (onlySeatedChecked) {
-      restriction.add('cannot_stand');
-    }
+  // ── GRADED STANDING SET — capability signals from banded answers ──
+  const GRADED_FLOOR = { pushups: "None", plank: "Cannot", cardio: "Cannot", lift: "Light only", stairs: "Less than 1", balance: "Can't", sit_to_stand: "Can't" };
+  if (ca.cardio && ca.cardio !== GRADED_FLOOR.cardio) capability.add('cardiovascular');
+  if (ca.cardio === "20+ min") capability.add('endurance');
+  if (ca.lift && ca.lift !== GRADED_FLOOR.lift) capability.add('moderate_lifting');
+  if (ca.lift === "50+ lbs") capability.add('heavy_lifting');
+  if (ca.pushups && ca.pushups !== GRADED_FLOOR.pushups) capability.add('upper_body_strength');
+  if (ca.plank && ca.plank !== GRADED_FLOOR.plank) capability.add('core_strength');
+  if (ca.stairs && ca.stairs !== GRADED_FLOOR.stairs) capability.add('lower_body_strength');
+  if (ca.balance && ca.balance !== GRADED_FLOOR.balance) { capability.add('balance_training'); }
+  if (ca.balance === "30+ sec") capability.add('advanced_balance');
+  if (ca.sit_to_stand && ca.sit_to_stand !== GRADED_FLOOR.sit_to_stand) capability.add('lower_body_strength');
+  if (ca.sit_to_stand === "16+") capability.add('full_body_mobility');
+  // Poor balance signals a restriction
+  if (ca.balance === "Can't" || ca.balance === "Under 10 sec") restriction.add('balance_issues');
+  // Cannot do stairs at all → no high-impact jumping/running
+  if (ca.stairs === "Less than 1") restriction.add('no_high_impact');
+
+  // ── GRADED SEATED SET — capability and restriction signals ──
+  const SEATED_FLOOR = { seated_arm_raise: "Cannot", seated_push: "Cannot", seated_grip: "Very weak / none", seated_trunk: "Cannot", seated_lift: "Cannot lift anything", seated_endurance: "Under 1 min" };
+  const isSeatedSet = ca.seated_arm_raise !== undefined || ca.seated_trunk !== undefined || ca.seated_lift !== undefined;
+  if (isSeatedSet) {
+    // These users are non-ambulatory — always restrict standing/high-impact
+    restriction.add('cannot_stand'); restriction.add('no_high_impact');
+    // Grade mobility further from seated answers
+    const trunkOk = ca.seated_trunk && ca.seated_trunk !== SEATED_FLOOR.seated_trunk;
+    const liftOk = ca.seated_lift && ca.seated_lift !== SEATED_FLOOR.seated_lift;
+    const armOk = ca.seated_arm_raise && ca.seated_arm_raise !== SEATED_FLOOR.seated_arm_raise;
+    const enduranceOk = ca.seated_endurance && ca.seated_endurance !== "Under 1 min";
+    if (!trunkOk && !armOk) restriction.add('very_low_mobility');
+    if (trunkOk) capability.add('seated_core');
+    if (armOk) capability.add('seated_upper_body');
+    if (liftOk) capability.add('moderate_lifting');
+    if (enduranceOk) capability.add('seated_cardio');
+    if (ca.seated_grip === "Strong" || ca.seated_grip === "Moderate") capability.add('grip_strength');
+    if (ca.seated_endurance === "15+ min") capability.add('endurance');
   }
 
-  // HIGH set (condition_severity === "A little"): positive capability signals — no extra restrictions
-  if (p.condition_severity === 'A little') {
-    if (ca.brisk_walk_or_jog === true) capability.add('cardiovascular');
-    if (ca.lift_25_lbs === true) capability.add('moderate_lifting');
-    if (ca.squat_down === true) capability.add('lower_body_strength');
-    if (ca.balance_30_sec === true) capability.add('balance_training');
-    if (ca.get_up_from_floor_no_hands === true) capability.add('full_body_mobility');
-    if (ca.walk_30_min === true) capability.add('endurance');
+  // ── CONDITION SEVERITY — pacing/recovery guidance ONLY, no hard restrictions ──
+  // A capable person may be heavily affected; severity drives ramp speed, not exercise eligibility.
+  if (p.condition_severity === 'Moderately') {
+    capability.add('gentle_progression'); capability.add('fatigue_management');
   }
+  if (p.condition_severity === 'Severely') {
+    capability.add('gentle_progression'); capability.add('fatigue_management'); capability.add('extra_modifications');
+  }
+
+  // ── SELF-REPORTED FITNESS — intensity guidance ──
+  if (p.self_reported_fitness === 'Strong') capability.add('high_intensity');
+  if (p.self_reported_fitness === 'Athletic') { capability.add('high_intensity'); capability.add('advanced_training'); }
 
   // ── MOBILITY / POSITION ──
   if (p.fitness_mode === 'Wheelchair' || p.current_abilities?.can_stand === false) {
