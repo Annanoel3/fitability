@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Dumbbell, Heart, Wind, Zap, Layers } from "lucide-react";
 
@@ -20,8 +20,27 @@ const INTENSITIES = [
 export default function WorkoutPickerModal({ onConfirm, onClose }) {
   const [types, setTypes] = useState([]);
   const [intensity, setIntensity] = useState(null);
+  const [demoCaption, setDemoCaption] = useState("");
+  const timersRef = useRef([]);
+
+  const isTourPicking = typeof window !== "undefined" &&
+    (window.fitabilityTourStep === "workout_picking" || window.fitabilityTourStep === "workout");
+
+  useEffect(() => {
+    if (!isTourPicking) return;
+    const t1 = setTimeout(() => setDemoCaption("Building a sample workout for you..."), 200);
+    const t2 = setTimeout(() => setTypes(["mixed"]), 500);
+    const t3 = setTimeout(() => setIntensity("easy"), 900);
+    const t4 = setTimeout(() => {
+      onConfirm({ workoutTypes: ["mixed"], intensity: "easy" });
+      onClose();
+    }, 1400);
+    timersRef.current = [t1, t2, t3, t4];
+    return () => timersRef.current.forEach(clearTimeout);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleType = (id) => {
+    if (isTourPicking) return;
     setTypes(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
   };
 
@@ -38,10 +57,15 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
           <h2 className="font-heading font-bold text-lg">Choose Your Workout</h2>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-muted text-muted-foreground">
-            <X className="w-5 h-5" />
-          </button>
+          {!isTourPicking && (
+            <button onClick={onClose} className="p-1 rounded-full hover:bg-muted text-muted-foreground">
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
+        {demoCaption && (
+          <p className="px-5 pb-2 text-sm text-primary font-medium animate-pulse">{demoCaption}</p>
+        )}
 
         <div className="overflow-y-auto flex-1 px-5 pt-1 space-y-5">
           {/* Workout Type */}

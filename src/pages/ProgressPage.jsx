@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Loader2, TrendingUp, Dumbbell, Calendar, Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -19,6 +19,8 @@ export default function ProgressPage() {
   const [logData, setLogData] = useState({});
   const [saving, setSaving] = useState(false);
   const [tourStep, setTourStep] = useState(null);
+  const [demoCaption, setDemoCaption] = useState("");
+  const demoTimersRef = useRef([]);
   const isTourProgressLog = tourStep === "progress_log";
 
   useEffect(() => {
@@ -29,13 +31,32 @@ export default function ProgressPage() {
     const handleTourChange = (e) => {
       setTourStep(e.detail.tourStep);
       if (e.detail.tourStep === "progress_log") {
-        setShowLogForm(false); // Reset form so user clicks the button themselves
+        setShowLogForm(false);
       }
     };
     window.addEventListener("fitability-tour-step-change", handleTourChange);
     if (window.fitabilityTourStep) setTourStep(window.fitabilityTourStep);
     return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
   }, []);
+
+  // Demo auto-fill when log form opens during the tour
+  useEffect(() => {
+    if (!showLogForm || tourStep !== "progress_log") return;
+    demoTimersRef.current.forEach(clearTimeout);
+    setDemoCaption("Here's how you'll log each day...");
+    const t1 = setTimeout(() => setLogData(p => ({ ...p, activity_pct: 100 })), 400);
+    const t2 = setTimeout(() => setLogData(p => ({ ...p, energy_level: 7 })), 700);
+    const t3 = setTimeout(() => setLogData(p => ({ ...p, overall_pain: 2 })), 900);
+    const t4 = setTimeout(() => setLogData(p => ({ ...p, mood_score: 4 })), 1100);
+    const t5 = setTimeout(() => {
+      setDemoCaption("");
+      setShowLogForm(false);
+      setLogData({});
+      window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "progress_logged" }));
+    }, 2400);
+    demoTimersRef.current = [t1, t2, t3, t4, t5];
+    return () => demoTimersRef.current.forEach(clearTimeout);
+  }, [showLogForm, tourStep]);
 
   const loadData = async () => {
     const [pain, work, prog] = await Promise.all([
@@ -136,6 +157,9 @@ export default function ProgressPage() {
       {showLogForm && (
         <div className="bg-card rounded-2xl border border-border p-6 space-y-5">
           <h3 className="font-heading font-semibold">Log Today's Progress</h3>
+          {demoCaption && (
+            <p className="text-sm text-primary font-medium animate-pulse">{demoCaption}</p>
+          )}
 
           <div>
             <Label className="text-sm">Activity Completed Today?</Label>
