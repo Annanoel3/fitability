@@ -91,6 +91,10 @@
       },
       "description": "Risk factors like fall history, surgery, etc."
     },
+    "risk_factor_details": {
+      "type": "object",
+      "description": "Per risk factor { severity: string, note: string }"
+    },
     "is_veteran": {
       "type": "boolean",
       "default": false
