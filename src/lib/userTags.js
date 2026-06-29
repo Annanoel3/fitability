@@ -259,6 +259,10 @@ export function buildUserTags(profile) {
     if (rf.includes('copd') || rf.includes('asthma') || rf.includes('respiratory') || rf.includes('pulmonary')) restriction.add('breathing_difficulty');
     if (rf.includes('blood pressure') || rf.includes('hypertension')) restriction.add('breathing_difficulty');
     if (rf.includes('immune') || rf.includes('immunocompromised')) restriction.add('immune_compromised');
+    if (rf.includes('osteoporosis')) { restriction.add('osteoporosis'); restriction.add('no_spinal_flexion'); restriction.add('no_high_impact'); capability.add('osteoporosis_safe'); }
+    if (rf.includes('dizz') || rf.includes('vertigo')) { restriction.add('no_head_inversion'); capability.add('vertigo_safe'); }
+    if (rf.includes('seizure') || rf.includes('epilep')) { restriction.add('seizure_risk'); restriction.add('no_head_inversion'); capability.add('vertigo_safe'); }
+    if (rf.includes('clot') || rf.includes('dvt') || rf.includes('thrombo')) { restriction.add('blood_clot_risk'); restriction.add('no_high_impact'); capability.add('heart_safe'); }
   });
 
   return { restriction, capability };
