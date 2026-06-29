@@ -119,7 +119,7 @@ export default function CoachChat() {
   const sendWelcome = async (prof) => {
     // Instant intro during the onboarding tour (skip the slow LLM round-trip)
     if (window.fitabilityTourStep === "coach") {
-      setMessages([{ role: "assistant", content: `Hi ${prof?.display_name || "there"}! I am your FitAbility Coach. I can tweak your workouts, answer questions about your conditions, and keep you moving safely - just message me anytime.` }]);
+      setMessages([{ role: "assistant", content: `Hi ${prof?.display_name || "there"}! 💪 I'm your FitAbility Coach. I can help you adjust and fine-tune your workouts, suggest modifications for exercises, answer fitness questions, and keep you moving safely.\n\nKeep me updated on any changes to your health and conditions — whether things are improving, getting tougher, or anything that affects your workouts. The better I understand you, the better I can support your fitness journey. I'll remember what you tell me and tailor your plan around it.` }]);
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "coach_message" } }));
       }, 300);
