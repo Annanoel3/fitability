@@ -505,6 +505,13 @@ export default function WorkoutPage() {
           </button>
         </div>
       </div>
+        {/* Adjust-with-Coach reminder + quick path to Coach */}
+        <button
+          onClick={() => navigate("/coach")}
+          className="w-full mb-5 flex items-center justify-center gap-2 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/15 rounded-xl py-2.5 px-3 transition-colors"
+        >
+          Too hard or too easy? Tell your Coach — it tunes all your future workouts →
+        </button>
 
       {/* Audio mode status banner */}
       {audioMode && (
