@@ -241,6 +241,9 @@ export default function OnboardingTour({ profile, onComplete }) {
           <Button className="w-full h-12 text-base gap-2" onClick={() => advance("workout")}>
             Show me around <ArrowRight className="w-4 h-4" />
           </Button>
+          <button onClick={completeTour} className="w-full text-sm text-muted-foreground py-1 mt-1 hover:text-foreground transition-colors">
+            Skip the tour, I'll explore on my own
+          </button>
         </div>
       </div>
     );
