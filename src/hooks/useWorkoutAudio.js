@@ -27,11 +27,13 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   const noisyRef = useRef(noisyMode);
   const speakingRef = useRef(false);
   const listeningStoppedRef = useRef(false); // true = intentionally stopped, don't restart
+  const speakIdRef = useRef(0); // incremented each speak() call — only the latest one plays
 
   useEffect(() => { noisyRef.current = noisyMode; }, [noisyMode]);
   useEffect(() => { audioModeRef.current = audioMode; }, [audioMode]);
 
   const stopAudio = useCallback(() => {
+    speakIdRef.current++; // invalidate any in-flight speak() so it won't play after stop
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.onended = null;
@@ -114,6 +116,8 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   // Stops listening before speaking, restarts listening after
   const speak = useCallback((text, cacheKey) => {
     return new Promise(async (resolve) => {
+      const myId = ++speakIdRef.current;
+
       // Pause listening while speaking
       if (recognitionRef.current) {
         const r = recognitionRef.current;
@@ -142,11 +146,18 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
           }
         }
 
+        // A newer speak() call superseded this one — abandon without playing
+        if (speakIdRef.current !== myId) {
+          resolve();
+          return;
+        }
+
         const audio = new Audio(audioUrl);
         audio.playbackRate = 1.15;
         audioRef.current = audio;
 
         const finish = () => {
+          if (speakIdRef.current !== myId) { resolve(); return; }
           speakingRef.current = false;
           setSpeaking(false);
           // Resume listening after speaking (if still in audio mode and voice not noisy)
@@ -164,8 +175,10 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
         audio.onerror = finish;
         await audio.play();
       } catch (e) {
-        speakingRef.current = false;
-        setSpeaking(false);
+        if (speakIdRef.current === myId) {
+          speakingRef.current = false;
+          setSpeaking(false);
+        }
         resolve();
       }
     });
