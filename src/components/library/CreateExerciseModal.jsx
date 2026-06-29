@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [tourFilling, setTourFilling] = useState(false);
   const [demoPressing, setDemoPressing] = useState(false);
+  const bodyRef = useRef(null);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -32,13 +33,18 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
     setTourFilling(true);
     const steps = [
       [250,  () => setForm(f => ({ ...f, name: "Seated Marches" }))],
-      [900,  () => setForm(f => ({ ...f, category: "Cardio" }))],
-      [1500, () => setForm(f => ({ ...f, position: "Seated" }))],
-      [2100, () => setForm(f => ({ ...f, default_sets: 3 }))],
-      [2700, () => setForm(f => ({ ...f, default_reps: 12 }))],
-      [3400, () => setForm(f => ({ ...f, description: "Gentle warm-up — march in place at your own pace." }))],
-      [4300, () => setDemoPressing(true)],
-      [5200, () => {
+      [950,  () => setForm(f => ({ ...f, default_sets: 3 }))],
+      [1650, () => setForm(f => ({ ...f, default_reps: 12 }))],
+      [2350, () => setForm(f => ({ ...f, description: "Gentle warm-up — march in place at your own pace." }))],
+      [3150, () => setForm(f => ({ ...f, category: "Cardio" }))],
+      [3850, () => setForm(f => ({ ...f, position: "Seated" }))],
+      [4500, () => {
+        if (bodyRef.current) {
+          bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
+        }
+        setDemoPressing(true);
+      }],
+      [5800, () => {
         setTourFilling(false);
         setDemoPressing(false);
         onClose();
@@ -86,7 +92,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
           </button>
         </div>
 
-        <div className="overflow-y-auto flex-1 px-5 space-y-3">
+        <div ref={bodyRef} className="overflow-y-auto flex-1 px-5 space-y-3">
           <div>
             <label className="text-sm font-semibold text-foreground">Exercise name *</label>
             <Input
@@ -202,9 +208,9 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading} className={"flex-1 transition-transform duration-150 " + (demoPressing ? "scale-95 ring-4 ring-primary/40 brightness-110" : "")}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Create
+          <Button onClick={handleSubmit} disabled={loading || demoPressing} className={"flex-1 transition-transform duration-150 " + (demoPressing ? "scale-95 ring-4 ring-primary/40 brightness-110" : "")}>
+            {demoPressing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+            {demoPressing ? "Saving…" : loading ? "Saving…" : "Create"}
           </Button>
         </div>
       </div>
