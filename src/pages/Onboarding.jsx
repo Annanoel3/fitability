@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Heart } from "lucide-react";
+import { ABILITIES_CHECKLIST_GRADED, ABILITIES_CHECKLIST_GRADED_SEATED } from "@/lib/constants";
 import StepBasicInfo from "@/components/onboarding/StepBasicInfo";
 import StepGoals from "@/components/onboarding/StepGoals";
 import StepActivityLevel from "@/components/onboarding/StepActivityLevel";
@@ -94,6 +95,59 @@ export default function Onboarding() {
     if (step === 1) return data.display_name && data.age;
     if (step === 2) return (data.goals || []).length > 0;
     if (step === 3) return !!data.activity_level;
+    
+    // Step 4: Body Map / Disabilities — require at least one marked zone
+    if (step === 4) return (data.marked_zones || []).length > 0;
+    
+    // Step 5: Body Limitations — require at least one selected
+    if (step === 5) return (data.body_limitations || []).length > 0;
+    
+    // Step 6: Abilities — require self_reported_fitness, condition_severity (if applicable), and all shown ability questions answered
+    if (step === 6) {
+      if (!data.self_reported_fitness) return false;
+      
+      // condition_severity required only if user has conditions
+      const hasConditions =
+        (data.disabilities || []).length > 0 ||
+        (data.body_limitations || []).length > 0 ||
+        Object.keys(data.pain_areas || {}).length > 0 ||
+        (data.marked_zones || []).length > 0;
+      
+      if (hasConditions && !data.condition_severity) return false;
+      
+      // All shown ability questions must be answered
+      const SEVERE_DISABILITIES = [
+        "wheelchair", "paralysis", "amputee", "cannot stand", "bedridden",
+        "stroke", "parkinson", "multiple sclerosis", "cerebral palsy"
+      ];
+      
+      const isNonAmbulatory =
+        data.activity_level === "Bedridden" ||
+        data.activity_level === "Mostly seated" ||
+        data.activity_level === "Wheelchair user" ||
+        data.fitness_mode === "Wheelchair" ||
+        (data.disabilities || []).some(d => SEVERE_DISABILITIES.some(s => d.toLowerCase().includes(s))) ||
+        ((data.body_limitations || []).join(' ').toLowerCase().includes('cannot stand') ||
+         (data.body_limitations || []).join(' ').toLowerCase().includes('wheelchair') ||
+         (data.body_limitations || []).join(' ').toLowerCase().includes('paralyz'));
+      
+      const checklist = isNonAmbulatory ? ABILITIES_CHECKLIST_GRADED_SEATED : ABILITIES_CHECKLIST_GRADED;
+      const abilities = data.current_abilities || {};
+      
+      // Every question in the active checklist must have a value
+      for (const q of checklist) {
+        if (!abilities[q.id]) return false;
+      }
+      
+      return true;
+    }
+    
+    // Step 7: Risk Factors — require at least one selected (severity/notes optional)
+    if (step === 7) return (data.risk_factors || []).length > 0;
+    
+    // Step 8: Equipment — require at least one selected
+    if (step === 8) return (data.equipment || []).length > 0;
+    
     return true;
   };
 
