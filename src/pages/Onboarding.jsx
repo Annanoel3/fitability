@@ -130,9 +130,14 @@ export default function Onboarding() {
   const handleNext = async () => {
     setNavigating(true);
     const next = step + 1;
-    await saveProgress(next, data);
-    setStep(next);
-    setTimeout(() => setNavigating(false), 500);
+    try {
+      await saveProgress(next, data);
+    } catch (e) {
+      console.error("Onboarding step save failed (answers kept locally):", e);
+    } finally {
+      setStep(next);
+      setNavigating(false);
+    }
   };
 
   const handleFinish = async () => {
@@ -181,12 +186,17 @@ export default function Onboarding() {
       onboarding_step: STEPS.length
     };
 
-    if (existingProfileId) {
-      await base44.entities.UserProfile.update(existingProfileId, profile);
-    } else {
-      await base44.entities.UserProfile.create(profile);
+    try {
+      if (existingProfileId) {
+        await base44.entities.UserProfile.update(existingProfileId, profile);
+      } else {
+        await base44.entities.UserProfile.create(profile);
+      }
+      navigate("/");
+    } catch (e) {
+      console.error("Onboarding finish failed:", e);
+      setSaving(false);
     }
-    navigate("/");
   };
 
   const handleStartOver = async () => {
