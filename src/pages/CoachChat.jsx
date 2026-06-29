@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Send, Bot, Loader2, CheckCircle2 } from "lucide-react";
+import { Send, Bot, Loader2, CheckCircle2, Mic } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useSpeechToText } from "@/hooks/useSpeechToText";
 
 const SUGGESTIONS = [
 "Today's workout feels too hard for me",
@@ -57,6 +58,24 @@ export default function CoachChat() {
   const textareaRef = useRef(null);
   const hasWelcomed = useRef(false);
   const isTourCoachMessage = tourStep === "coach_message";
+
+  const mic = useSpeechToText({
+    onResult: (t) => {
+      setInput((prev) => {
+        const base = prev.trim();
+        const merged = base ? `${base} ${t}` : t;
+        // keep textarea height in sync
+        if (textareaRef.current) {
+          textareaRef.current.value = merged;
+          textareaRef.current.style.height = 'auto';
+          const newHeight = Math.min(textareaRef.current.scrollHeight, 120);
+          textareaRef.current.style.height = newHeight + 'px';
+          setTextareaHeight(newHeight);
+        }
+        return merged;
+      });
+    },
+  });
 
   const handleInputChange = (e) => {
     setInput(e.target.value);
@@ -287,7 +306,21 @@ export default function CoachChat() {
             disabled={sending || isTourCoachMessage}
             data-tour-coach-input
             style={{ minHeight: '2.25rem', fontFamily: 'inherit', fontSize: 'inherit' }} />
-          
+
+          {mic.supported && !isTourCoachMessage && (
+            <Button
+              type="button"
+              onClick={mic.toggle}
+              disabled={sending}
+              size="icon"
+              variant={mic.listening ? "destructive" : "outline"}
+              className="rounded-xl my-2 flex-shrink-0"
+              title={mic.listening ? "Stop" : "Speak"}
+            >
+              <Mic className="w-4 h-4" />
+            </Button>
+          )}
+
           {isTourCoachMessage && (
             <style>{`
               @keyframes coach-send-pulse {

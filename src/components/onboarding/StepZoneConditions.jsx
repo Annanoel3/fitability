@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { Mic } from "lucide-react";
+import { useSpeechToText } from "@/hooks/useSpeechToText";
 
 const ZONE_LABELS = {
   head: "Head / Neck",
@@ -71,6 +73,38 @@ const PLACEHOLDERS = {
 export default function StepZoneConditions({ data, onChange }) {
   const markedZones = data.marked_zones || [];
   const descriptions = data.zone_descriptions || {};
+  const [activeMic, setActiveMic] = useState(null);
+
+  const handleMicResult = (zoneId, transcript) => {
+    const current = (descriptions[zoneId] || "").trim();
+    const merged = current ? `${current} ${transcript}` : transcript;
+    onChange({
+      zone_descriptions: {
+        ...descriptions,
+        [zoneId]: merged,
+      }
+    });
+  };
+
+  const mic = useSpeechToText({
+    onResult: (t) => { if (activeMic) handleMicResult(activeMic, t); },
+  });
+
+  const toggleMic = (zoneId) => {
+    if (activeMic === zoneId) {
+      mic.stop();
+      setActiveMic(null);
+    } else {
+      if (activeMic) mic.stop();
+      setActiveMic(zoneId);
+      mic.start();
+    }
+  };
+
+  // clear active mic if recognition ends on its own
+  useEffect(() => {
+    if (!mic.listening && activeMic) setActiveMic(null);
+  }, [mic.listening]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (markedZones.length === 0) {
     return (
@@ -126,6 +160,20 @@ export default function StepZoneConditions({ data, onChange }) {
                   className="resize-none text-sm min-h-[80px] bg-background"
                   rows={3}
                 />
+                {mic.supported && (
+                  <button
+                    type="button"
+                    onClick={() => toggleMic(zoneId)}
+                    className={`mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full transition-colors ${
+                      activeMic === zoneId
+                        ? "bg-red-500 text-white animate-pulse"
+                        : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                    }`}
+                  >
+                    <Mic className="w-3.5 h-3.5" />
+                    {activeMic === zoneId ? "Listening…" : "Speak"}
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -145,6 +193,20 @@ export default function StepZoneConditions({ data, onChange }) {
             className="resize-none text-sm min-h-[80px] bg-background"
             rows={3}
           />
+          {mic.supported && (
+            <button
+              type="button"
+              onClick={() => toggleMic("_extra")}
+              className={`mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full transition-colors ${
+                activeMic === "_extra"
+                  ? "bg-red-500 text-white animate-pulse"
+                  : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
+              }`}
+            >
+              <Mic className="w-3.5 h-3.5" />
+              {activeMic === "_extra" ? "Listening…" : "Speak"}
+            </button>
+          )}
         </div>
       </div>
 
