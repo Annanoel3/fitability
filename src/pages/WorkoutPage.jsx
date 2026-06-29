@@ -78,7 +78,7 @@ export default function WorkoutPage() {
     setPendingVoiceCommand(null);
   };
 
-  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported } =
+  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported, voiceError } =
     useWorkoutAudio({ exercises, userRestrictions: userProfile?.restriction_tags || [], onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode, onRepeat: (idx) => repeatRef.current?.(idx), onCommandDetected: handleCommandDetected });
 
   // Keep ref in sync after speakExercise is available
@@ -540,7 +540,10 @@ export default function WorkoutPage() {
               <X className="w-4 h-4" />
             </button>
           </div>
-          {!noisyMode && (
+          {voiceError && (
+            <p className="text-xs text-destructive font-mono bg-destructive/10 px-2 py-1 rounded">⚠ {voiceError}</p>
+          )}
+          {!noisyMode && !voiceError && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-muted-foreground">Say:</span>
               {['"next"', '"skip"', '"back"', '"repeat"'].map(cmd => (

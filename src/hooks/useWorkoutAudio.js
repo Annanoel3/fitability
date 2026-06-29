@@ -14,6 +14,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   const [speaking, setSpeaking] = useState(false);
   const [listening, setListening] = useState(false);
   const [listeningForFeedback, setListeningForFeedback] = useState(false);
+  const [voiceError, setVoiceError] = useState(null);
   const [voiceSupported] = useState(() => {
     try {
       return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -87,10 +88,16 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
         fatalError = true;
         listeningStoppedRef.current = true;
-      }
-      // network / audio-capture = hardware issue, don't restart
-      if (e.error === "audio-capture" || e.error === "network") {
+        setVoiceError("Mic permission denied (" + e.error + ")");
+      } else if (e.error === "audio-capture") {
         fatalError = true;
+        setVoiceError("No mic found (" + e.error + ")");
+      } else if (e.error === "network") {
+        fatalError = true;
+        setVoiceError("Network error — voice unavailable");
+      } else if (e.error !== "no-speech" && e.error !== "aborted") {
+        // Surface any unexpected errors
+        setVoiceError("Voice error: " + e.error);
       }
       // no-speech / aborted — normal, onend will restart
     };
@@ -385,5 +392,6 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
     listening,
     listeningForFeedback,
     voiceSupported,
+    voiceError,
   };
 }
