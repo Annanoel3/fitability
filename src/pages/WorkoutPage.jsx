@@ -447,7 +447,7 @@ export default function WorkoutPage() {
 
       {/* Audio Setup Modal */}
       {showAudioSetup && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4 pb-24 md:pb-4">
           <div className="bg-card rounded-2xl border border-border w-full max-w-sm shadow-xl p-6 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
