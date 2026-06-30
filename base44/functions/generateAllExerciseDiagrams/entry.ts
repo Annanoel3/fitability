@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import OpenAI from 'npm:openai';
 
 Deno.serve(async (req) => {
   try {
@@ -24,12 +25,17 @@ Deno.serve(async (req) => {
       try {
         const prompt = `Create a minimalist, instructional fitness exercise diagram for "${exercise.name}". Show a simple stick figure or anatomical outline demonstrating the exercise position and movement. Include key body angles, joint positions, and directional arrows for movement. Style: medical/instructional, clean lines, educational. Position: ${exercise.position}. No background, transparent if possible.`;
 
-        const res = await base44.integrations.Core.GenerateImage({
-          prompt
+        const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
+        const res = await openai.images.generate({
+          model: "dall-e-3",
+          prompt,
+          n: 1,
+          size: "1024x1024"
         });
+        const url = res.data[0]?.url;
 
-        if (res.url) {
-          await base44.entities.Exercise.update(exercise.id, { diagram_url: res.url });
+        if (url) {
+          await base44.entities.Exercise.update(exercise.id, { diagram_url: url });
           generated++;
           console.log(`Generated diagram for: ${exercise.name}`);
         }

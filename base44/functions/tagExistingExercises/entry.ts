@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import OpenAI from 'npm:openai';
 
 // Tags existing exercises that have no restriction_tags yet — processes in batches of 20
 Deno.serve(async (req) => {
@@ -32,53 +33,27 @@ Deno.serve(async (req) => {
    Muscles: ${(ex.muscles_used || []).join(', ') || 'N/A'}`
     ).join('\n\n');
 
-    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `You are an expert adaptive physical therapist. For each exercise below, assign accurate restriction_tags, suitable_for_tags, and equipment_tags based on the exercise name, category, position, and description.
+    const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
+
+    const raw = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+      max_tokens: 3000,
+      messages: [{ role: "user", content: `You are an expert adaptive physical therapist. For each exercise below, assign accurate restriction_tags, suitable_for_tags, and equipment_tags.
 
 EXERCISES TO TAG:
 ${exerciseList}
 
-RESTRICTION_TAGS — use ONLY these exact strings. Tag an exercise if the condition CONTRAINDICATES it (i.e., someone with this condition should NOT do this exercise):
+RESTRICTION_TAGS (conditions that CONTRAINDICATE the exercise): cannot_stand, wheelchair_user, no_legs, single_leg_amputation, no_arms, paraplegia, very_low_mobility, bedridden, knee_pain, knee_replacement, hip_pain, hip_replacement, back_pain, neck_injury, shoulder_injury, wrist_injury, elbow_injury, ankle_pain, no_high_impact, no_spinal_flexion, no_overhead_press, no_neck_flexion, no_head_inversion, balance_issues, heart_condition, copd, breathing_difficulty, osteoporosis, fracture_risk, scoliosis, multiple_sclerosis, parkinsons, cerebral_palsy, seizure_risk, vertigo, fibromyalgia, chronic_fatigue, arthritis, rheumatoid_arthritis, high_bmi, pregnancy, heat_sensitive, immune_compromised
 
-MOBILITY: cannot_stand, wheelchair_user, no_legs, single_leg_amputation, no_arms, single_arm_amputation, no_bilateral_arms, paraplegia, very_low_mobility, bedridden
-JOINTS: knee_pain, left_knee_pain, right_knee_pain, knee_replacement, left_knee_replacement, right_knee_replacement, hip_pain, left_hip_pain, right_hip_pain, hip_replacement, left_hip_replacement, right_hip_replacement, back_pain, neck_injury, shoulder_injury, left_shoulder_injury, right_shoulder_injury, wrist_injury, left_wrist_injury, right_wrist_injury, elbow_injury, left_elbow_injury, right_elbow_injury, ankle_pain, left_ankle_pain, right_ankle_pain
-MOVEMENT RESTRICTIONS: no_high_impact, no_spinal_flexion, left_no_overhead_press, right_no_overhead_press, no_neck_flexion, no_head_inversion, balance_issues
-CARDIAC/PULMONARY: heart_condition, copd, breathing_difficulty
-BONE/STRUCTURAL: osteoporosis, fracture_risk, scoliosis
-NEUROLOGICAL: multiple_sclerosis, parkinsons, cerebral_palsy, seizure_risk, vertigo
-SYSTEMIC: fibromyalgia, chronic_fatigue, arthritis, rheumatoid_arthritis, high_bmi, pregnancy, heat_sensitive, immune_compromised
+SUITABLE_FOR_TAGS (conditions this exercise helps): wheelchair_user, seated_only, low_mobility, chronic_pain, heart_safe, vertigo_safe, osteoporosis_safe, balance_training, fall_prevention, stroke_recovery, coordination, sensory_grounding, fatigue_management, breathing_focused, joint_mobility, upper_body_focus, lower_body_focus, core_stability
 
-CRITICAL LOGIC:
-- If position = "Standing" but person cannot_stand, tag it. If position = "Wheelchair" but person is NOT wheelchair_user, EXCLUDE this exercise (don't show it). If position = "Seated", it's usually safe for wheelchair users.
-- If exercise requires high-impact movements (jumping, running, heavy impact), tag no_high_impact.
-- If exercise requires core stability or trunk control, tag paraplegia and very_low_mobility.
-- If exercise mentions pain-provoking movements for a joint (e.g., deep squats → knee_pain), tag it.
+EQUIPMENT_TAGS (use ONLY): chair, mat, resistance_bands, dumbbells, wall, pillow, towel. Empty array = bodyweight only.
 
-SUITABLE_FOR_TAGS — conditions this exercise is especially good for. Only tag if the exercise actively helps:
-wheelchair_user, seated_only, low_mobility, very_low_mobility, chronic_pain, heart_safe, vertigo_safe, osteoporosis_safe, balance_training, fall_prevention, stroke_recovery, coordination, sensory_grounding, fatigue_management, breathing_focused, joint_mobility, upper_body_focus, lower_body_focus, core_stability
-
-EQUIPMENT_TAGS: exact equipment needed. Use ONLY: chair, mat, resistance_bands, dumbbells, wall, pillow, towel. Empty array = pure bodyweight (no equipment needed).
-
-STRICT VOCABULARY: Use ONLY the exact tag strings listed above. Never output 'epilepsy' (use seizure_risk), 'neck_pain' (use neck_injury), or 'ankle_injury' (use ankle_pain). Use generic joint tags (knee_pain, hip_pain) with NO left_/right_ prefix. Apply no_high_impact to ANY exercise involving jumping, hopping, running, skipping, or jarring impact.\n\nReturn a JSON array with one object per exercise (in same order), each with fields: name, restriction_tags (array), suitable_for_tags (array), equipment_tags (array).`,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          tagged: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                restriction_tags: { type: 'array', items: { type: 'string' } },
-                suitable_for_tags: { type: 'array', items: { type: 'string' } },
-                equipment_tags: { type: 'array', items: { type: 'string' } }
-              }
-            }
-          }
-        }
-      },
-      model: 'gpt_5_4'
+Return JSON: { "tagged": [ { "name": string, "restriction_tags": [], "suitable_for_tags": [], "equipment_tags": [] } ] }` }]
     });
+
+    const result = JSON.parse(raw.choices[0].message.content || "{}");
 
     console.log('Tagged result sample:', JSON.stringify(result?.tagged?.slice(0, 2)));
     let updated = 0;

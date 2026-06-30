@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import OpenAI from 'npm:openai';
 
 Deno.serve(async (req) => {
   try {
@@ -6,9 +7,14 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
+
     // Single comprehensive call to generate 200+ exercises
-    const resp = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an expert adaptive fitness specialist. Generate a JSON array (NOT wrapped in an object) of 200+ adaptive fitness exercises across ALL these categories:
+    const raw = await openai.chat.completions.create({
+      model: "gpt-4o",
+      response_format: { type: "json_object" },
+      max_tokens: 8000,
+      messages: [{ role: "user", content: `You are an expert adaptive fitness specialist. Generate a JSON object with key "exercises" containing 200+ adaptive fitness exercises across ALL these categories:
 
 CATEGORIES (aim for 25-35 exercises per category):
 1. Amputee Rehabilitation (above-knee, below-knee, upper limb - all stages)
@@ -19,33 +25,15 @@ CATEGORIES (aim for 25-35 exercises per category):
 6. Asthma & Respiratory (breathing, low-intensity cardio, bronchial management)
 7. General Adaptive Strength & Mobility (seated, standing, lying, flexibility, balance, warmup, cooldown)
 
-FOR EACH EXERCISE INCLUDE (in JSON):
-- name (string)
-- description (2-3 sentences on what it does and who benefits)
-- instructions (5-10 detailed steps with specific positions, movements, tempo)
-- category (Warmup|Strength|Cardio|Balance|Flexibility|Cooldown|Breathing|Recovery)
-- position (Seated|Standing|Wheelchair|Lying down|Any)
-- difficulty (Beginner|Easy|Moderate|Advanced)
-- muscles_used (array like ["Quadriceps", "Core"])
-- equipment_needed (array, empty for bodyweight)
-- restrictions (array like ["Severe knee pain", "Recent hip surgery"])
-- modifications (string describing easier/harder versions)
-- default_sets (number)
-- default_reps (number or null)
-- default_duration_seconds (number or null)
-- safety_rating (Safe|Caution|Avoid)
-
-RESPOND ONLY WITH A VALID JSON ARRAY. NO MARKDOWN, NO WRAPPER OBJECT. Start with "[" and end with "]".`,
-      model: "claude_sonnet_4_6"
+FOR EACH EXERCISE INCLUDE: name, description, instructions, category (Warmup|Strength|Cardio|Balance|Flexibility|Cooldown|Breathing|Recovery), position (Seated|Standing|Wheelchair|Lying down|Any), difficulty (Beginner|Easy|Moderate|Advanced), muscles_used (array), equipment_needed (array), restrictions (array), modifications (string), default_sets (number), default_reps (number or null), default_duration_seconds (number or null), safety_rating (Safe|Caution|Avoid).` }]
     });
 
-    // Parse the response, handling markdown wrapping
-    let respStr = typeof resp === 'string' ? resp : JSON.stringify(resp);
-    respStr = respStr.replace(/```json\n?|\n?```/g, '').replace(/^```\n?|\n?```$/g, '').trim();
+    let respStr = raw.choices[0].message.content || "{}";
     
     let exercises = [];
     try {
-      exercises = JSON.parse(respStr);
+      const parsed = JSON.parse(respStr);
+      exercises = parsed.exercises || parsed;
     } catch (e) {
       return Response.json({ error: `Failed to parse LLM response: ${e.message}` }, { status: 500 });
     }
