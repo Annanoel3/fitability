@@ -67,6 +67,10 @@ function createNativeSpeechShim(plugin) {
           }
         }
 
+        // Stop any stuck recognizer and clear listeners before starting fresh
+        try { const st = await plugin.isListening(); if (st && st.listening) { await plugin.stop(); } } catch (e) {}
+        try { await plugin.removeAllListeners(); } catch (e) {}
+
         // Register listeners
         const partialListener = await plugin.addListener('partialResults', (data) => {
           if (data && data.matches && data.matches[0]) {

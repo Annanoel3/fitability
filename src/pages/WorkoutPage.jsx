@@ -78,7 +78,7 @@ export default function WorkoutPage() {
     setPendingVoiceCommand(null);
   };
 
-  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported, voiceError } =
+  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported, voiceError, lastHeard } =
     useWorkoutAudio({ exercises, userRestrictions: userProfile?.restriction_tags || [], onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode, onRepeat: (idx) => repeatRef.current?.(idx), onCommandDetected: handleCommandDetected });
 
   // Keep ref in sync after speakExercise is available
@@ -540,6 +540,9 @@ export default function WorkoutPage() {
               <X className="w-4 h-4" />
             </button>
           </div>
+          {lastHeard && (
+            <p className="text-xs text-muted-foreground">Heard: "<span className="font-medium">{lastHeard}</span>"</p>
+          )}
           {voiceError && (
             <p className="text-xs text-destructive font-mono bg-destructive/10 px-2 py-1 rounded">⚠ {voiceError}</p>
           )}

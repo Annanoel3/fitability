@@ -16,6 +16,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   const [listening, setListening] = useState(false);
   const [listeningForFeedback, setListeningForFeedback] = useState(false);
   const [voiceError, setVoiceError] = useState(null);
+  const [lastHeard, setLastHeard] = useState('');
   const [voiceSupported] = useState(() => {
     try {
       return isSpeechSupported();
@@ -71,6 +72,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript.toLowerCase().trim();
       console.log("[Voice] Heard:", transcript);
+      setLastHeard(transcript);
       onResult(transcript);
     };
 
@@ -107,7 +109,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
           if (!listeningStoppedRef.current && !speakingRef.current && audioModeRef.current) {
             startOneShot(onResult);
           }
-        }, 300);
+        }, 600);
       }
     };
 
@@ -185,7 +187,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
               if (!listeningStoppedRef.current && audioModeRef.current && !noisyRef.current) {
                 startOneShot(commandHandlerRef.current);
               }
-            }, 300);
+            }, 600);
           }
           resolve();
         };
@@ -214,15 +216,25 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
     activeIdxRef.current = idx;
     const isLast = idx === exercises.length - 1;
     const lastNote = isLast ? " This is your last exercise — great work, almost there!" : "";
-    
+
     // Check if this exercise has restrictions matching the user's profile
     const matchingRestrictions = (ex.restriction_tags || []).filter(tag => userRestrictions.includes(tag));
     const restrictionNote = matchingRestrictions.length > 0
       ? ` I know you have ${matchingRestrictions.map(tag => tag.replace(/_/g, ' ')).join(' and ')}, so if this is giving you too much trouble, feel free to skip or modify.`
       : "";
-    
-    const text = `Exercise ${idx + 1}: ${ex.name}. ${ex.sets ? `${ex.sets} sets` : ""} ${ex.reps ? `of ${ex.reps} reps.` : ex.duration_seconds ? `for ${ex.duration_seconds} seconds.` : ""} ${ex.instructions || ex.description || ""}${restrictionNote}${lastNote}`;
-    await speak(text, ex.name);
+
+    // Part 1: name only — user can interrupt immediately after hearing the exercise name
+    await speak(`Exercise ${idx + 1}: ${ex.name}.`, `${ex.name}_name`);
+
+    // Pause — listening is active here so a voice command can fire
+    await new Promise(resolve => setTimeout(resolve, 2500));
+
+    // Only read instructions if no command moved us away
+    if (activeIdxRef.current !== idx || !audioModeRef.current || listeningStoppedRef.current) return;
+
+    // Part 2: sets/reps/duration + instructions + notes
+    const instrText = `${ex.sets ? `${ex.sets} sets` : ""} ${ex.reps ? `of ${ex.reps} reps.` : ex.duration_seconds ? `for ${ex.duration_seconds} seconds.` : ""} ${ex.instructions || ex.description || ""}${restrictionNote}${lastNote}`;
+    await speak(instrText.trim(), `${ex.name}_instr`);
   }, [exercises, userRestrictions, speak]);
 
   const speakCommands = useCallback(() => {
@@ -382,5 +394,6 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
     listeningForFeedback,
     voiceSupported,
     voiceError,
+    lastHeard,
   };
 }
