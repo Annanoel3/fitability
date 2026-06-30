@@ -374,20 +374,7 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
       navigate("/workout", { state: { workout: { ...created, workout_data: JSON.stringify(finalResult) } } });
     }
 
-    // Pre-generate exercise images in background (non-blocking, after navigation)
-    if (finalResult.exercises?.length) {
-      finalResult.exercises.forEach(async (ex) => {
-        try {
-          const key = ex.name.toLowerCase().trim();
-          const cached = await base44.entities.ExerciseImage.filter({ exercise_name_key: key });
-          if (cached.length > 0) return;
-          const { url } = await base44.integrations.Core.GenerateImage({
-            prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || "standing"}. ${ex.muscles_used?.length ? "Muscles worked: " + ex.muscles_used.slice(0, 3).join(", ") + "." : ""} Simple, clear diagram style, white background, no text.`
-          });
-          await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: url });
-        } catch (e) { /* silently skip */ }
-      });
-    }
+    // Image pre-generation removed — requires integration credits
   };
 
   if (loading) {

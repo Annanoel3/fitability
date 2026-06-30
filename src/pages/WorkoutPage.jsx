@@ -89,16 +89,9 @@ export default function WorkoutPage() {
   useEffect(() => {
     loadTodayWorkout();
     // Load user profile for restriction tags
-    const loadProfile = async () => {
-      try {
-        const user = await base44.auth.me();
-        if (user) {
-          const profiles = await base44.entities.UserProfile.filter({ created_by_id: user.id });
-          if (profiles.length > 0) setUserProfile(profiles[0]);
-        }
-      } catch (e) {}
-    };
-    loadProfile();
+    base44.entities.UserProfile.filter({}).then(profiles => {
+      if (profiles.length > 0) setUserProfile(profiles[0]);
+    }).catch(() => {});
     return () => { if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current); };
   }, []);
 
@@ -137,13 +130,7 @@ export default function WorkoutPage() {
         if (cached.length > 0) {
           setExerciseImages(prev => ({ ...prev, [idx]: cached[0].image_url }));
         } else {
-          setLoadingImages(prev => ({ ...prev, [idx]: true }));
-          const { url } = await base44.integrations.Core.GenerateImage({
-            prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || "standing"}. ${ex.muscles_used?.length ? "Muscles worked: " + ex.muscles_used.slice(0, 3).join(", ") + "." : ""} Simple, clear diagram style, white background, no text.`
-          });
-          setExerciseImages(prev => ({ ...prev, [idx]: url }));
-          await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: url });
-          setLoadingImages(prev => ({ ...prev, [idx]: false }));
+          // Image generation skipped — requires integration credits
         }
       } catch (e) {}
     });
@@ -232,15 +219,17 @@ export default function WorkoutPage() {
       const transcript = await askForFeedback();
 
       if (transcript) {
+        // Parse voice feedback via openaiChat backend function
         setFeedbackState("processing");
         try {
-          const parsed = await base44.integrations.Core.InvokeLLM({
+          const res = await base44.functions.invoke('openaiChat', {
             prompt: `A user just finished a workout and verbally responded to "how did your workout go, rate it 1-5 stars and why?" They said: "${transcript}"\n\nExtract a star rating from 1-5 based on how positive/negative they sound. Also produce a short cleaned-up written summary of their feedback (1-2 sentences).\n\nRating guide: "one star", "terrible", "awful", "hated it" → 1. "two stars", "bad", "not great", "pretty rough" → 2. "okay", "alright", "fine", "three stars", "meh" → 3. "good", "great", "liked it", "four stars" → 4. "amazing", "perfect", "loved it", "five stars", "best ever" → 5. If unclear, use 3.`,
             response_json_schema: {
               type: "object",
               properties: { rating: { type: "number" }, summary: { type: "string" } }
             }
           });
+          const parsed = res.data;
           const rating = Math.min(5, Math.max(1, Math.round(parsed.rating || 3)));
           setReviewRating(rating);
           setReviewText(parsed.summary || transcript);
