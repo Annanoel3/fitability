@@ -30,9 +30,14 @@ function isUserActive() {
   return false;
 }
 
+function isWorkoutActive() {
+  return window.location.pathname === '/workout';
+}
+
 export async function showInterstitialAd() {
   if (!isNative() || !getAdMob()) return false;
   if (isUserActive()) return false;
+  if (isWorkoutActive()) return false;
   try {
     await getAdMob().prepareInterstitial({ adId: AD_UNIT_ID, isTesting: false });
     await getAdMob().showInterstitial();
@@ -55,6 +60,6 @@ export async function maybeShowAdOnOpen() {
   } catch (e) { return; }
   if (count % SHOW_EVERY_N_OPENS === 0) {
     await new Promise(resolve => setTimeout(resolve, AD_DELAY_MS));
-    await showInterstitialAd();
+    if (!isWorkoutActive()) await showInterstitialAd();
   }
 }
