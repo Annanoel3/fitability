@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import OpenAI from 'npm:openai';
 
 Deno.serve(async (req) => {
   try {
@@ -43,8 +44,9 @@ Deno.serve(async (req) => {
     });
 
     const p = profile;
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an expert adaptive fitness coach and physical therapist AI. Generate a highly personalized workout for this specific individual.
+    const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
+
+    const workoutPrompt = `You are an expert adaptive fitness coach and physical therapist AI. Generate a highly personalized workout for this specific individual.
 
 ${preferences.workoutType ? `═══ USER'S WORKOUT PREFERENCES ═══
 Requested workout type: ${preferences.workoutType}
@@ -95,52 +97,28 @@ INSTRUCTIONS FOR VARIETY:
 
 INSTRUCTIONS FOR WORKOUT:
 Generate a complete daily workout with warmup, 3–6 main exercises, and cooldown.
-Each exercise must include: name, description, sets, reps/duration, step-by-step instructions, position, muscles_used, safety_notes.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          title: { type: "string" },
-          description: { type: "string" },
-          total_duration_minutes: { type: "number" },
-          difficulty_level: { type: "string" },
-          warmup: {
-            type: "object",
-            properties: {
-              name: { type: "string" },
-              duration_minutes: { type: "number" },
-              instructions: { type: "string" }
-            }
-          },
-          exercises: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                name: { type: "string" },
-                description: { type: "string" },
-                sets: { type: "number" },
-                reps: { type: "number" },
-                duration_seconds: { type: "number" },
-                instructions: { type: "string" },
-                position: { type: "string" },
-                muscles_used: { type: "array", items: { type: "string" } },
-                safety_notes: { type: "string" }
-              }
-            }
-          },
-          cooldown: {
-            type: "object",
-            properties: {
-              name: { type: "string" },
-              duration_minutes: { type: "number" },
-              instructions: { type: "string" }
-            }
-          },
-          safety_review: { type: "string" }
-        }
-      },
-      model: "gpt_5_4"
+Each exercise must include: name, description, sets, reps/duration, step-by-step instructions, position, muscles_used, safety_notes.
+
+Respond with a JSON object matching this structure exactly:
+{
+  "title": string,
+  "description": string,
+  "total_duration_minutes": number,
+  "difficulty_level": string,
+  "warmup": { "name": string, "duration_minutes": number, "instructions": string },
+  "exercises": [{ "name": string, "description": string, "sets": number, "reps": number, "duration_seconds": number, "instructions": string, "position": string, "muscles_used": [string], "safety_notes": string }],
+  "cooldown": { "name": string, "duration_minutes": number, "instructions": string },
+  "safety_review": string
+}`;
+
+    const rawResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: workoutPrompt }],
+      response_format: { type: "json_object" },
+      max_tokens: 3000
     });
+
+    const result = JSON.parse(rawResponse.choices[0].message.content || "{}");
 
     const today = new Date().toISOString().split("T")[0];
     const workout = await base44.entities.WorkoutPlan.create({
