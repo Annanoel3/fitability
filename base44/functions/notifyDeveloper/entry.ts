@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import OpenAI from 'npm:openai';
 
 Deno.serve(async (req) => {
   try {
@@ -8,11 +9,9 @@ Deno.serve(async (req) => {
 
     const { message, category } = await req.json();
 
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to: "juliheaton@msn.com",
-      subject: `FitAbility Coach: ${category === "out_of_scope" ? "Feature Request / Out-of-Scope Ask" : "User Feedback"} from ${user.full_name || user.email}`,
-      body: `A user interaction requires your attention.\n\nUser: ${user.full_name || "Unknown"} (${user.email})\nCategory: ${category}\n\nMessage:\n${message}\n\n---\nSent automatically by the FitAbility Coach.`
-    });
+    // Use OpenAI-free notification — log to console (visible in function logs)
+    // SendEmail uses Base44 credits; swap for a webhook/SMTP solution when available
+    console.log(`[NOTIFY] User: ${user.full_name || user.email} | Category: ${category} | Message: ${message}`);
 
     return Response.json({ success: true });
   } catch (error) {

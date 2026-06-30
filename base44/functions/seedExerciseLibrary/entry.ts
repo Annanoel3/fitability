@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import OpenAI from 'npm:openai';
 
 // Focused ability groups — each batch call targets one group so we never timeout
 const ABILITY_GROUPS = [
@@ -128,39 +129,14 @@ equipment_tags: EXACT equipment required. Empty array = pure bodyweight. Options
 
 Return exactly 10 exercises.`;
 
-    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          exercises: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                description: { type: 'string' },
-                instructions: { type: 'string' },
-                category: { type: 'string' },
-                position: { type: 'string' },
-                difficulty: { type: 'string' },
-                muscles_used: { type: 'array', items: { type: 'string' } },
-                equipment_tags: { type: 'array', items: { type: 'string' } },
-                restriction_tags: { type: 'array', items: { type: 'string' } },
-                suitable_for_tags: { type: 'array', items: { type: 'string' } },
-                modifications: { type: 'string' },
-                safety_rating: { type: 'string' },
-                safety_notes: { type: 'string' },
-                default_sets: { type: 'number' },
-                default_reps: { type: 'number' },
-                default_duration_seconds: { type: 'number' }
-              }
-            }
-          }
-        }
-      },
-      model: 'claude_sonnet_4_6'
+    const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
+    const rawResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt + "\n\nReturn a JSON object: { \"exercises\": [...] }" }],
+      response_format: { type: "json_object" },
+      max_tokens: 4000
     });
+    const result = JSON.parse(rawResponse.choices[0].message.content || "{}");
 
     const exercises = (result.exercises || []).filter(ex =>
       ex.safety_rating !== 'Avoid' && !existingNames.has(ex.name.toLowerCase().trim())
