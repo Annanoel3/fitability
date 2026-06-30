@@ -40,8 +40,18 @@ export default function Onboarding() {
 
   // Load any saved onboarding progress on mount
   useEffect(() => {
-    const loadProgress = async () => {
-      const profiles = await base44.entities.UserProfile.filter({});
+    const loadProgress = async (attempt = 0) => {
+      let profiles;
+      try {
+        profiles = await base44.entities.UserProfile.filter({});
+      } catch (e) {
+        if (attempt < 3) {
+          setTimeout(() => loadProgress(attempt + 1), 1000 * (attempt + 1));
+          return;
+        }
+        setLoading(false);
+        return;
+      }
       if (profiles.length > 0) {
         const profile = profiles[0];
         // If already completed, go to dashboard
