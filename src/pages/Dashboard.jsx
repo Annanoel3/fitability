@@ -324,57 +324,8 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
       model: "gpt_5_4"
     });
 
-    // ── VALIDATION PASS: LLM checks the generated workout against the user's profile ──
-    // This catches any exercise that slipped through that the user genuinely cannot do.
-    const validation = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a physical therapist reviewing a generated workout for a specific patient. Your only job is to check whether any exercise in this workout is inappropriate for this person given their profile or their stated coach preferences, and if so, replace it with a suitable alternative.
-
-PATIENT PROFILE:
-Age: ${p.age || 'Unknown'} | Sex: ${p.sex || 'Unknown'} | Weight: ${p.weight_lbs ? p.weight_lbs + ' lbs' : 'Unknown'} | BMI: ${bmi || 'Unknown'}
-Activity Level: ${p.activity_level || 'Unknown'} | Fitness Mode: ${p.fitness_mode || 'Standard'}
-Conditions: ${(p.disabilities || []).join(', ') || 'None'}
-Body Limitations: ${(p.body_limitations || []).join(', ') || 'None'}
-Pain Areas: ${Object.entries(p.pain_areas || {}).map(([a, l]) => `${a}: ${l}/10`).join(', ') || 'None'}
-Current Abilities: ${Object.entries(p.current_abilities || {}).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v ? 'Yes' : 'No'}`).join(', ') || 'Not assessed'}
-Equipment: ${userEquipment.join(', ')}
-${p.coach_memory ? `\nCoach memory (also enforce these preferences during validation):\n${p.coach_memory}` : ''}
-
-GENERATED WORKOUT TO REVIEW:
-${JSON.stringify({ exercises: result.exercises, warmup: result.warmup, cooldown: result.cooldown }, null, 2)}
-
-REVIEW CHECKLIST — flag an exercise if:
-- It requires a body part this person doesn't have or cannot use
-- It requires standing/walking when the person cannot stand
-- It uses equipment not in their equipment list
-- It involves movement (high impact, spinal flexion, overhead press, etc.) that is explicitly unsafe given their conditions
-- The reps/sets/duration are wildly unrealistic given their activity level, weight, or energy today (mood: ${(checkin || todayCheckin)?.mood}, energy: ${(checkin || todayCheckin)?.energy})
-- The workout is INSULTINGLY EASY for a capable person — if this person has no relevant disabilities or limitations for a given exercise, 5 push-ups or 10 squats is not acceptable for an active adult. Flag and increase to a realistic challenge.
-
-IMPORTANT: Do NOT water down exercises just because the person has any disability at all. Only restrict what is directly affected. A person with a bad ankle should still get a challenging upper body and core workout.
-
-For each flagged exercise, replace it or adjust reps/sets to a realistic level. Keep the same structure. If nothing needs changing, return the workout unchanged.
-
-Return the complete corrected workout in the same JSON structure.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          exercises: { type: "array", items: { type: "object", properties: { name: { type: "string" }, description: { type: "string" }, sets: { type: "number" }, reps: { type: "number" }, duration_seconds: { type: "number" }, instructions: { type: "string" }, position: { type: "string" }, muscles_used: { type: "array", items: { type: "string" } }, safety_notes: { type: "string" } } } },
-          warmup: { type: "object", properties: { name: { type: "string" }, duration_minutes: { type: "number" }, instructions: { type: "string" } } },
-          cooldown: { type: "object", properties: { name: { type: "string" }, duration_minutes: { type: "number" }, instructions: { type: "string" } } },
-          changes_made: { type: "array", items: { type: "string" } }
-        }
-      },
-      model: "gpt_5_mini"
-    });
-
-    // Merge validated exercises back into result
-    const finalResult = {
-      ...result,
-      exercises: validation.exercises || result.exercises,
-      warmup: validation.warmup || result.warmup,
-      cooldown: validation.cooldown || result.cooldown,
-      safety_review: (result.safety_review || '') + (validation.changes_made?.length ? '\n\nValidation changes: ' + validation.changes_made.join('; ') : '')
-    };
+    // First LLM call already has full safety context + pre-filtered library + deterministic check below
+    const finalResult = { ...result };
 
         // -- DETERMINISTIC SAFETY RE-CHECK: drop any AI exercise that violates the user's hard restrictions --
     let safetyLib = [];
