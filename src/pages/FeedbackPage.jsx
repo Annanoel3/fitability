@@ -28,21 +28,9 @@ export default function FeedbackPage() {
     setSending(true);
     setError("");
     try {
-      const user = await base44.auth.me();
-      const body = `
-<b>Category:</b> ${form.category}<br/>
-<b>Subject:</b> ${form.subject || "(none)"}<br/>
-<b>From:</b> ${user?.email || "unknown"} (${user?.full_name || "unknown"})<br/>
-<br/>
-<b>Message:</b><br/>
-${form.message.replace(/\n/g, "<br/>")}
-      `.trim();
-
-      await base44.integrations.Core.SendEmail({
-        to: "mediocreatbestdev@outlook.com",
-        from_name: "FitAbility Feedback",
-        subject: `[FitAbility Feedback] ${form.category}${form.subject ? ": " + form.subject : ""}`,
-        body,
+      await base44.functions.invoke('notifyDeveloper', {
+        message: `Category: ${form.category}\nSubject: ${form.subject || "(none)"}\n\n${form.message}`,
+        category: "feedback",
       });
       setSent(true);
     } catch (err) {
