@@ -197,7 +197,7 @@ export default function Dashboard() {
       ? `\nVerified Abilities (USE THESE TO SELECT EXERCISES — cannot-do items are hard limits):\n${abilitiesLines.join('\n')}`
       : '';
 
-    const result = await base44.integrations.Core.InvokeLLM({
+    const _invokePromise = base44.functions.invoke('openaiChat', {
       prompt: `You are an expert adaptive fitness coach. Generate a deeply personalized workout for this individual. Every single data point below was provided by the user and must influence the workout you create.
 
 HOW THIS WORKS:
@@ -320,9 +320,9 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
           },
           safety_review: { type: "string" }
         }
-      },
-      model: "gpt_5_4"
+      }
     });
+    const result = (await _invokePromise).data;
 
     // First LLM call already has full safety context + pre-filtered library + deterministic check below
     const finalResult = { ...result };

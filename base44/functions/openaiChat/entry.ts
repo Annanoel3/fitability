@@ -12,11 +12,15 @@ Deno.serve(async (req) => {
 
     const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
 
+    const fullPrompt = response_json_schema
+      ? prompt + '\n\nRespond with ONLY a valid JSON object that exactly matches this JSON schema (no markdown, no extra text):\n' + JSON.stringify(response_json_schema)
+      : prompt;
+
     const rawResponse = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: fullPrompt }],
       response_format: { type: "json_object" },
-      max_tokens: 3000
+      max_tokens: 8000
     });
 
     const parsed = JSON.parse(rawResponse.choices[0].message.content || "{}");
