@@ -47,8 +47,38 @@ function MessageBubble({ message, isTourCoachMessage }) {
 
 }
 
+const CHAT_STORAGE_KEY = "fitability_chat_messages";
+const CHAT_TIMESTAMP_KEY = "fitability_chat_timestamp";
+const CHAT_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
+
+function loadPersistedMessages() {
+  try {
+    const ts = localStorage.getItem(CHAT_TIMESTAMP_KEY);
+    if (!ts || Date.now() - Number(ts) > CHAT_TTL_MS) {
+      localStorage.removeItem(CHAT_STORAGE_KEY);
+      localStorage.removeItem(CHAT_TIMESTAMP_KEY);
+      return { messages: [], wasReset: !!ts }; // wasReset=true only if there WAS a previous session
+    }
+    const stored = localStorage.getItem(CHAT_STORAGE_KEY);
+    return { messages: stored ? JSON.parse(stored) : [], wasReset: false };
+  } catch (e) {
+    return { messages: [], wasReset: false };
+  }
+}
+
+function persistMessages(msgs) {
+  try {
+    if (!localStorage.getItem(CHAT_TIMESTAMP_KEY)) {
+      localStorage.setItem(CHAT_TIMESTAMP_KEY, String(Date.now()));
+    }
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
+  } catch (e) {}
+}
+
 export default function CoachChat() {
-  const [messages, setMessages] = useState([]);
+  const { messages: initialMessages, wasReset: initialWasReset } = loadPersistedMessages();
+  const [messages, setMessages] = useState(initialMessages);
+  const [wasReset] = useState(initialWasReset);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [profile, setProfile] = useState(null);
@@ -107,6 +137,11 @@ export default function CoachChat() {
     }
     return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
   }, []);
+
+  // Persist messages to localStorage whenever they change
+  useEffect(() => {
+    if (messages.length > 0) persistMessages(messages);
+  }, [messages]);
 
   useEffect(() => {
     const init = async () => {
@@ -225,9 +260,9 @@ export default function CoachChat() {
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
           <Bot className="w-5 h-5 text-primary" />
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <div className="font-heading font-semibold text-sm">FitAbility Coach</div>
-          <div className="text-xs text-muted-foreground">Your adaptive fitness assistant</div>
+          <div className="text-xs text-muted-foreground">Chat resets weekly · your preferences are always remembered</div>
         </div>
       </div>
 
@@ -257,6 +292,12 @@ export default function CoachChat() {
             </div>
           </div>
         }
+
+        {wasReset && (
+          <div className="mb-3 mt-1 text-center text-xs text-muted-foreground bg-muted/60 rounded-xl px-3 py-2">
+            🔄 Your weekly chat history was cleared — but your coach still remembers your preferences and history.
+          </div>
+        )}
 
         <div className="flex flex-col gap-3">
           {messages.map((msg, i) =>
