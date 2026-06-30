@@ -54,9 +54,11 @@ export default function Dashboard() {
   }, []);
 
   const loadData = async () => {
-    // Track activity and capture timezone (non-blocking)
+    // Track activity and capture timezone (non-blocking, inlined)
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    base44.functions.invoke('trackUserActivity', { timezone: tz }).catch(() => {});
+    base44.entities.UserProfile.filter({}).then(ps => {
+      if (ps.length > 0) base44.entities.UserProfile.update(ps[0].id, { last_activity_date: new Date().toISOString(), timezone: tz });
+    }).catch(() => {});
 
     const profiles = await base44.entities.UserProfile.filter({});
     if (profiles.length === 0) {
