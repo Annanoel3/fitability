@@ -148,9 +148,11 @@ export default function CoachChat() {
       const profiles = await base44.entities.UserProfile.filter({});
       if (profiles.length > 0) {
         setProfile(profiles[0]);
-        // Auto-send welcome message on very first coach visit (no prior messages)
-        if (!hasWelcomed.current && messages.length === 0) {
+        // Only send welcome once ever — tracked by a permanent localStorage flag
+        const hasEverWelcomed = localStorage.getItem("fitability_coach_welcomed");
+        if (!hasWelcomed.current && !hasEverWelcomed && messages.length === 0) {
           hasWelcomed.current = true;
+          localStorage.setItem("fitability_coach_welcomed", "1");
           await sendWelcome(profiles[0]);
         }
       }
