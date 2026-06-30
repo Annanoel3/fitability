@@ -365,7 +365,7 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
     localStorage.removeItem('fitability_generating');
     
     // Refresh workouts list so it shows the new workout
-    const updatedWorkouts = await base44.entities.WorkoutPlan.filter({ created_by_id: (await base44.auth.me()).id }, "-date", 10);
+    const updatedWorkouts = await base44.entities.WorkoutPlan.filter({ archived: false }, "-date", 30);
     setWorkouts(updatedWorkouts);
     
     // Auto-navigate only if user stayed on the Dashboard and the tour is not active
