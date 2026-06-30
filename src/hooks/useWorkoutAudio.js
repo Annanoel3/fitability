@@ -154,10 +154,14 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
           if (cached.length > 0) audioUrl = cached[0].image_url;
         }
         if (!audioUrl) {
-          const result = await base44.integrations.Core.GenerateSpeech({ text, voice: "sunny" });
-          audioUrl = result.url;
+          const result = await base44.functions.invoke('openaiTTS', { text, voice: 'nova' });
+          audioUrl = result.data.url;
           if (cacheKey) {
-            await base44.entities.ExerciseImage.create({ exercise_name_key: `audio_${cacheKey}`, image_url: audioUrl });
+            try {
+              await base44.entities.ExerciseImage.create({ exercise_name_key: `audio_${cacheKey}`, image_url: audioUrl });
+            } catch (e) {
+              console.warn("[TTS] Cache write failed (non-fatal):", e.message);
+            }
           }
         }
 
