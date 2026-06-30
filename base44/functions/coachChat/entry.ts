@@ -157,8 +157,11 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
 
         if (toolCall.function.name === "notify_developer") {
           // Fire and forget — send email, don't block the response
-          // Log notification — SendEmail uses Base44 credits
-          console.log(`[NOTIFY] User: ${user.full_name || user.email} | Category: ${args.category} | Message: ${args.message}`);
+          base44.asServiceRole.integrations.Core.SendEmail({
+            to: "juliheaton@msn.com",
+            subject: `FitAbility Coach: ${args.category === "out_of_scope" ? "Feature Request / Out-of-Scope Ask" : "User Feedback"} from ${user.full_name || user.email}`,
+            body: `A user interaction requires your attention.\n\nUser: ${user.full_name || "Unknown"} (${user.email})\nCategory: ${args.category}\n\nMessage:\n${args.message}\n\n---\nSent automatically by the FitAbility Coach.`
+          }).catch(() => {});
 
           // If out_of_scope, get a natural reply acknowledging it
           if (args.category === "out_of_scope" && !reply) {
