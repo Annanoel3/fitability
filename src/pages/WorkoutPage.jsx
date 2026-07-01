@@ -219,7 +219,11 @@ export default function WorkoutPage() {
     setShowAudioSetup(false);
     enableAudioMode();
     speakWelcome(workout?.title || "today's workout").then(() => {
-      setTimeout(() => { setExpandedExercise(0); speakExercise(0); }, 5000);
+      if (voiceSupported) {
+        speakText("When you're ready, say next to begin your first exercise.");
+      } else {
+        setTimeout(() => { setExpandedExercise(0); speakExercise(0); }, 3000);
+      }
     });
   };
 
