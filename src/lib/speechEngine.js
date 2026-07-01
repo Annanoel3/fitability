@@ -39,6 +39,7 @@ function createNativeSpeechShim(plugin) {
   let aborted = false;
   let finalized = false;
   let listeners = [];
+  let watchdog = null;
 
   const shim = {
     onstart: null,
@@ -67,8 +68,7 @@ function createNativeSpeechShim(plugin) {
           }
         }
 
-        // Stop any stuck recognizer and clear listeners before starting fresh
-        try { const st = await plugin.isListening(); if (st && st.listening) { await plugin.stop(); } } catch (e) {}
+        // Clear listeners before starting fresh
         try { await plugin.removeAllListeners(); } catch (e) {}
 
         // Register listeners
@@ -97,6 +97,11 @@ function createNativeSpeechShim(plugin) {
           partialResults: true,
           popup: false
         });
+
+        // Watchdog: if plugin never emits stopped event, self-heal after 9 seconds
+        watchdog = setTimeout(() => {
+          shim.abort();
+        }, 9000);
       } catch (e) {
         if (this.onend) {
           this.onend();
@@ -120,6 +125,12 @@ function createNativeSpeechShim(plugin) {
   function finalize() {
     if (finalized) return;
     finalized = true;
+
+    // Clear watchdog
+    if (watchdog) {
+      clearTimeout(watchdog);
+      watchdog = null;
+    }
 
     // Remove listeners
     listeners.forEach(listener => {
