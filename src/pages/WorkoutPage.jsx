@@ -29,6 +29,7 @@ export default function WorkoutPage() {
   const [reviewText, setReviewText] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
   const [pendingVoiceCommand, setPendingVoiceCommand] = useState(null); // { label, action, transcript }
+  const [pendingSkipIdx, setPendingSkipIdx] = useState(null);
   const pendingTimerRef = useRef(null);
   const [started, setStarted] = useState(false); // timer doesn't run until user taps Start
   const isRestart = location.state?.workout?.completed === true; // came from a completed workout
@@ -87,7 +88,7 @@ export default function WorkoutPage() {
     setPendingVoiceCommand(null);
   };
 
-  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported, voiceError, lastHeard } =
+  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, speakText, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported, voiceError, lastHeard } =
     useWorkoutAudio({ exercises, userRestrictions: userProfile?.restriction_tags || [], onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode, onRepeat: (idx) => repeatRef.current?.(idx), onCommandDetected: handleCommandDetected });
 
   // Keep ref in sync after speakExercise is available
@@ -103,6 +104,21 @@ export default function WorkoutPage() {
     }).catch(() => {});
     return () => { if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current); };
   }, []);
+
+  // Voice confirmation for skip-to-exercise
+  useEffect(() => {
+    if (pendingSkipIdx !== null && lastHeard) {
+      const lower = lastHeard.toLowerCase();
+      if (lower.includes("yes") || lower.includes("yeah") || lower.includes("yep") || lower.includes("sure") || lower.includes("confirm")) {
+        const idx = pendingSkipIdx;
+        setPendingSkipIdx(null);
+        setExpandedExercise(idx);
+        if (audioMode) speakExercise(idx);
+      } else if (lower.includes("no") || lower.includes("nope") || lower.includes("cancel") || lower.includes("never mind") || lower.includes("nevermind")) {
+        setPendingSkipIdx(null);
+      }
+    }
+  }, [lastHeard, pendingSkipIdx, audioMode, speakExercise]);
 
   // Elapsed timer — only runs after user taps Start, and not while paused
   useEffect(() => {
@@ -637,7 +653,14 @@ export default function WorkoutPage() {
           return (
             <div key={idx} className={`rounded-xl border-2 transition-all ${skipped ? "border-amber-200 bg-amber-50/50 opacity-60" : completed ? "border-emerald-300 bg-emerald-50" : expanded ? "border-primary/50 bg-primary/5" : "border-border bg-card"}`}>
               <div className="flex items-center gap-3 p-4">
-                <button onClick={() => !skipped && toggleExercise(idx)} className="flex-shrink-0">
+                <button onClick={() => {
+                  if (idx === expandedExercise) {
+                    setExpandedExercise(null);
+                  } else {
+                    setPendingSkipIdx(idx);
+                    if (audioMode) speakText("Do you want to skip to this exercise? Say yes to skip, or no to cancel.");
+                  }
+                }} className="flex-shrink-0">
                   {skipped ? <SkipForward className="w-6 h-6 text-amber-500" /> : completed ? <CheckCircle2 className="w-6 h-6 text-emerald-600" /> : <Circle className="w-6 h-6 text-muted-foreground" />}
                 </button>
                 <div className="flex-1 min-w-0">
@@ -650,7 +673,14 @@ export default function WorkoutPage() {
                     ].filter(Boolean).join(' · ')}
                   </p>
                 </div>
-                <button onClick={() => setExpandedExercise(expanded ? null : idx)} className="p-1 text-muted-foreground">
+                <button onClick={() => {
+                  if (idx === expandedExercise) {
+                    setExpandedExercise(null);
+                  } else {
+                    setPendingSkipIdx(idx);
+                    if (audioMode) speakText("Do you want to skip to this exercise? Say yes to skip, or no to cancel.");
+                  }
+                }} className="p-1 text-muted-foreground">
                     {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
               </div>
@@ -723,6 +753,36 @@ export default function WorkoutPage() {
           );
         })}
       </div>
+
+      {/* Skip to exercise confirmation modal */}
+      {pendingSkipIdx !== null && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4 pb-24 md:pb-4">
+          <div className="bg-card rounded-2xl border border-border w-full max-w-sm shadow-xl p-6 space-y-5">
+            <h2 className="font-heading font-bold text-lg">Skip to this exercise?</h2>
+            <p className="text-sm text-muted-foreground">{exercises[pendingSkipIdx]?.name}</p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 h-11"
+                onClick={() => setPendingSkipIdx(null)}
+              >
+                No, cancel
+              </Button>
+              <Button
+                className="flex-1 h-11"
+                onClick={() => {
+                  const idx = pendingSkipIdx;
+                  setPendingSkipIdx(null);
+                  setExpandedExercise(idx);
+                  if (audioMode) speakExercise(idx);
+                }}
+              >
+                Yes, skip
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cooldown */}
       {workoutData?.cooldown && (

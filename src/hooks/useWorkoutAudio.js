@@ -233,6 +233,10 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
     return speak(text, null);
   }, [speak]);
 
+  const speakText = useCallback((text) => {
+    return speak(text, null);
+  }, [speak]);
+
   // Build and register the command handler whenever exercises/callbacks change
   useEffect(() => {
     commandHandlerRef.current = (transcript) => {
@@ -376,6 +380,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
     speakExercise,
     speakWelcome,
     speakCommands,
+    speakText,
     askForFeedback,
     stopAudio,
     stopListening,
