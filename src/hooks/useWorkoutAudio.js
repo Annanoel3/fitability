@@ -64,7 +64,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   // Start a single (non-continuous) recognition session. On end, auto-restarts
   // unless listeningStoppedRef is true or we're currently speaking.
   const startOneShot = useCallback((onResult) => {
-    if (!voiceSupported || noisyRef.current || listeningStoppedRef.current) return;
+    if (!voiceSupported || noisyRef.current || listeningStoppedRef.current || speakingRef.current) return;
 
     const recognition = createSpeechRecognizer();
     if (!recognition) return;
@@ -364,6 +364,11 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       stopListening();
     }
   }, [audioMode, noisyMode, voiceSupported, startOneShot, stopListening]);
+
+  // Sync speakingRef with speaking state for safety
+  useEffect(() => {
+    speakingRef.current = speaking;
+  }, [speaking]);
 
   // Cleanup on unmount
   useEffect(() => {
