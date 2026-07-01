@@ -286,7 +286,8 @@ Rep/set calibration for healthy/capable users:
 
 INSTRUCTIONS:
 Generate a complete workout: warmup, 3–6 main exercises, cooldown.
-Each exercise: name, description, sets, reps or duration_seconds, step-by-step instructions, position, muscles_used, safety_notes.
+Each exercise: name, description, sets, reps or duration_seconds, step-by-step instructions, position, muscles_used, safety_notes, and restriction_tags.
+CRITICAL: For every exercise (library selection OR invented), populate restriction_tags with the EXACT restriction tags that exercise would be unsafe for, using this vocabulary: ${Array.from(userRestrictionTags).join(", ")}. Leave empty [] if no restrictions apply. Example: if an exercise requires standing and the user has "cannot_stand" in their restrictions, include "cannot_stand" in that exercise's restriction_tags. This is mandatory for all exercises.
 Title: short, natural, motivating — reflect their primary goal in the title.
 ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
       response_json_schema: {
@@ -317,7 +318,8 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
                 instructions: { type: "string" },
                 position: { type: "string" },
                 muscles_used: { type: "array", items: { type: "string" } },
-                safety_notes: { type: "string" }
+                safety_notes: { type: "string" },
+                restriction_tags: { type: "array", items: { type: "string" } }
               }
             }
           },
@@ -347,7 +349,8 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
     finalResult.exercises = (finalResult.exercises || []).filter(ex => {
       if (userRestrictionTags.has('cannot_stand') && ex.position === 'Standing') { removedBySafety.push(ex.name); return false; }
       const lib = libByName[(ex.name || '').toLowerCase().trim()];
-      if (lib && (lib.restriction_tags || []).some(t => userRestrictionTags.has(t))) { removedBySafety.push(ex.name); return false; }
+      const tags = lib ? (lib.restriction_tags || []) : (ex.restriction_tags || []);
+      if (tags.some(t => userRestrictionTags.has(t))) { removedBySafety.push(ex.name); return false; }
       if (lib && !difficultyAllowed(lib.difficulty, userRestrictionTags)) { removedBySafety.push(ex.name); return false; }
       return true;
     });
