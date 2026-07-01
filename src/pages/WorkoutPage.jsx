@@ -40,7 +40,10 @@ export default function WorkoutPage() {
   const handleNext = (currentIdx) => {
     const nextIdx = (currentIdx ?? -1) + 1;
     if (currentIdx != null) setCompletedExercises(prev => { const s = new Set(prev); s.add(currentIdx); return s; });
-    if (nextIdx < exercises.length) setExpandedExercise(nextIdx);
+    if (nextIdx < exercises.length) {
+      setExpandedExercise(nextIdx);
+      if (audioMode) speakExercise(nextIdx);
+    }
   };
 
   const handleSkip = (currentIdx) => {
@@ -49,12 +52,18 @@ export default function WorkoutPage() {
     setSkippedExercises(prev => { const s = new Set(prev); s.add(currentIdx); return s; });
     setCompletedExercises(prev => { const s = new Set(prev); s.delete(currentIdx); return s; });
     const nextIdx = currentIdx + 1;
-    if (nextIdx < exercises.length) setExpandedExercise(nextIdx);
+    if (nextIdx < exercises.length) {
+      setExpandedExercise(nextIdx);
+      if (audioMode) speakExercise(nextIdx);
+    }
   };
 
   const handleBack = (currentIdx) => {
     const prevIdx = (currentIdx ?? 1) - 1;
-    if (prevIdx >= 0) setExpandedExercise(prevIdx);
+    if (prevIdx >= 0) {
+      setExpandedExercise(prevIdx);
+      if (audioMode) speakExercise(prevIdx);
+    }
   };
 
   // handleRepeat is defined after the hook — use a ref so the hook can call it safely
@@ -114,12 +123,7 @@ export default function WorkoutPage() {
     }));
   }, [completedExercises, skippedExercises, expandedExercise, elapsedSeconds, started, done, workout?.id]);
 
-  // Auto-speak when expanded exercise changes (audio mode only)
-  useEffect(() => {
-    if (audioMode && expandedExercise !== null) {
-      speakExercise(expandedExercise);
-    }
-  }, [audioMode, expandedExercise]);
+
 
   const loadExerciseImages = (exList) => {
     if (!exList || exList.length === 0) return;
@@ -182,7 +186,9 @@ export default function WorkoutPage() {
   const handleStartAudio = () => {
     setShowAudioSetup(false);
     enableAudioMode();
-    speakWelcome(workout?.title || "today's workout");
+    speakWelcome(workout?.title || "today's workout").then(() => {
+      setTimeout(() => { setExpandedExercise(0); speakExercise(0); }, 5000);
+    });
   };
 
   const toggleExercise = (idx) => {

@@ -206,7 +206,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   }, [stopAudio, startOneShot]);
 
   const speakWelcome = useCallback((workoutTitle) => {
-    const text = `Welcome to ${workoutTitle}! I'll read each exercise out loud as you go. Here's what you can say at any time: "next" or "done" to complete and move on. "skip" if an exercise isn't right for you today. "back" to go to the previous exercise. "repeat" to hear the instructions again. And "commands" to hear this list again. You can also tap the on-screen buttons at any time. Let's get started!`;
+    const text = `Welcome to ${workoutTitle}! I'll read each exercise out loud. In between the spoken instructions you can say things like next or done to move on, skip, back, or repeat — or just tap the buttons on screen. Let's get started!`;
     return speak(text, null);
   }, [speak]);
 
@@ -223,18 +223,9 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       ? ` I know you have ${matchingRestrictions.map(tag => tag.replace(/_/g, ' ')).join(' and ')}, so if this is giving you too much trouble, feel free to skip or modify.`
       : "";
 
-    // Part 1: name only — user can interrupt immediately after hearing the exercise name
-    await speak(`Exercise ${idx + 1}: ${ex.name}.`, `${ex.name}_name`);
-
-    // Pause — listening is active here so a voice command can fire
-    await new Promise(resolve => setTimeout(resolve, 2500));
-
-    // Only read instructions if no command moved us away
-    if (activeIdxRef.current !== idx || !audioModeRef.current || listeningStoppedRef.current) return;
-
-    // Part 2: sets/reps/duration + instructions + notes
-    const instrText = `${ex.sets ? `${ex.sets} sets` : ""} ${ex.reps ? `of ${ex.reps} reps.` : ex.duration_seconds ? `for ${ex.duration_seconds} seconds.` : ""} ${ex.instructions || ex.description || ""}${restrictionNote}${lastNote}`;
-    await speak(instrText.trim(), `${ex.name}_instr`);
+    // Read entire exercise in one pass
+    const fullText = `Exercise ${idx + 1}: ${ex.name}. ${ex.sets ? `${ex.sets} sets` : ''} ${ex.reps ? `of ${ex.reps} reps.` : ex.duration_seconds ? `for ${ex.duration_seconds} seconds.` : ''} ${ex.instructions || ex.description || ''}${restrictionNote}${lastNote}`.trim();
+    await speak(fullText, ex.name);
   }, [exercises, userRestrictions, speak]);
 
   const speakCommands = useCallback(() => {
