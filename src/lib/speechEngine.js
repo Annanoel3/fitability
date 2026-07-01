@@ -1,165 +1,86 @@
-export function getNativeSR() {
-  return window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()
-    ? (window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition) || null
-    : null;
+import { base44 } from "@/api/base44Client";
+
+// How long (ms) we record before sending the clip to Whisper.
+const WINDOW_MS = 4000;
+
+function getVR() {
+  try {
+    return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.VoiceRecorder) || null;
+  } catch (e) { return null; }
 }
 
-export function getWebSR() {
-  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
-}
-
+// Voice is supported when the native VoiceRecorder plugin is present in the wrapper.
 export function isSpeechSupported() {
-  return !!(getNativeSR() || getWebSR());
+  return !!getVR();
 }
 
+// Transcribe a base64 audio clip via our own transcribeAudio function (OpenAI key, no base44 credits).
+async function transcribe(recordDataBase64, mimeType) {
+  const mt = mimeType || "audio/aac";
+  const ext = mt.includes("webm") ? "webm" : mt.includes("wav") ? "wav" : mt.includes("mp3") ? "mp3" : "m4a";
+  const res = await base44.functions.invoke("transcribeAudio", {
+    audio_base64: recordDataBase64,
+    filename: "audio." + ext,
+    mimeType: mt,
+  });
+  const data = res && res.data ? res.data : res;
+  return ((data && data.text) || "").trim();
+}
+
+// Returns a recognizer with the same interface the app already uses
+// (onstart / onresult / onerror / onend, start() / abort()), backed by
+// record-a-window -> OpenAI Whisper instead of the native SpeechRecognizer.
 export function createSpeechRecognizer() {
-  const nativeSR = getNativeSR();
-
-  if (nativeSR) {
-    // Native Capacitor plugin shim
-    return createNativeSpeechShim(nativeSR);
-  }
-
-  const webSR = getWebSR();
-  if (webSR) {
-    // Web Speech API — use as-is
-    const recognition = new webSR();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
-    return recognition;
-  }
-
-  return null;
-}
-
-function createNativeSpeechShim(plugin) {
-  let lastTranscript = '';
+  const vr = getVR();
   let aborted = false;
-  let finalized = false;
-  let listeners = [];
-  let watchdog = null;
+  let finished = false;
 
-  const shim = {
-    onstart: null,
-    onresult: null,
-    onerror: null,
-    onend: null,
-
+  const shim = { onstart: null, onresult: null, onerror: null, onend: null,
     async start() {
       aborted = false;
-      finalized = false;
-      lastTranscript = '';
-
+      finished = false;
+      if (!vr) { emitError("audio-capture"); emitEnd(); return; }
       try {
-        // Check permissions
-        const permissions = await plugin.checkPermissions();
-        if (permissions.speechRecognition !== 'granted') {
-          const reqResult = await plugin.requestPermissions();
-          if (reqResult.speechRecognition !== 'granted') {
-            if (this.onerror) {
-              this.onerror({ error: 'not-allowed' });
-            }
-            if (this.onend) {
-              this.onend();
-            }
-            return;
-          }
-        }
+        let granted = false;
+        try { granted = (await vr.hasAudioRecordingPermission()).value; } catch (e) { granted = false; }
+        if (!granted) { try { granted = (await vr.requestAudioRecordingPermission()).value; } catch (e) { granted = false; } }
+        if (!granted) { emitError("not-allowed"); emitEnd(); return; }
 
-        // Stop any leftover session BEFORE attaching new listeners (so its stop event does not hit them)
-        try { await plugin.stop(); } catch (e) {}
+        try { await vr.startRecording(); }
+        catch (e) { try { await vr.stopRecording(); } catch (e2) {} emitError("audio-capture"); emitEnd(); return; }
 
-        // Let the recognizer settle
-        await new Promise((r) => setTimeout(r, 350));
+        if (aborted) { safeStop(); return; }
+        if (shim.onstart) shim.onstart();
 
-        // Clear listeners before starting fresh
-        try { await plugin.removeAllListeners(); } catch (e) {}
+        await wait(WINDOW_MS);
+        if (aborted) return;
 
-        // Register listeners
-        const partialListener = await plugin.addListener('partialResults', (data) => {
-          if (data && data.matches && data.matches[0]) {
-            lastTranscript = data.matches[0];
-          }
-        });
-        listeners.push(partialListener);
+        let val = null;
+        try { const rec = await vr.stopRecording(); val = rec && rec.value ? rec.value : rec; }
+        catch (e) { emitError("no-speech"); emitEnd(); return; }
+        if (aborted) return;
 
-        const stateListener = await plugin.addListener('listeningState', (data) => {
-          if (data.status === 'started') {
-            if (shim.onstart) {
-              shim.onstart();
-            }
-          } else if (data.status === 'stopped') {
-            finalize();
-          }
-        });
-        listeners.push(stateListener);
+        const b64 = val && val.recordDataBase64;
+        const dur = val && typeof val.msDuration === "number" ? val.msDuration : null;
+        if (!b64 || (dur !== null && dur < 350)) { emitError("no-speech"); emitEnd(); return; }
 
-        // Start recognition
-        await plugin.start({
-          language: 'en-US',
-          maxResults: 2,
-          partialResults: true,
-          popup: false
-        });
+        let text = "";
+        try { text = await transcribe(b64, val.mimeType); }
+        catch (e) { emitError("network"); emitEnd(); return; }
+        if (aborted) return;
 
-        // Watchdog: if plugin never emits stopped event, self-heal after 9 seconds
-        watchdog = setTimeout(() => {
-          shim.abort();
-        }, 9000);
-      } catch (e) {
-        if (this.onend) {
-          this.onend();
-        }
-      }
+        if (text) { if (shim.onresult) shim.onresult({ results: [[{ transcript: text }]] }); }
+        else { emitError("no-speech"); }
+        emitEnd();
+      } catch (e) { emitError("audio-capture"); emitEnd(); }
     },
-
-    async abort() {
-      aborted = true;
-      try {
-        await plugin.stop();
-      } catch (e) {}
-      finalize();
-    },
-
-    stop() {
-      this.abort();
-    }
+    abort() { aborted = true; safeStop(); emitEnd(); },
   };
 
-  function finalize() {
-    if (finalized) return;
-    finalized = true;
-
-    // Clear watchdog
-    if (watchdog) {
-      clearTimeout(watchdog);
-      watchdog = null;
-    }
-
-    // Remove listeners
-    listeners.forEach(listener => {
-      try {
-        listener.remove();
-      } catch (e) {}
-    });
-    listeners = [];
-
-    // Call onresult only if not aborted and has transcript
-    if (!aborted && lastTranscript) {
-      if (shim.onresult) {
-        shim.onresult({
-          results: [[{ transcript: lastTranscript }]]
-        });
-      }
-    }
-
-    // Always call onend
-    if (shim.onend) {
-      shim.onend();
-    }
-  }
+  function emitError(code) { if (shim.onerror) { try { shim.onerror({ error: code }); } catch (e) {} } }
+  function emitEnd() { if (finished) return; finished = true; if (shim.onend) { try { shim.onend(); } catch (e) {} } }
+  function safeStop() { try { if (vr) vr.stopRecording().catch(function () {}); } catch (e) {} }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
   return shim;
 }
