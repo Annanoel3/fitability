@@ -31,6 +31,7 @@ export default function WorkoutPage() {
   const [pendingVoiceCommand, setPendingVoiceCommand] = useState(null); // { label, action, transcript }
   const [pendingSkipIdx, setPendingSkipIdx] = useState(null);
   const pendingTimerRef = useRef(null);
+  const exerciseCardRefs = useRef([]);
   const [started, setStarted] = useState(false); // timer doesn't run until user taps Start
   const isRestart = location.state?.workout?.completed === true; // came from a completed workout
   const [savedProgress, setSavedProgress] = useState(null); // mid-workout progress from localStorage
@@ -126,6 +127,15 @@ export default function WorkoutPage() {
     const interval = setInterval(() => setElapsedSeconds(s => s + 1), 1000);
     return () => clearInterval(interval);
   }, [started, done, paused]);
+
+  // Auto-scroll the active/expanded exercise into view
+  useEffect(() => {
+    if (expandedExercise == null) return;
+    const card = exerciseCardRefs.current[expandedExercise];
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [expandedExercise]);
 
   // Save mid-workout progress to localStorage
   useEffect(() => {
@@ -654,7 +664,7 @@ export default function WorkoutPage() {
           const skipped = skippedExercises.has(idx);
           const expanded = expandedExercise === idx;
           return (
-            <div key={idx} className={`rounded-xl border-2 transition-all ${skipped ? "border-amber-200 bg-amber-50/50 opacity-60" : completed ? "border-emerald-300 bg-emerald-50" : expanded ? "border-primary/50 bg-primary/5" : "border-border bg-card"}`}>
+            <div key={idx} ref={(el) => { exerciseCardRefs.current[idx] = el; }} className={`rounded-xl border-2 transition-all ${skipped ? "border-amber-200 bg-amber-50/50 opacity-60" : completed ? "border-emerald-300 bg-emerald-50" : expanded ? "border-primary/50 bg-primary/5" : "border-border bg-card"}`}>
               <div className="flex items-center gap-3 p-4">
                 <button onClick={() => {
                   if (idx === expandedExercise) {
