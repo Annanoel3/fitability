@@ -88,7 +88,7 @@ export default function WorkoutPage() {
     setPendingVoiceCommand(null);
   };
 
-  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, speakText, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported, voiceError, lastHeard } =
+  const { audioMode, enableAudioMode, disableAudioMode, speakExercise, speakWelcome, speakCommands, speakText, askForFeedback, stopAudio, stopListening, startListening, speaking, listening, listeningForFeedback, voiceSupported, voiceError, lastHeard, dbg } =
     useWorkoutAudio({ exercises, userRestrictions: userProfile?.restriction_tags || [], onNext: handleNext, onSkip: handleSkip, onBack: handleBack, noisyMode, onRepeat: (idx) => repeatRef.current?.(idx), onCommandDetected: handleCommandDetected });
 
   // Keep ref in sync after speakExercise is available
@@ -562,6 +562,9 @@ export default function WorkoutPage() {
           )}
           {voiceError && (
             <p className="text-xs text-destructive font-mono bg-destructive/10 px-2 py-1 rounded">⚠ {voiceError}</p>
+          )}
+          {dbg && (
+            <p className="text-xs text-muted-foreground font-mono">dbg: {dbg}</p>
           )}
           {!noisyMode && !voiceError && (
             <div className="flex items-center gap-2 flex-wrap">

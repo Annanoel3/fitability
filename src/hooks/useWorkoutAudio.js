@@ -17,6 +17,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   const [listeningForFeedback, setListeningForFeedback] = useState(false);
   const [voiceError, setVoiceError] = useState(null);
   const [lastHeard, setLastHeard] = useState('');
+  const [dbg, setDbg] = useState('');
   const [voiceSupported] = useState(() => {
     try {
       return isSpeechSupported();
@@ -64,7 +65,11 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   // Start a single (non-continuous) recognition session. On end, auto-restarts
   // unless listeningStoppedRef is true or we're currently speaking.
   const startOneShot = useCallback((onResult) => {
-    if (!voiceSupported || noisyRef.current || listeningStoppedRef.current) return;
+    if (!voiceSupported || noisyRef.current || listeningStoppedRef.current) {
+      setDbg("startOneShot-blocked");
+      return;
+    }
+    setDbg("startOneShot-run");
 
     const recognition = createSpeechRecognizer();
     if (!recognition) return;
@@ -78,9 +83,10 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
 
     let fatalError = false;
     recognition.onerror = (e) => {
-      console.log("[Voice] Error:", e.error);
-      // not-allowed / service-not-allowed = permission denied, don't restart
-      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+     console.log("[Voice] Error:", e.error);
+     setDbg("error:"+(e && e.error));
+     // not-allowed / service-not-allowed = permission denied, don't restart
+     if (e.error === "not-allowed" || e.error === "service-not-allowed") {
         fatalError = true;
         listeningStoppedRef.current = true;
         setVoiceError("Mic permission denied (" + e.error + ")");
@@ -102,6 +108,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
         recognitionRef.current = null;
       }
       setListening(false);
+      setDbg("onend");
       if (fatalError) return;
       // Auto-restart unless intentionally stopped or currently speaking
       if (!listeningStoppedRef.current && !speakingRef.current && audioModeRef.current) {
@@ -115,6 +122,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
 
     recognition.onstart = () => {
       setListening(true);
+      setDbg("LISTENING");
     };
 
     recognitionRef.current = recognition;
@@ -178,19 +186,22 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
         audioRef.current = audio;
 
         const finish = () => {
-          if (speakIdRef.current !== myId) { resolve(); return; }
-          speakingRef.current = false;
-          setSpeaking(false);
-          // Resume listening after speaking (if still in audio mode and voice not noisy)
-          if (!listeningStoppedRef.current && audioModeRef.current && !noisyRef.current && commandHandlerRef.current) {
-            setTimeout(() => {
-              if (!listeningStoppedRef.current && audioModeRef.current && !noisyRef.current) {
-                startOneShot(commandHandlerRef.current);
-              }
-            }, 600);
-          }
-          resolve();
-        };
+           if (speakIdRef.current !== myId) { resolve(); return; }
+           speakingRef.current = false;
+           setSpeaking(false);
+           // Resume listening after speaking (if still in audio mode and voice not noisy)
+           if (!listeningStoppedRef.current && audioModeRef.current && !noisyRef.current && commandHandlerRef.current) {
+             setDbg("resume-scheduled");
+             setTimeout(() => {
+               if (!listeningStoppedRef.current && audioModeRef.current && !noisyRef.current) {
+                 startOneShot(commandHandlerRef.current);
+               }
+             }, 600);
+           } else {
+             setDbg("resume-blocked stop:"+listeningStoppedRef.current+" audio:"+audioModeRef.current+" noisy:"+noisyRef.current+" handler:"+(!!commandHandlerRef.current));
+           }
+           resolve();
+         };
 
         audio.onended = finish;
         audio.onerror = finish;
@@ -407,5 +418,6 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
     voiceSupported,
     voiceError,
     lastHeard,
+    dbg,
   };
 }
