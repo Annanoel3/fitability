@@ -68,6 +68,12 @@ function createNativeSpeechShim(plugin) {
           }
         }
 
+        // Stop any leftover session BEFORE attaching new listeners (so its stop event does not hit them)
+        try { await plugin.stop(); } catch (e) {}
+
+        // Let the recognizer settle
+        await new Promise((r) => setTimeout(r, 350));
+
         // Clear listeners before starting fresh
         try { await plugin.removeAllListeners(); } catch (e) {}
 
