@@ -64,7 +64,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
   // Start a single (non-continuous) recognition session. On end, auto-restarts
   // unless listeningStoppedRef is true or we're currently speaking.
   const startOneShot = useCallback((onResult) => {
-    if (!voiceSupported || noisyRef.current || listeningStoppedRef.current || speakingRef.current) return;
+    if (!voiceSupported || noisyRef.current || listeningStoppedRef.current) return;
 
     const recognition = createSpeechRecognizer();
     if (!recognition) return;
@@ -223,8 +223,9 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       ? ` I know you have ${matchingRestrictions.map(tag => tag.replace(/_/g, ' ')).join(' and ')}, so if this is giving you too much trouble, feel free to skip or modify.`
       : "";
 
-    // Read entire exercise in one pass
-    const fullText = `Exercise ${idx + 1}: ${ex.name}. ${ex.sets ? `${ex.sets} sets` : ''} ${ex.reps ? `of ${ex.reps} reps.` : ex.duration_seconds ? `for ${ex.duration_seconds} seconds.` : ''} ${ex.instructions || ex.description || ''}${restrictionNote}${lastNote}`.trim();
+    // Read entire exercise in one pass — with clear sets/reps statement
+    const setsRepsText = ex.sets && ex.reps ? `Do ${ex.sets} sets of ${ex.reps} reps.` : ex.duration_seconds ? `Do this for ${ex.duration_seconds} seconds.` : '';
+    const fullText = `Exercise ${idx + 1}: ${ex.name}. ${setsRepsText} ${ex.instructions || ex.description || ''}${restrictionNote}${lastNote}`.trim();
     await speak(fullText, ex.name);
   }, [exercises, userRestrictions, speak]);
 
@@ -266,9 +267,19 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       } else if (transcript.includes("back") || transcript.includes("previous")) {
         label = "back";
         action = () => { stopAudio(); onBack(activeIdxRef.current); };
-      } else if (transcript.includes("repeat") || transcript.includes("again") || transcript.includes("say that") || transcript.includes("instructions")) {
+      } else if (transcript.includes("repeat") || transcript.includes("repeat that") || transcript.includes("say that") || transcript.includes("say that again") || transcript.includes("again") || transcript.includes("instructions")) {
         label = "repeat";
         action = () => { stopAudio(); if (onRepeat) onRepeat(activeIdxRef.current); };
+      } else if (transcript.includes("how many") || transcript.includes("how many reps") || transcript.includes("how many sets")) {
+        label = "how many";
+        action = () => {
+          const idx = activeIdxRef.current;
+          if (exercises && exercises[idx]) {
+            const ex = exercises[idx];
+            const countText = ex.sets && ex.reps ? `This exercise is ${ex.sets} sets of ${ex.reps} reps.` : ex.duration_seconds ? `This exercise is for ${ex.duration_seconds} seconds.` : 'Duration not specified.';
+            speakText(countText);
+          }
+        };
       } else if (transcript.includes("command") || transcript.includes("what can i say") || transcript.includes("help")) {
         label = "commands";
         action = () => { stopAudio(); speakCommands(); };
