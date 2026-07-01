@@ -54,24 +54,33 @@ export default function Dashboard() {
   }, []);
 
   const loadData = async () => {
-    // Track activity and capture timezone (non-blocking, inlined)
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    base44.entities.UserProfile.filter({}).then(ps => {
-      if (ps.length > 0) base44.entities.UserProfile.update(ps[0].id, { last_activity_date: new Date().toISOString(), timezone: tz });
-    }).catch(() => {});
-
+    
+    // Get user profile
     const profiles = await base44.entities.UserProfile.filter({});
     if (profiles.length === 0) {
       navigate("/onboarding");
       return;
     }
-    setProfile(profiles[0]);
+    const profile = profiles[0];
+    setProfile(profile);
 
-    const allWorkouts = await base44.entities.WorkoutPlan.filter({ archived: false }, "-date", 30);
+    // Update activity async (fire-and-forget)
+    base44.entities.UserProfile.update(profile.id, { 
+      last_activity_date: new Date().toISOString(), 
+      timezone: tz 
+    }).catch(() => {});
+
+    // Small delay to avoid rate limit
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Fetch workouts and checkin in parallel
+    const [allWorkouts, todayLogs] = await Promise.all([
+      base44.entities.WorkoutPlan.filter({ archived: false }, "-date", 30),
+      base44.entities.PainLog.filter({ date: new Date().toISOString().split("T")[0] })
+    ]);
+
     setWorkouts(allWorkouts);
-
-    const today = new Date().toISOString().split("T")[0];
-    const todayLogs = await base44.entities.PainLog.filter({ date: today });
     if (todayLogs.length > 0) {
       setTodayCheckin(todayLogs[0]);
       if (todayLogs[0].mood === "Severe pain") setEmergency(true);
