@@ -65,14 +65,8 @@ export default function Dashboard() {
     const profile = profiles[0];
     setProfile(profile);
 
-    // Update activity async (fire-and-forget)
-    base44.entities.UserProfile.update(profile.id, { 
-      last_activity_date: new Date().toISOString(), 
-      timezone: tz 
-    }).catch(() => {});
-
-    // Small delay to avoid rate limit
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Delay to avoid rate limit before parallel calls
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Fetch workouts and checkin in parallel
     const [allWorkouts, todayLogs] = await Promise.all([
@@ -86,6 +80,12 @@ export default function Dashboard() {
       if (todayLogs[0].mood === "Severe pain") setEmergency(true);
     }
     setLoading(false);
+
+    // Update activity async (fire-and-forget) after main load completes
+    base44.entities.UserProfile.update(profile.id, { 
+      last_activity_date: new Date().toISOString(), 
+      timezone: tz 
+    }).catch(() => {});
   };
 
   const handleCheckIn = (checkin) => {
