@@ -134,7 +134,13 @@ export default function WorkoutPage() {
         if (cached.length > 0) {
           setExerciseImages(prev => ({ ...prev, [idx]: cached[0].image_url }));
         } else {
-          // Image generation skipped — requires integration credits
+          setLoadingImages(prev => ({ ...prev, [idx]: true }));
+          const { url } = (await base44.functions.invoke('openaiImage', { prompt: `Clean instructional fitness illustration showing a person performing "${ex.name}". Position: ${ex.position || 'standing'}. Simple, clear diagram style, white background, no text.` })).data;
+          if (url) {
+            setExerciseImages(prev => ({ ...prev, [idx]: url }));
+            await base44.entities.ExerciseImage.create({ exercise_name_key: key, image_url: url });
+          }
+          setLoadingImages(prev => ({ ...prev, [idx]: false }));
         }
       } catch (e) {}
     });
