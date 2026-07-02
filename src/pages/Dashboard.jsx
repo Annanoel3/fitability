@@ -115,7 +115,7 @@ export default function Dashboard() {
     localStorage.setItem('fitability_generating', 'true');
     // Capture tour state at generation START so the workout-ready auto-nav is never triggered for the tour's workout, even if it finishes after the tour ends
     const startedDuringTour = !!window.fitabilityTourStep && window.fitabilityTourStep !== "done";
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD so a workout stays "today" until local midnight
     
     // Fetch recent workouts to avoid repeating exercises
     const recentWorkouts = await base44.entities.WorkoutPlan.filter({ completed: true }, "-date", 5);
@@ -397,7 +397,7 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
     );
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD
   const todayWorkout = workouts.find(w => w.date === today);
   // Only show a stale workout if there's no today's workout — never show both
   const staleWorkout = !todayWorkout ? workouts.find(w => w.date < today) : null;

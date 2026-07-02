@@ -199,7 +199,7 @@ export default function WorkoutPage() {
       return;
     }
     // Fallback: fetch from DB (e.g. user navigates directly to /workout)
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD
     const workouts = await base44.entities.WorkoutPlan.filter({ date: today, archived: false });
     if (workouts.length === 0) { navigate("/"); return; }
     const w = workouts[0];
