@@ -11,7 +11,7 @@ function getVR() {
 
 // Voice is supported when the native VoiceRecorder plugin is present in the wrapper.
 export function isSpeechSupported() {
-  return !!getVR();
+  return false; // TEMP: isolate mic test so the listening loop does not grab the mic
 }
 
 // Transcribe a base64 audio clip via our own transcribeAudio function (OpenAI key, no base44 credits).
