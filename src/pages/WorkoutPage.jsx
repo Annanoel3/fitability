@@ -23,6 +23,7 @@ export default function WorkoutPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showAudioSetup, setShowAudioSetup] = useState(false);
   const [noisyMode, setNoisyMode] = useState(false);
+  const [micTest, setMicTest] = useState("");
   const [feedbackState, setFeedbackState] = useState(null); // null | "listening" | "processing" | "review" | "saving" | "saved"
   const [savedRating, setSavedRating] = useState(null);
   const [reviewRating, setReviewRating] = useState(3);
@@ -218,6 +219,11 @@ export default function WorkoutPage() {
   const handleStartAudio = () => {
     setShowAudioSetup(false);
     enableAudioMode();
+    try {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => { stream.getTracks().forEach((t) => t.stop()); setMicTest("MIC OK"); })
+        .catch((err) => { setMicTest("MIC FAIL: " + (err && (err.name || err.message))); });
+    } catch (e) { setMicTest("MIC FAIL: " + (e && (e.name || e.message))); }
     speakWelcome(workout?.title || "today's workout").then(() => {
       if (voiceSupported) {
         speakText("When you're ready, say next to begin your first exercise.");
@@ -580,6 +586,9 @@ export default function WorkoutPage() {
           {dbg && (
             <p className="text-xs text-muted-foreground font-mono">dbg: {dbg}</p>
           )}
+          {micTest ? (
+            <p className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded">Mic test: {micTest}</p>
+          ) : null}
           {!noisyMode && !voiceError && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-muted-foreground">Say:</span>
