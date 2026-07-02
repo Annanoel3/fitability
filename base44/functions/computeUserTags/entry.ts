@@ -27,6 +27,23 @@ Deno.serve(async (req) => {
     const restriction_tags = Array.from(restriction);
     const capability_tags = Array.from(capability);
 
+    // CRITICAL: only write back if the tags actually changed.
+    // This automation is triggered on UserProfile updates, and writing back to
+    // UserProfile would re-trigger this automation → infinite loop → credit burn.
+    const existingR = JSON.stringify(profile.restriction_tags || []);
+    const existingC = JSON.stringify(profile.capability_tags || []);
+    const newR = JSON.stringify(restriction_tags);
+    const newC = JSON.stringify(capability_tags);
+    if (existingR === newR && existingC === newC) {
+      return Response.json({
+        success: true,
+        profile_id,
+        unchanged: true,
+        restriction_tags_count: restriction_tags.length,
+        capability_tags_count: capability_tags.length
+      });
+    }
+
     // Store back in UserProfile
     await base44.entities.UserProfile.update(profile_id, {
       restriction_tags,
