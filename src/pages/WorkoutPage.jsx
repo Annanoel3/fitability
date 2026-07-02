@@ -221,9 +221,9 @@ export default function WorkoutPage() {
     enableAudioMode();
     try {
       navigator.mediaDevices.getUserMedia({ audio: true })
-        .then((stream) => { stream.getTracks().forEach((t) => t.stop()); setMicTest("MIC OK"); })
-        .catch((err) => { setMicTest("MIC FAIL: " + (err && (err.name || err.message))); });
-    } catch (e) { setMicTest("MIC FAIL: " + (e && (e.name || e.message))); }
+        .then((stream) => { stream.getTracks().forEach((t) => t.stop()); setMicTest("MIC OK"); window.alert("Mic test: MIC OK"); })
+        .catch((err) => { const msg = "MIC FAIL: " + (err && (err.name || err.message)); setMicTest(msg); window.alert("Mic test: " + msg); });
+    } catch (e) { const msg = "MIC FAIL: " + (e && (e.name || e.message)); setMicTest(msg); window.alert("Mic test: " + msg); }
     speakWelcome(workout?.title || "today's workout").then(() => {
       if (voiceSupported) {
         speakText("When you're ready, say next to begin your first exercise.");
