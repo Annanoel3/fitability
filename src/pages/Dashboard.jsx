@@ -514,13 +514,13 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
         </>
       )}
 
-      {/* Streak */}
-      <StreakCard workouts={workouts} />
-
       {/* Archived Workouts */}
       <ArchivedWorkouts onReuse={(w) => {
         setShowWorkoutPicker(true);
       }} />
+
+      {/* Streak */}
+      <StreakCard workouts={workouts} />
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
