@@ -77,14 +77,6 @@ export default function VoiceOnboarding({ step, onChange, onAdvance }) {
     if (promptedRef.current || decided || step !== 0) return;
     promptedRef.current = true;
     setShowPrompt(true);
-    (async () => {
-      await speak("Would you like to set up your account hands free, just by speaking? I will read each question and you answer out loud. Say yes to talk, or no to tap.");
-      const t = await listenForAnswer(8000);
-      const s = (t || "").toLowerCase();
-      if (!s) return;
-      if (s.includes("yes") || s.includes("yeah") || s.includes("talk") || s.includes("speak") || s.includes("sure")) acceptVoice();
-      else if (s.includes("no") || s.includes("tap") || s.includes("type")) declineVoice();
-    })();
   }, [step, decided]);
 
   const runStep = async () => {
@@ -146,9 +138,9 @@ export default function VoiceOnboarding({ step, onChange, onAdvance }) {
     <>
       {showPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-card rounded-2xl p-6 max-w-sm w-full text-center shadow-xl border border-border">
+          <div role="dialog" aria-modal="true" aria-labelledby="hf-title" className="bg-card rounded-2xl p-6 max-w-sm w-full text-center shadow-xl border border-border">
             <Mic className="w-10 h-10 mx-auto text-primary mb-3" />
-            <h2 className="text-lg font-bold mb-2 text-foreground">Set up hands-free?</h2>
+            <h2 id="hf-title" className="text-lg font-bold mb-2 text-foreground">Set up hands-free?</h2>
             <p className="text-sm text-muted-foreground mb-5">I can read each question out loud and you answer by speaking — no typing. You can switch to tapping anytime.</p>
             <div className="flex gap-3">
               <button onClick={acceptVoice} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold">Yes, let us talk</button>
