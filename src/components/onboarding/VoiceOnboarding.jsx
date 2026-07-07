@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { isSpeechSupported, listenForAnswer } from "@/lib/speechEngine";
+import { isSpeechSupported, captureAnswer } from "@/lib/speechEngine";
 import { Mic } from "lucide-react";
 
 const _ttsCache = {};
@@ -48,7 +48,7 @@ const VOICE_STEPS = {
   2: { parts: [{
     question: "What are your main fitness goals? For example, improve balance, build strength, reduce pain, or improve mobility. You can name a few.",
     clipMs: 3500,
-    instruction: "Map the user goals to this exact list and return JSON { goals: [strings] } using only values from: Lose weight, Improve mobility, Reduce pain, Improve balance, Build strength, Increase stamina, Improve flexibility, Walk farther, Stand longer, Wheelchair fitness, Improve independence, Fall prevention, Better heart health, Better daily functioning.",
+    instruction: "List the user fitness goals in their own words as short phrases. If a goal clearly matches one of these, use that exact wording: Lose weight, Improve mobility, Reduce pain, Improve balance, Build strength, Increase stamina, Improve flexibility, Walk farther, Stand longer, Wheelchair fitness, Improve independence, Fall prevention, Better heart health, Better daily functioning. Otherwise keep the user own words. Return JSON { goals: [strings] }.",
     schema: { type: "object", properties: { goals: { type: "array", items: { type: "string" } } }, required: ["goals"] },
     apply: (p, onChange) => onChange({ goals: Array.isArray(p.goals) ? p.goals : [] }),
   }] },
@@ -155,7 +155,7 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
         await speak(cfg.question);
         setStatus("Listening...");
         listenChime();
-        const t = await listenForAnswer(30000, 1800);
+        const t = await captureAnswer({ maxMs: 20000, silenceMs: 1200 });
         const low = (t || "").toLowerCase();
         setStatus("");
         setBusy(false);
@@ -173,7 +173,7 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
           await speak(attempt === 0 ? part.question : "Sorry, I did not catch that. " + part.question);
           setStatus("Listening...");
           listenChime();
-          transcript = await listenForAnswer(12000, part.clipMs || 2500);
+          transcript = await captureAnswer({ maxMs: 18000 });
         }
         if (!transcript) continue;
         setStatus("Heard: " + transcript);
