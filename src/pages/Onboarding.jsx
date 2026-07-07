@@ -323,7 +323,7 @@ export default function Onboarding() {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
 
-          <VoiceOnboarding step={step} onChange={handleChange} onAdvance={() => setStep((s) => s + 1)} />
+          <VoiceOnboarding step={step} data={data} onChange={handleChange} onAdvance={() => setStep((s) => s + 1)} />
           <StepComponent data={data} onChange={handleChange} />
         </div>
       </div>
