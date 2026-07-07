@@ -180,3 +180,27 @@ export async function recordAndTranscribe(windowMs) {
     try { return await transcribeWav(encodeWavBase64(pcm, TARGET_SR)); } catch (e) { return ""; }
   } catch (e) { return ""; }
 }
+
+export function listenForAnswer(timeoutMs) {
+  return new Promise((resolve) => {
+    const rec = createSpeechRecognizer();
+    if (!rec) { resolve(""); return; }
+    let done = false;
+    const finish = (t) => {
+      if (done) return;
+      done = true;
+      rec.onresult = null;
+      rec.onend = null;
+      rec.onerror = null;
+      try { rec.abort(); } catch (e) {}
+      resolve(t || "");
+    };
+    rec.onresult = (e) => {
+      try { finish(e.results[0][0].transcript); } catch (err) { finish(""); }
+    };
+    rec.onerror = () => {};
+    rec.onend = () => { finish(""); };
+    try { rec.start(); } catch (e) { finish(""); }
+    setTimeout(() => finish(""), timeoutMs || 15000);
+  });
+}
