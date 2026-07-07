@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { isSpeechSupported, listenForAnswer } from "@/lib/speechEngine";
+import { isSpeechSupported, listenForAnswer, listenUntilPause } from "@/lib/speechEngine";
 import { Mic } from "lucide-react";
 
 const _ttsCache = {};
 
 const BODY_ZONES = "head, neck, left_shoulder, right_shoulder, chest, upper_back, abdomen, lower_back, left_arm, right_arm, left_forearm, right_forearm, left_wrist, right_wrist, left_hip, right_hip, left_thigh, right_thigh, left_knee, right_knee, left_calf, right_calf, left_foot, right_foot";
+
+function setIfPresent(p, keys, onChange) {
+  const u = {};
+  keys.forEach((k) => { if (p[k] !== undefined && p[k] !== null && p[k] !== "") u[k] = p[k]; });
+  onChange(u);
+}
 
 const VOICE_STEPS = {
   0: {
@@ -24,10 +30,11 @@ const VOICE_STEPS = {
     confirm: (p) => (p.is_veteran ? "Thank you for your service." : "Got it, not a veteran."),
   },
   1: {
-    question: "What is your first name, and how old are you?",
-    instruction: "Extract the user first name and age. Return JSON with display_name (string) and age (number).",
-    schema: { type: "object", properties: { display_name: { type: "string" }, age: { type: "number" } }, required: ["display_name", "age"] },
-    apply: (p, onChange) => onChange({ display_name: p.display_name, age: p.age }),
+    longAnswer: true,
+    question: "Let us get some basics. Tell me your first name, your age, your sex, your height, and your weight.",
+    instruction: "Extract the user basic info. Return JSON with display_name (first name string), age (number), sex (one of Male, Female, Non-binary, Prefer not to say), height_ft (number of feet), height_in (number of remaining inches), weight_lbs (number of pounds). Omit any field the user did not give.",
+    schema: { type: "object", properties: { display_name: { type: "string" }, age: { type: "number" }, sex: { type: "string" }, height_ft: { type: "number" }, height_in: { type: "number" }, weight_lbs: { type: "number" } }, required: ["display_name"] },
+    apply: (p, onChange) => setIfPresent(p, ["display_name", "age", "sex", "height_ft", "height_in", "weight_lbs"], onChange),
     confirm: (p) => "Thanks " + (p.display_name || "") + ".",
   },
   2: {
@@ -45,6 +52,7 @@ const VOICE_STEPS = {
     confirm: (p) => "Okay, " + (p.activity_level || "") + ".",
   },
   4: {
+    longAnswer: true,
     question: "Tell me about any pain, injuries, or parts of your body that limit you, and how they affect your day to day. Or just say I have none.",
     buildPrompt: (t) => "From the user description, extract the affected body zones and a short description for each. Use zone ids from this exact list: " + BODY_ZONES + ". Return JSON { marked_zones: [ids], zone_descriptions: { zoneId: shortDescription }, no_body_areas: boolean }. If they say none, set no_body_areas true and the others empty. The user said: " + t,
     schema: { type: "object", properties: { marked_zones: { type: "array", items: { type: "string" } }, zone_descriptions: { type: "object" }, no_body_areas: { type: "boolean" } }, required: ["marked_zones"] },
@@ -60,10 +68,11 @@ const VOICE_STEPS = {
     question: "For this step, please tap your ability answers on the screen. When you are finished, say next to continue.",
   },
   7: {
+    longAnswer: true,
     question: "Do you have any of these health risk factors? For example: history of falls, heart condition, osteoporosis, dizziness, recent surgery, or pregnancy. Or say none.",
-    instruction: "Map the user health risk factors to this exact list and return JSON { risk_factors: [strings], no_risk_factors: boolean } using only values from: History of falls, Recent surgery (last 6 months), Osteoporosis, Heart condition, Dizziness/Vertigo, Seizure disorder, Blood clot history, Pacemaker/defibrillator, Oxygen dependent, Dialysis, Active cancer treatment, Pregnant, Recent hospitalization. If they say none, set no_risk_factors true and risk_factors empty.",
-    schema: { type: "object", properties: { risk_factors: { type: "array", items: { type: "string" } }, no_risk_factors: { type: "boolean" } }, required: ["risk_factors"] },
-    apply: (p, onChange) => onChange({ risk_factors: Array.isArray(p.risk_factors) ? p.risk_factors : [], no_risk_factors: !!p.no_risk_factors }),
+    instruction: "Map the user health risk factors to this exact list and return JSON { risk_factors: [strings], no_risk_factors: boolean, risk_factor_details: string } using only values from: History of falls, Recent surgery (last 6 months), Osteoporosis, Heart condition, Dizziness/Vertigo, Seizure disorder, Blood clot history, Pacemaker/defibrillator, Oxygen dependent, Dialysis, Active cancer treatment, Pregnant, Recent hospitalization. Put any extra detail they mention into risk_factor_details. If they say none, set no_risk_factors true and risk_factors empty.",
+    schema: { type: "object", properties: { risk_factors: { type: "array", items: { type: "string" } }, no_risk_factors: { type: "boolean" }, risk_factor_details: { type: "string" } }, required: ["risk_factors"] },
+    apply: (p, onChange) => onChange({ risk_factors: Array.isArray(p.risk_factors) ? p.risk_factors : [], no_risk_factors: !!p.no_risk_factors, risk_factor_details: p.risk_factor_details || "" }),
     confirm: (p) => (p.no_risk_factors ? "Okay, none noted." : "Got it."),
   },
   8: {
@@ -134,19 +143,15 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
   const runStep = async () => {
     const cfg = VOICE_STEPS[step];
     if (!cfg) return;
-
-    if (cfg.type === "autoskip") {
-      if (onAdvance) onAdvance();
-      return;
-    }
-
     setBusy(true);
     try {
       setStatus("Speaking...");
       await speak(cfg.question);
       setStatus("Listening...");
       playChime();
-      const transcript = await listenForAnswer(cfg.type === "manual" ? 30000 : 15000);
+      const transcript = cfg.longAnswer
+        ? await listenUntilPause(20000, 1500, 2500)
+        : await listenForAnswer(cfg.type === "manual" ? 30000 : 12000, 1800);
       const low = (transcript || "").toLowerCase();
 
       if (cfg.type === "manual") {
