@@ -234,7 +234,7 @@ export default function WorkoutPage() {
     enableAudioMode();
     speakWelcome(workout?.title || "today's workout").then(() => {
       if (voiceSupported) {
-        speakText("When you're ready, say next to begin your first exercise.");
+        speakText("When you're ready, say next to begin your first exercise.", "prompt_saynext");
       } else {
         setTimeout(() => { setExpandedExercise(0); speakExercise(0); }, 3000);
       }
