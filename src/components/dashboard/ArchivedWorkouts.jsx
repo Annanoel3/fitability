@@ -44,35 +44,37 @@ export default function ArchivedWorkouts() {
               ? new Date(w.date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
               : "";
             return (
-              <div key={w.id} className="px-5 py-4 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Dumbbell className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-foreground truncate">{w.title}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                    <span>{dateLabel}</span>
-                    {w.total_duration_minutes && (
-                      <>
-                        <span>·</span>
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{w.total_duration_minutes} min</span>
-                      </>
-                    )}
-                    {w.difficulty_level && <><span>·</span><span>{w.difficulty_level}</span></>}
-                    {w.user_rating && (
-                      <>
-                        <span>·</span>
-                        <span className="flex items-center gap-1">
-                          <Star className="w-3 h-3 text-amber-400 fill-amber-400" />{w.user_rating}
-                        </span>
-                      </>
-                    )}
+              <div key={w.id} className="px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Dumbbell className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-foreground truncate">{w.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                      <span>{dateLabel}</span>
+                      {w.total_duration_minutes && (
+                        <>
+                          <span>·</span>
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{w.total_duration_minutes} min</span>
+                        </>
+                      )}
+                      {w.difficulty_level && <><span>·</span><span>{w.difficulty_level}</span></>}
+                      {w.user_rating && (
+                        <>
+                          <span>·</span>
+                          <span className="flex items-center gap-1">
+                            <Star className="w-3 h-3 text-amber-400 fill-amber-400" />{w.user_rating}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-1.5 flex-shrink-0"
+                  className="w-full gap-1.5 mt-3"
                   onClick={() => handleDoAgain(w)}
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> Do Again
