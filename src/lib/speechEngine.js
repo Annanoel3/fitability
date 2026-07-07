@@ -159,3 +159,24 @@ export function createSpeechRecognizer() {
 
   return shim;
 }
+
+export async function recordAndTranscribe(windowMs) {
+  const vr = getVR();
+  if (!vr) return "";
+  try {
+    let granted = (await vr.hasAudioRecordingPermission()).value;
+    if (!granted) granted = (await vr.requestAudioRecordingPermission()).value;
+    if (!granted) return "";
+    try { if (audioCtx().state === "suspended") await audioCtx().resume(); } catch (e) {}
+    await vr.startRecording();
+    await new Promise((r) => setTimeout(r, windowMs || 7000));
+    let val = null;
+    try { const rec = await vr.stopRecording(); val = rec && rec.value ? rec.value : rec; } catch (e) { return ""; }
+    const b64 = val && val.recordDataBase64;
+    if (!b64) return "";
+    let pcm = null;
+    try { const dec = await decodeToMono(b64ToBytes(b64)); pcm = downsample(dec.data, dec.sampleRate); } catch (e) { return ""; }
+    if (!hasSpeech(pcm, TARGET_SR)) return "";
+    try { return await transcribeWav(encodeWavBase64(pcm, TARGET_SR)); } catch (e) { return ""; }
+  } catch (e) { return ""; }
+}
