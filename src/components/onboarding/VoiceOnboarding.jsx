@@ -71,7 +71,7 @@ const VOICE_STEPS = {
     instruction: "Map the user equipment to ids from this exact list and return JSON { equipment: [ids] } using only: none, resistance_bands, dumbbells, mat, cane_walker, wheelchair.",
     schema: { type: "object", properties: { equipment: { type: "array", items: { type: "string" } } }, required: ["equipment"] },
     apply: (p, onChange) => onChange({ equipment: Array.isArray(p.equipment) ? p.equipment : [] }),
-    confirm: () => "All set.",
+    confirm: () => "All set. You can change any of your answers anytime in Settings.",
   },
 };
 
