@@ -205,6 +205,62 @@ export function listenForAnswer(timeoutMs, clipMs) {
   });
 }
 
+let _capturing = false;
+
+export async function captureAnswer(opts) {
+  opts = opts || {};
+  const maxMs = opts.maxMs || 15000;
+  const silenceMs = opts.silenceMs || 1400;
+  const clipMs = opts.clipMs || 900;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const vr = getVR();
+  if (!vr || _capturing) return "";
+  _capturing = true;
+  try {
+    let granted = false;
+    try { granted = (await vr.hasAudioRecordingPermission()).value; } catch (e) {}
+    if (!granted) { try { granted = (await vr.requestAudioRecordingPermission()).value; } catch (e) {} }
+    if (!granted) return "";
+    try { if (audioCtx().state === "suspended") await audioCtx().resume(); } catch (e) {}
+    try { await vr.stopRecording(); } catch (e) {}
+    await w(120);
+
+    const chunks = [];
+    let sawSpeech = false;
+    let silenceRun = 0;
+    const needSilence = Math.max(1, Math.round(silenceMs / clipMs));
+    const start = Date.now();
+
+    while (Date.now() - start < maxMs) {
+      try { await vr.startRecording(); }
+      catch (e) { try { await vr.stopRecording(); } catch (e2) {} await w(150); continue; }
+      await w(clipMs);
+      let val = null;
+      try { const rec = await vr.stopRecording(); val = rec && rec.value ? rec.value : rec; }
+      catch (e) { await w(100); continue; }
+      const b64 = val && val.recordDataBase64;
+      if (!b64) continue;
+      let pcm = null;
+      try { const dec = await decodeToMono(b64ToBytes(b64)); pcm = downsample(dec.data, dec.sampleRate); }
+      catch (e) { continue; }
+      if (hasSpeech(pcm, TARGET_SR)) { sawSpeech = true; silenceRun = 0; chunks.push(pcm); }
+      else if (sawSpeech) { silenceRun++; chunks.push(pcm); if (silenceRun >= needSilence) break; }
+    }
+    if (!sawSpeech || !chunks.length) return "";
+    let total = 0;
+    for (const c of chunks) total += c.length;
+    const all = new Float32Array(total);
+    let off = 0;
+    for (const c of chunks) { all.set(c, off); off += c.length; }
+    return await transcribeWav(encodeWavBase64(all, TARGET_SR));
+  } catch (e) {
+    return "";
+  } finally {
+    _capturing = false;
+    try { const v2 = getVR(); if (v2) v2.stopRecording().catch(() => {}); } catch (e) {}
+  }
+}
+
 export function listenUntilPause(timeoutMs, clipMs, pauseMs) {
   return new Promise((resolve) => {
     const rec = createSpeechRecognizer(clipMs);
