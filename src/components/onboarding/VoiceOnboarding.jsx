@@ -51,7 +51,10 @@ const VOICE_STEPS = {
     apply: (p, onChange) => onChange({ marked_zones: Array.isArray(p.marked_zones) ? p.marked_zones : [], zone_descriptions: p.zone_descriptions || {}, no_body_areas: !!p.no_body_areas }),
     confirm: (p) => (p.no_body_areas ? "Okay, no problem areas." : "Got it, thank you."),
   },
-  5: { type: "autoskip" },
+  5: {
+    type: "manual",
+    question: "Here is what I understood about your body areas. Feel free to change anything on the screen, then say next to continue.",
+  },
   6: {
     type: "manual",
     question: "For this step, please tap your ability answers on the screen. When you are finished, say next to continue.",
