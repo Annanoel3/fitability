@@ -216,9 +216,14 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
     });
   }, [stopAudio, startOneShot]);
 
-  const speakWelcome = useCallback((workoutTitle) => {
-    const text = `Welcome to ${workoutTitle}! I'll read each exercise out loud. In between the spoken instructions you can say things like next or done to move on, skip, back, or repeat — or just tap the buttons on screen. Let's get started!`;
-    return speak(text, `welcome_${workoutTitle}`);
+  const speakWelcome = useCallback((workoutTitle, withVoiceGuidance) => {
+    let text = `Welcome to ${workoutTitle}! I'll read each exercise out loud, and you can say next, skip, back, or repeat — or just tap the buttons on screen.`;
+    if (withVoiceGuidance) {
+      text += ` Two quick things: it may take a second or two for me to respond, and you'll hear a short chime when I've heard you. When you're ready, say next to begin your first exercise.`;
+    } else {
+      text += ` Let's get started!`;
+    }
+    return speak(text, `welcome_v2_${withVoiceGuidance ? "voice" : "plain"}_${workoutTitle}`);
   }, [speak]);
 
   const speakExercise = useCallback(async (idx) => {
