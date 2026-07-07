@@ -233,3 +233,36 @@ export function listenUntilPause(timeoutMs, clipMs, pauseMs) {
     setTimeout(finish, timeoutMs || 20000);
   });
 }
+
+let _stopCapture = false;
+export function stopCapture() { _stopCapture = true; }
+
+export async function captureOnce(maxMs, minMs) {
+  const vr = getVR();
+  if (!vr) return "";
+  _stopCapture = false;
+  try {
+    let granted = (await vr.hasAudioRecordingPermission()).value;
+    if (!granted) granted = (await vr.requestAudioRecordingPermission()).value;
+    if (!granted) return "";
+    try { if (audioCtx().state === "suspended") await audioCtx().resume(); } catch (e) {}
+    try { await vr.startRecording(); } catch (e) { return ""; }
+    const start = Date.now();
+    const cap = maxMs || 9000;
+    const floor = minMs || 1200;
+    while (Date.now() - start < cap) {
+      await new Promise((r) => setTimeout(r, 100));
+      if (_stopCapture && Date.now() - start >= floor) break;
+    }
+    let val = null;
+    try { const rec = await vr.stopRecording(); val = rec && rec.value ? rec.value : rec; }
+    catch (e) { return ""; }
+    const b64 = val && val.recordDataBase64;
+    if (!b64) return "";
+    let pcm = null;
+    try { const dec = await decodeToMono(b64ToBytes(b64)); pcm = downsample(dec.data, dec.sampleRate); }
+    catch (e) { return ""; }
+    if (!hasSpeech(pcm, TARGET_SR)) return "";
+    try { return await transcribeWav(encodeWavBase64(pcm, TARGET_SR)); } catch (e) { return ""; }
+  } catch (e) { return ""; }
+}
