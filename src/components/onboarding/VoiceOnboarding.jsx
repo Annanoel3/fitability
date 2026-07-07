@@ -5,21 +5,70 @@ import { Mic } from "lucide-react";
 
 const _ttsCache = {};
 
+const BODY_ZONES = "head, neck, left_shoulder, right_shoulder, chest, upper_back, abdomen, lower_back, left_arm, right_arm, left_forearm, right_forearm, left_wrist, right_wrist, left_hip, right_hip, left_thigh, right_thigh, left_knee, right_knee, left_calf, right_calf, left_foot, right_foot";
+
 const VOICE_STEPS = {
   0: {
     question: "Are you a veteran? You can just say yes, or no.",
     mapLocal: (t) => {
       const s = (t || "").toLowerCase();
       const no = s.includes("no") || s.includes("nope") || s.includes("nah");
-      const yes = s.includes("yes") || s.includes("yeah") || s.includes("yep") || s.includes("yup") || s.includes("i served") || s.includes("i did");
+      const yes = s.includes("yes") || s.includes("yeah") || s.includes("yep") || s.includes("yup") || s.includes("served");
       if (yes && !no) return { is_veteran: true };
       if (no && !yes) return { is_veteran: false };
       return null;
     },
+    instruction: "The user is asked if they are a military veteran. Return JSON with is_veteran true or false.",
     schema: { type: "object", properties: { is_veteran: { type: "boolean" } }, required: ["is_veteran"] },
-    instruction: "The user is being asked if they are a military veteran. Set is_veteran to true if they indicate yes or that they served, otherwise false.",
     apply: (p, onChange) => onChange({ is_veteran: !!p.is_veteran }),
     confirm: (p) => (p.is_veteran ? "Thank you for your service." : "Got it, not a veteran."),
+  },
+  1: {
+    question: "What is your first name, and how old are you?",
+    instruction: "Extract the user first name and age. Return JSON with display_name (string) and age (number).",
+    schema: { type: "object", properties: { display_name: { type: "string" }, age: { type: "number" } }, required: ["display_name", "age"] },
+    apply: (p, onChange) => onChange({ display_name: p.display_name, age: p.age }),
+    confirm: (p) => "Thanks " + (p.display_name || "") + ".",
+  },
+  2: {
+    question: "What are your main fitness goals? For example, improve balance, build strength, reduce pain, or improve mobility. You can name a few.",
+    instruction: "Map the user goals to this exact list and return JSON { goals: [strings] } using only values from: Lose weight, Improve mobility, Reduce pain, Improve balance, Build strength, Increase stamina, Improve flexibility, Walk farther, Stand longer, Wheelchair fitness, Improve independence, Fall prevention, Better heart health, Better daily functioning.",
+    schema: { type: "object", properties: { goals: { type: "array", items: { type: "string" } } }, required: ["goals"] },
+    apply: (p, onChange) => onChange({ goals: Array.isArray(p.goals) ? p.goals : [] }),
+    confirm: () => "Got it.",
+  },
+  3: {
+    question: "How active are you day to day? For example: mostly seated, wheelchair user, limited walking, light activity, moderate activity, or active.",
+    instruction: "Map the user activity level to exactly one of: Bedridden, Mostly seated, Wheelchair user, Limited walking, Light activity, Moderate activity, Active. Return JSON { activity_level: string }.",
+    schema: { type: "object", properties: { activity_level: { type: "string" } }, required: ["activity_level"] },
+    apply: (p, onChange) => onChange({ activity_level: p.activity_level }),
+    confirm: (p) => "Okay, " + (p.activity_level || "") + ".",
+  },
+  4: {
+    question: "Tell me about any pain, injuries, or parts of your body that limit you, and how they affect your day to day. Or just say I have none.",
+    buildPrompt: (t) => "From the user description, extract the affected body zones and a short description for each. Use zone ids from this exact list: " + BODY_ZONES + ". Return JSON { marked_zones: [ids], zone_descriptions: { zoneId: shortDescription }, no_body_areas: boolean }. If they say none, set no_body_areas true and the others empty. The user said: " + t,
+    schema: { type: "object", properties: { marked_zones: { type: "array", items: { type: "string" } }, zone_descriptions: { type: "object" }, no_body_areas: { type: "boolean" } }, required: ["marked_zones"] },
+    apply: (p, onChange) => onChange({ marked_zones: Array.isArray(p.marked_zones) ? p.marked_zones : [], zone_descriptions: p.zone_descriptions || {}, no_body_areas: !!p.no_body_areas }),
+    confirm: (p) => (p.no_body_areas ? "Okay, no problem areas." : "Got it, thank you."),
+  },
+  5: { type: "autoskip" },
+  6: {
+    type: "manual",
+    question: "For this step, please tap your ability answers on the screen. When you are finished, say next to continue.",
+  },
+  7: {
+    question: "Do you have any of these health risk factors? For example: history of falls, heart condition, osteoporosis, dizziness, recent surgery, or pregnancy. Or say none.",
+    instruction: "Map the user health risk factors to this exact list and return JSON { risk_factors: [strings], no_risk_factors: boolean } using only values from: History of falls, Recent surgery (last 6 months), Osteoporosis, Heart condition, Dizziness/Vertigo, Seizure disorder, Blood clot history, Pacemaker/defibrillator, Oxygen dependent, Dialysis, Active cancer treatment, Pregnant, Recent hospitalization. If they say none, set no_risk_factors true and risk_factors empty.",
+    schema: { type: "object", properties: { risk_factors: { type: "array", items: { type: "string" } }, no_risk_factors: { type: "boolean" } }, required: ["risk_factors"] },
+    apply: (p, onChange) => onChange({ risk_factors: Array.isArray(p.risk_factors) ? p.risk_factors : [], no_risk_factors: !!p.no_risk_factors }),
+    confirm: (p) => (p.no_risk_factors ? "Okay, none noted." : "Got it."),
+  },
+  8: {
+    question: "What equipment do you have? For example: resistance bands, dumbbells, an exercise mat, a cane or walker, a wheelchair, or none.",
+    instruction: "Map the user equipment to ids from this exact list and return JSON { equipment: [ids] } using only: none, resistance_bands, dumbbells, mat, cane_walker, wheelchair.",
+    schema: { type: "object", properties: { equipment: { type: "array", items: { type: "string" } } }, required: ["equipment"] },
+    apply: (p, onChange) => onChange({ equipment: Array.isArray(p.equipment) ? p.equipment : [] }),
+    confirm: () => "All set.",
   },
 };
 
@@ -42,7 +91,7 @@ function playChime() {
   } catch (e) {}
 }
 
-export default function VoiceOnboarding({ step, onChange, onAdvance }) {
+export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
   const [voiceMode, setVoiceMode] = useState(false);
   const [decided, setDecided] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -82,13 +131,29 @@ export default function VoiceOnboarding({ step, onChange, onAdvance }) {
   const runStep = async () => {
     const cfg = VOICE_STEPS[step];
     if (!cfg) return;
+
+    if (cfg.type === "autoskip") {
+      if (onAdvance) onAdvance();
+      return;
+    }
+
     setBusy(true);
     try {
       setStatus("Speaking...");
       await speak(cfg.question);
       setStatus("Listening...");
       playChime();
-      const transcript = await listenForAnswer(15000);
+      const transcript = await listenForAnswer(cfg.type === "manual" ? 30000 : 15000);
+      const low = (transcript || "").toLowerCase();
+
+      if (cfg.type === "manual") {
+        setStatus("");
+        setBusy(false);
+        if (low.includes("next") || low.includes("continue") || low.includes("done")) { if (onAdvance) onAdvance(); }
+        else { ranStepRef.current = -1; }
+        return;
+      }
+
       if (!transcript) {
         setStatus("");
         await speak("Sorry, I did not catch that. Let us try again.");
@@ -96,14 +161,13 @@ export default function VoiceOnboarding({ step, onChange, onAdvance }) {
         setBusy(false);
         return;
       }
+
       setStatus("Heard: " + transcript);
       let parsed = cfg.mapLocal ? cfg.mapLocal(transcript) : null;
       if (!parsed) {
         try {
-          const res = await base44.functions.invoke("openaiChat", {
-            prompt: cfg.instruction + " The user said: " + transcript,
-            response_json_schema: cfg.schema,
-          });
+          const prompt = cfg.buildPrompt ? cfg.buildPrompt(transcript, data) : (cfg.instruction + " The user said: " + transcript);
+          const res = await base44.functions.invoke("openaiChat", { prompt, response_json_schema: cfg.schema });
           parsed = res && res.data ? res.data : null;
         } catch (e) {}
       }
@@ -114,8 +178,9 @@ export default function VoiceOnboarding({ step, onChange, onAdvance }) {
         setBusy(false);
         return;
       }
+
       cfg.apply(parsed, onChange);
-      await speak(cfg.confirm(parsed));
+      await speak(cfg.confirm ? cfg.confirm(parsed) : "Got it.");
       setStatus("");
       setBusy(false);
       if (onAdvance) onAdvance();
