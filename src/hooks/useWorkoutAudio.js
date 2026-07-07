@@ -308,7 +308,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       }
       // Unknown transcript — keep listening silently
     };
-  }, [exercises, onNext, onSkip, onBack, onRepeat, onCommandDetected, stopAudio, speakCommands, disableAudioMode]);
+  }, [exercises, onNext, onSkip, onBack, onRepeat, onCommandDetected, stopAudio, speakCommands]);
 
   // Start continuous (restart-on-end) listening
   const startListening = useCallback(() => {
