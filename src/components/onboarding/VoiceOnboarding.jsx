@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { isSpeechSupported, listenForAnswer } from "@/lib/speechEngine";
+import { isSpeechSupported, captureOnce, stopCapture } from "@/lib/speechEngine";
 import { Mic } from "lucide-react";
 
 const _ttsCache = {};
@@ -48,7 +48,7 @@ const VOICE_STEPS = {
   2: { parts: [{
     question: "What are your main fitness goals? For example, improve balance, build strength, reduce pain, or improve mobility. You can name a few.",
     clipMs: 3500,
-    instruction: "Map the user goals to this exact list and return JSON { goals: [strings] } using only values from: Lose weight, Improve mobility, Reduce pain, Improve balance, Build strength, Increase stamina, Improve flexibility, Walk farther, Stand longer, Wheelchair fitness, Improve independence, Fall prevention, Better heart health, Better daily functioning.",
+    instruction: "Extract the user's fitness goals as a short list of concise phrases in their own words. Do not restrict them to any preset list. Return JSON { goals: [strings] }.",
     schema: { type: "object", properties: { goals: { type: "array", items: { type: "string" } } }, required: ["goals"] },
     apply: (p, onChange) => onChange({ goals: Array.isArray(p.goals) ? p.goals : [] }),
   }] },
@@ -114,6 +114,7 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
   const [showPrompt, setShowPrompt] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
+  const [listening, setListening] = useState(false);
   const ranStepRef = useRef(-1);
   const promptedRef = useRef(false);
 
@@ -155,7 +156,9 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
         await speak(cfg.question);
         setStatus("Listening...");
         listenChime();
-        const t = await listenForAnswer(30000, 1800);
+        setListening(true);
+        const t = await captureOnce(15000);
+        setListening(false);
         const low = (t || "").toLowerCase();
         setStatus("");
         setBusy(false);
@@ -173,7 +176,9 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
           await speak(attempt === 0 ? part.question : "Sorry, I did not catch that. " + part.question);
           setStatus("Listening...");
           listenChime();
-          transcript = await listenForAnswer(12000, part.clipMs || 2500);
+          setListening(true);
+          transcript = await captureOnce(Math.max(6000, (part.clipMs || 2500) + 4000));
+          setListening(false);
         }
         if (!transcript) continue;
         setStatus("Heard: " + transcript);
@@ -226,9 +231,10 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
       <div className="mb-4 flex items-center gap-3">
         <button type="button" onClick={() => (voiceMode ? declineVoice() : acceptVoice())} className={"inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border " + (voiceMode ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border")}>
           <Mic className="w-4 h-4" />
-          {voiceMode ? "Hands-free on" : "Answer out loud"}
+          {voiceMode ? "Hands-free on - tap to type" : "Answer out loud"}
         </button>
         {voiceMode && status ? <span className="text-xs text-muted-foreground">{status}</span> : null}
+        {voiceMode && listening ? <button type="button" onClick={() => { stopCapture(); setListening(false); }} className="text-xs px-3 py-1.5 rounded-full bg-primary text-primary-foreground font-medium">Done speaking</button> : null}
       </div>
     </>
   );
