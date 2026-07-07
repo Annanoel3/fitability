@@ -88,7 +88,7 @@ async function transcribeWav(wavB64) {
   return ((data && data.text) || "").trim();
 }
 
-export function createSpeechRecognizer() {
+export function createSpeechRecognizer(clipMs) {
   const vr = getVR();
   let aborted = false;
   let finished = false;
@@ -113,7 +113,7 @@ export function createSpeechRecognizer() {
         catch (e) { try { await vr.stopRecording(); } catch (e2) {} await wait(200); continue; }
         if (!started) { started = true; if (shim.onstart) shim.onstart(); }
 
-        await wait(CLIP_MS);
+        await wait(clipMs || CLIP_MS);
         if (aborted) { safeStop(); break; }
 
         let val = null;
@@ -181,9 +181,9 @@ export async function recordAndTranscribe(windowMs) {
   } catch (e) { return ""; }
 }
 
-export function listenForAnswer(timeoutMs) {
+export function listenForAnswer(timeoutMs, clipMs) {
   return new Promise((resolve) => {
-    const rec = createSpeechRecognizer();
+    const rec = createSpeechRecognizer(clipMs);
     if (!rec) { resolve(""); return; }
     let done = false;
     const finish = (t) => {
@@ -202,5 +202,34 @@ export function listenForAnswer(timeoutMs) {
     rec.onend = () => { finish(""); };
     try { rec.start(); } catch (e) { finish(""); }
     setTimeout(() => finish(""), timeoutMs || 15000);
+  });
+}
+
+export function listenUntilPause(timeoutMs, clipMs, pauseMs) {
+  return new Promise((resolve) => {
+    const rec = createSpeechRecognizer(clipMs);
+    if (!rec) { resolve(""); return; }
+    const parts = [];
+    let done = false;
+    let pauseTimer = null;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      if (pauseTimer) clearTimeout(pauseTimer);
+      rec.onresult = null;
+      rec.onend = null;
+      rec.onerror = null;
+      try { rec.abort(); } catch (e) {}
+      resolve(parts.join(" ").trim());
+    };
+    rec.onresult = (e) => {
+      try { parts.push(e.results[0][0].transcript); } catch (err) {}
+      if (pauseTimer) clearTimeout(pauseTimer);
+      pauseTimer = setTimeout(finish, pauseMs || 2500);
+    };
+    rec.onerror = () => {};
+    rec.onend = () => { finish(); };
+    try { rec.start(); } catch (e) { finish(); }
+    setTimeout(finish, timeoutMs || 20000);
   });
 }
