@@ -1,78 +1,153 @@
 import { base44 } from "@/api/base44Client";
 
-// How long (ms) we record before sending the clip to Whisper.
-const WINDOW_MS = 4000;
+const CLIP_MS = 2800;
+const TARGET_SR = 16000;
+const FRAME_MS = 30;
+const SPEECH_RMS = 0.03;
+const MIN_SPEECH_FRAMES = 3;
 
 function getVR() {
-  try {
-    return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.VoiceRecorder) || null;
-  } catch (e) { return null; }
+  try { return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.VoiceRecorder) || null; }
+  catch (e) { return null; }
 }
 
-// Voice is supported when the native VoiceRecorder plugin is present in the wrapper.
 export function isSpeechSupported() {
-  return false; // TEMP: isolate mic test so the listening loop does not grab the mic
+  return !!getVR();
 }
 
-// Transcribe a base64 audio clip via our own transcribeAudio function (OpenAI key, no base44 credits).
-async function transcribe(recordDataBase64, mimeType) {
-  const mt = mimeType || "audio/aac";
-  const ext = mt.includes("webm") ? "webm" : mt.includes("wav") ? "wav" : mt.includes("mp3") ? "mp3" : "m4a";
-  const res = await base44.functions.invoke("transcribeAudio", {
-    audio_base64: recordDataBase64,
-    filename: "audio." + ext,
-    mimeType: mt,
-  });
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+let _ctx = null;
+function audioCtx() {
+  if (!_ctx) { const AC = window.AudioContext || window.webkitAudioContext; _ctx = new AC(); }
+  return _ctx;
+}
+
+async function decodeToMono(bytes) {
+  const buf = await audioCtx().decodeAudioData(bytes.buffer.slice(0));
+  return { data: buf.getChannelData(0), sampleRate: buf.sampleRate };
+}
+
+function downsample(data, srcSR) {
+  if (srcSR <= TARGET_SR) return data.slice(0);
+  const ratio = srcSR / TARGET_SR;
+  const outLen = Math.floor(data.length / ratio);
+  const out = new Float32Array(outLen);
+  for (let i = 0; i < outLen; i++) {
+    const start = Math.floor(i * ratio);
+    const end = Math.floor((i + 1) * ratio);
+    let sum = 0, n = 0;
+    for (let j = start; j < end && j < data.length; j++) { sum += data[j]; n++; }
+    out[i] = n ? sum / n : 0;
+  }
+  return out;
+}
+
+function hasSpeech(data, sr) {
+  const frame = Math.max(1, Math.floor((FRAME_MS / 1000) * sr));
+  let speechFrames = 0;
+  for (let i = 0; i + frame <= data.length; i += frame) {
+    let sum = 0;
+    for (let j = i; j < i + frame; j++) sum += data[j] * data[j];
+    if (Math.sqrt(sum / frame) > SPEECH_RMS) { speechFrames++; if (speechFrames >= MIN_SPEECH_FRAMES) return true; }
+  }
+  return false;
+}
+
+function encodeWavBase64(data, sr) {
+  const len = data.length;
+  const buffer = new ArrayBuffer(44 + len * 2);
+  const view = new DataView(buffer);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); view.setUint32(4, 36 + len * 2, true); w(8, "WAVE");
+  w(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, sr, true); view.setUint32(28, sr * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  w(36, "data"); view.setUint32(40, len * 2, true);
+  let off = 44;
+  for (let i = 0; i < len; i++) { const s = Math.max(-1, Math.min(1, data[i])); view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7fff, true); off += 2; }
+  const bytes = new Uint8Array(buffer);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+function concatF32(a, b) {
+  const out = new Float32Array(a.length + b.length);
+  out.set(a, 0); out.set(b, a.length);
+  return out;
+}
+
+async function transcribeWav(wavB64) {
+  const res = await base44.functions.invoke("transcribeAudio", { audio_base64: wavB64, filename: "audio.wav", mimeType: "audio/wav" });
   const data = res && res.data ? res.data : res;
   return ((data && data.text) || "").trim();
 }
 
-// Returns a recognizer with the same interface the app already uses
-// (onstart / onresult / onerror / onend, start() / abort()), backed by
-// record-a-window -> OpenAI Whisper instead of the native SpeechRecognizer.
 export function createSpeechRecognizer() {
   const vr = getVR();
   let aborted = false;
   let finished = false;
+  let started = false;
 
   const shim = { onstart: null, onresult: null, onerror: null, onend: null,
     async start() {
-      aborted = false;
-      finished = false;
+      aborted = false; finished = false;
       if (!vr) { emitError("audio-capture"); emitEnd(); return; }
       try {
-        let granted = false;
-        try { granted = (await vr.hasAudioRecordingPermission()).value; } catch (e) { granted = false; }
-        if (!granted) { try { granted = (await vr.requestAudioRecordingPermission()).value; } catch (e) { granted = false; } }
+        let granted = (await vr.hasAudioRecordingPermission()).value;
+        if (!granted) granted = (await vr.requestAudioRecordingPermission()).value;
         if (!granted) { emitError("not-allowed"); emitEnd(); return; }
+      } catch (e) { emitError("not-allowed"); emitEnd(); return; }
+      try { if (audioCtx().state === "suspended") await audioCtx().resume(); } catch (e) {}
 
+      let prev16 = new Float32Array(0);
+      let lastText = ""; let lastAt = 0;
+
+      while (!aborted) {
         try { await vr.startRecording(); }
-        catch (e) { try { await vr.stopRecording(); } catch (e2) {} emitError("audio-capture"); emitEnd(); return; }
+        catch (e) { try { await vr.stopRecording(); } catch (e2) {} await wait(200); continue; }
+        if (!started) { started = true; if (shim.onstart) shim.onstart(); }
 
-        if (aborted) { safeStop(); return; }
-        if (shim.onstart) shim.onstart();
-
-        await wait(WINDOW_MS);
-        if (aborted) return;
+        await wait(CLIP_MS);
+        if (aborted) { safeStop(); break; }
 
         let val = null;
         try { const rec = await vr.stopRecording(); val = rec && rec.value ? rec.value : rec; }
-        catch (e) { emitError("no-speech"); emitEnd(); return; }
-        if (aborted) return;
+        catch (e) { await wait(150); continue; }
+        if (aborted) break;
 
         const b64 = val && val.recordDataBase64;
-        const dur = val && typeof val.msDuration === "number" ? val.msDuration : null;
-        if (!b64 || (dur !== null && dur < 350)) { emitError("no-speech"); emitEnd(); return; }
+        if (!b64) continue;
 
-        let text = "";
-        try { text = await transcribe(b64, val.mimeType); }
-        catch (e) { emitError("network"); emitEnd(); return; }
-        if (aborted) return;
+        let cur16 = null;
+        try { const dec = await decodeToMono(b64ToBytes(b64)); cur16 = downsample(dec.data, dec.sampleRate); }
+        catch (e) { prev16 = new Float32Array(0); continue; }
+        if (aborted) break;
 
-        if (text) { if (shim.onresult) shim.onresult({ results: [[{ transcript: text }]] }); }
-        else { emitError("no-speech"); }
-        emitEnd();
-      } catch (e) { emitError("audio-capture"); emitEnd(); }
+        if (hasSpeech(cur16, TARGET_SR)) {
+          const merged = concatF32(prev16, cur16);
+          let text = "";
+          try { text = await transcribeWav(encodeWavBase64(merged, TARGET_SR)); } catch (e) { text = ""; }
+          if (aborted) break;
+          if (text) {
+            const now = Date.now();
+            const norm = text.toLowerCase().replace(/[^a-z ]/g, "").trim();
+            if (!(norm === lastText && now - lastAt < 2500)) {
+              lastText = norm; lastAt = now;
+              if (shim.onresult) shim.onresult({ results: [[{ transcript: text }]] });
+            }
+          }
+          prev16 = new Float32Array(0);
+        } else {
+          prev16 = cur16;
+        }
+      }
+      emitEnd();
     },
     abort() { aborted = true; safeStop(); emitEnd(); },
   };
