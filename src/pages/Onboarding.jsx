@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,8 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [data, setData] = useState({});
+  const dataRef = useRef(data);
+  useEffect(() => { dataRef.current = data; }, [data]);
   const [saving, setSaving] = useState(false);
   const [navigating, setNavigating] = useState(false);
   const [existingProfileId, setExistingProfileId] = useState(null);
@@ -193,6 +195,7 @@ export default function Onboarding() {
   };
 
   const handleFinish = async () => {
+    const data = dataRef.current;
     setSaving(true);
     const heightInches = ((data.height_ft || 0) * 12) + (data.height_in || 0);
     
@@ -250,6 +253,11 @@ export default function Onboarding() {
       console.error("Onboarding finish failed:", e);
       setSaving(false);
     }
+  };
+
+  const handleVoiceAdvance = () => {
+    if (step >= STEPS.length - 1) { handleFinish(); }
+    else { setStep((s) => s + 1); }
   };
 
   const handleStartOver = async () => {
@@ -323,7 +331,7 @@ export default function Onboarding() {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
 
-          <VoiceOnboarding step={step} data={data} onChange={handleChange} onAdvance={() => setStep((s) => s + 1)} />
+          <VoiceOnboarding step={step} data={data} onChange={handleChange} onAdvance={handleVoiceAdvance} />
           <StepComponent data={data} onChange={handleChange} />
         </div>
       </div>
@@ -357,6 +365,7 @@ export default function Onboarding() {
               {saving ? "Setting up your plan..." : "Start My Journey"}
             </Button>
           )}
+          <p className="text-xs text-center text-muted-foreground mt-4">You can change any of these answers later in Settings.</p>
         </div>
       </div>
     </div>
