@@ -237,7 +237,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
     // Read entire exercise in one pass — with clear sets/reps statement
     const setsRepsText = ex.sets && ex.reps ? `Do ${ex.sets} sets of ${ex.reps} reps.` : ex.duration_seconds ? `Do this for ${ex.duration_seconds} seconds.` : '';
     const fullText = `Exercise ${idx + 1}: ${ex.name}. ${setsRepsText} ${ex.instructions || ex.description || ''}${restrictionNote}${lastNote}`.trim();
-    await speak(fullText, ex.name);
+    await speak(fullText, `${idx}_${ex.name}`);
   }, [exercises, userRestrictions, speak]);
 
   const speakCommands = useCallback(() => {
@@ -294,6 +294,9 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       } else if (transcript.includes("command") || transcript.includes("what can i say") || transcript.includes("help")) {
         label = "commands";
         action = () => { stopAudio(); speakCommands(); };
+      } else if (transcript.includes("quit") || transcript.includes("exit")) {
+        label = "quit";
+        action = () => { stopAudio(); disableAudioMode(); };
       }
 
       if (action && label) {
@@ -305,7 +308,7 @@ export function useWorkoutAudio({ exercises, userRestrictions = [], onNext, onSk
       }
       // Unknown transcript — keep listening silently
     };
-  }, [exercises, onNext, onSkip, onBack, onRepeat, onCommandDetected, stopAudio, speakCommands]);
+  }, [exercises, onNext, onSkip, onBack, onRepeat, onCommandDetected, stopAudio, speakCommands, disableAudioMode]);
 
   // Start continuous (restart-on-end) listening
   const startListening = useCallback(() => {
