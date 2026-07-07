@@ -23,7 +23,6 @@ export default function WorkoutPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showAudioSetup, setShowAudioSetup] = useState(false);
   const [noisyMode, setNoisyMode] = useState(false);
-  const [micTest, setMicTest] = useState("");
   const [feedbackState, setFeedbackState] = useState(null); // null | "listening" | "processing" | "review" | "saving" | "saved"
   const [savedRating, setSavedRating] = useState(null);
   const [reviewRating, setReviewRating] = useState(3);
@@ -219,30 +218,6 @@ export default function WorkoutPage() {
   const handleStartAudio = () => {
     setShowAudioSetup(false);
     enableAudioMode();
-    (async () => {
-      try {
-        const VR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.VoiceRecorder;
-        if (!VR) { window.alert("Mic test: NO VoiceRecorder plugin found"); return; }
-        let perm = (await VR.hasAudioRecordingPermission()).value;
-        if (!perm) perm = (await VR.requestAudioRecordingPermission()).value;
-        if (!perm) { window.alert("Mic test: mic permission denied"); return; }
-        await VR.startRecording();
-        await new Promise((r) => setTimeout(r, 1500));
-        const rec = await VR.stopRecording();
-        const val = rec && rec.value ? rec.value : rec;
-        const b64 = val.recordDataBase64; const mime = val.mimeType || "audio/aac"; const dur = val.msDuration;
-        const bin = atob(b64); const bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        const AC = window.AudioContext || window.webkitAudioContext;
-        const ctx = new AC();
-        let decoded = null, derr = null;
-        try { decoded = await ctx.decodeAudioData(bytes.buffer.slice(0)); } catch (e) { derr = String(e && (e.name || e.message)); }
-        if (decoded) window.alert("REC+DECODE OK: " + mime + ", " + dur + "ms, " + decoded.length + " samples @ " + decoded.sampleRate + "Hz");
-        else window.alert("REC OK, DECODE FAIL: " + derr + " (mime " + mime + ", " + dur + "ms)");
-      } catch (err) {
-        window.alert("Mic test: REC FAIL: " + (err && (err.name || err.message)));
-      }
-    })();
     speakWelcome(workout?.title || "today's workout").then(() => {
       if (voiceSupported) {
         speakText("When you're ready, say next to begin your first exercise.");
@@ -605,9 +580,6 @@ export default function WorkoutPage() {
           {dbg && (
             <p className="text-xs text-muted-foreground font-mono">dbg: {dbg}</p>
           )}
-          {micTest ? (
-            <p className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded">Mic test: {micTest}</p>
-          ) : null}
           {!noisyMode && !voiceError && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-muted-foreground">Say:</span>
