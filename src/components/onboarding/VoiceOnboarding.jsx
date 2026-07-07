@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { isSpeechSupported, recordAndTranscribe } from "@/lib/speechEngine";
+import { isSpeechSupported, listenForAnswer } from "@/lib/speechEngine";
 import { Mic } from "lucide-react";
 
 const _ttsCache = {};
@@ -8,7 +8,6 @@ const _ttsCache = {};
 const VOICE_STEPS = {
   0: {
     question: "Are you a veteran? You can just say yes, or no.",
-    windowMs: 4000,
     mapLocal: (t) => {
       const s = (t || "").toLowerCase();
       const no = s.includes("no") || s.includes("nope") || s.includes("nah");
@@ -45,9 +44,12 @@ function playChime() {
 
 export default function VoiceOnboarding({ step, onChange, onAdvance }) {
   const [voiceMode, setVoiceMode] = useState(false);
+  const [decided, setDecided] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const ranStepRef = useRef(-1);
+  const promptedRef = useRef(false);
 
   const speak = async (text) => {
     try {
@@ -67,6 +69,24 @@ export default function VoiceOnboarding({ step, onChange, onAdvance }) {
     } catch (e) {}
   };
 
+  const acceptVoice = () => { setShowPrompt(false); setDecided(true); setVoiceMode(true); };
+  const declineVoice = () => { setShowPrompt(false); setDecided(true); setVoiceMode(false); };
+
+  useEffect(() => {
+    if (!isSpeechSupported()) return;
+    if (promptedRef.current || decided || step !== 0) return;
+    promptedRef.current = true;
+    setShowPrompt(true);
+    (async () => {
+      await speak("Would you like to set up your account hands free, just by speaking? I will read each question and you answer out loud. Say yes to talk, or no to tap.");
+      const t = await listenForAnswer(8000);
+      const s = (t || "").toLowerCase();
+      if (!s) return;
+      if (s.includes("yes") || s.includes("yeah") || s.includes("talk") || s.includes("speak") || s.includes("sure")) acceptVoice();
+      else if (s.includes("no") || s.includes("tap") || s.includes("type")) declineVoice();
+    })();
+  }, [step, decided]);
+
   const runStep = async () => {
     const cfg = VOICE_STEPS[step];
     if (!cfg) return;
@@ -76,7 +96,7 @@ export default function VoiceOnboarding({ step, onChange, onAdvance }) {
       await speak(cfg.question);
       setStatus("Listening...");
       playChime();
-      const transcript = await recordAndTranscribe(cfg.windowMs || 6000);
+      const transcript = await listenForAnswer(15000);
       if (!transcript) {
         setStatus("");
         await speak("Sorry, I did not catch that. Let us try again.");
@@ -123,16 +143,27 @@ export default function VoiceOnboarding({ step, onChange, onAdvance }) {
   if (!isSpeechSupported()) return null;
 
   return (
-    <div className="mb-4 flex items-center gap-3">
-      <button
-        type="button"
-        onClick={() => setVoiceMode((v) => !v)}
-        className={"inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border " + (voiceMode ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border")}
-      >
-        <Mic className="w-4 h-4" />
-        {voiceMode ? "Voice on — listening" : "Answer out loud"}
-      </button>
-      {voiceMode && status ? <span className="text-xs text-muted-foreground">{status}</span> : null}
-    </div>
+    <>
+      {showPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-card rounded-2xl p-6 max-w-sm w-full text-center shadow-xl border border-border">
+            <Mic className="w-10 h-10 mx-auto text-primary mb-3" />
+            <h2 className="text-lg font-bold mb-2 text-foreground">Set up hands-free?</h2>
+            <p className="text-sm text-muted-foreground mb-5">I can read each question out loud and you answer by speaking — no typing. You can switch to tapping anytime.</p>
+            <div className="flex gap-3">
+              <button onClick={acceptVoice} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold">Yes, let us talk</button>
+              <button onClick={declineVoice} className="flex-1 py-3 rounded-xl border border-border font-semibold text-foreground">No, I will tap</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="mb-4 flex items-center gap-3">
+        <button type="button" onClick={() => (voiceMode ? declineVoice() : acceptVoice())} className={"inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border " + (voiceMode ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border")}>
+          <Mic className="w-4 h-4" />
+          {voiceMode ? "Hands-free on" : "Answer out loud"}
+        </button>
+        {voiceMode && status ? <span className="text-xs text-muted-foreground">{status}</span> : null}
+      </div>
+    </>
   );
 }
