@@ -32,6 +32,7 @@ export default function WorkoutPage() {
   const [pendingSkipIdx, setPendingSkipIdx] = useState(null);
   const pendingTimerRef = useRef(null);
   const exerciseCardRefs = useRef([]);
+  const lastCommandAtRef = useRef(0);
   const [started, setStarted] = useState(false); // timer doesn't run until user taps Start
   const isRestart = location.state?.workout?.completed === true; // came from a completed workout
   const [savedProgress, setSavedProgress] = useState(null); // mid-workout progress from localStorage
@@ -71,17 +72,30 @@ export default function WorkoutPage() {
   // handleRepeat is defined after the hook — use a ref so the hook can call it safely
   const repeatRef = useRef(null);
 
+  const playChime = () => {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AC();
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.16);
+      o.onended = () => { try { ctx.close(); } catch (e) {} };
+    } catch (e) {}
+  };
+
   const handleCommandDetected = (cmd) => {
-    // Clear any previous pending command
     if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
     if (!cmd) { setPendingVoiceCommand(null); return; }
-
+    const now = Date.now();
+    if (now - lastCommandAtRef.current < 2500) return;
+    lastCommandAtRef.current = now;
+    playChime();
     setPendingVoiceCommand(cmd);
-    // Auto-execute after 3.5 seconds if user doesn't cancel
-    pendingTimerRef.current = setTimeout(() => {
-      setPendingVoiceCommand(null);
-      cmd.action();
-    }, 3500);
+    pendingTimerRef.current = setTimeout(() => { setPendingVoiceCommand(null); cmd.action(); }, 700);
   };
 
   const cancelPendingCommand = () => {
@@ -564,7 +578,7 @@ export default function WorkoutPage() {
             )}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">
-                {speaking ? "Reading instructions…" : noisyMode ? "Audio on — tap buttons to navigate" : listening ? "Listening…" : "Audio coaching on"}
+                {speaking ? "Reading instructions…" : noisyMode ? "Audio on — tap buttons to navigate" : "Listening…"}
               </p>
             </div>
             <button onClick={disableAudioMode} className="text-muted-foreground hover:text-foreground flex-shrink-0">
