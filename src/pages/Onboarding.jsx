@@ -15,6 +15,7 @@ import StepAbilities, { isNonAmbulatory } from "@/components/onboarding/StepAbil
 import StepRiskFactors from "@/components/onboarding/StepRiskFactors";
 import StepVeteran from "@/components/onboarding/StepVeteran";
 import StepEquipment from "@/components/onboarding/StepEquipment";
+import VoiceOnboarding from "@/components/onboarding/VoiceOnboarding";
 
 const STEPS = [
   { key: "veteran", label: "Veteran", component: StepVeteran },
@@ -322,6 +323,7 @@ export default function Onboarding() {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
 
+          <VoiceOnboarding step={step} onChange={handleChange} onAdvance={() => setStep((s) => s + 1)} />
           <StepComponent data={data} onChange={handleChange} />
         </div>
       </div>
