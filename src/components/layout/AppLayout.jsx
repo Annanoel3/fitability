@@ -56,7 +56,7 @@ export default function AppLayout() {
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <Heart className="w-7 h-7 text-primary" />
+            <Heart className="w-7 h-7 text-primary" aria-hidden="true" />
             <span className="font-heading font-bold text-xl text-foreground">FitAbility</span>
           </Link>
 
@@ -83,32 +83,35 @@ export default function AppLayout() {
                   "text-muted-foreground hover:text-foreground hover:bg-muted"}`
                   }>
                   
-                  <item.icon className="w-4 h-4" />
+                  <item.icon className="w-4 h-4" aria-hidden="true" />
                   {item.label}
                 </Link>);
 
             })}
             <button
               onClick={toggle}
+              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
               className="ml-1 p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
               title={dark ? "Switch to light mode" : "Switch to dark mode"}>
               
-              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {dark ? <Sun className="w-4 h-4" aria-hidden="true" /> : <Moon className="w-4 h-4" aria-hidden="true" />}
             </button>
             <button
               onClick={handleLogout}
+              aria-label="Log out"
               className="ml-1 p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors">
               
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4" aria-hidden="true" />
             </button>
           </nav>
 
           {/* Mobile menu button */}
           <button
             className="md:hidden p-2 text-foreground"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}>
             
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
           </button>
         </div>
 
@@ -126,7 +129,7 @@ export default function AppLayout() {
                 active ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`
                 }>
                 
-                  <item.icon className="w-5 h-5" />
+                  <item.icon className="w-5 h-5" aria-hidden="true" />
                   {item.label}
                 </Link>);
 
@@ -135,7 +138,7 @@ export default function AppLayout() {
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground w-full">
             
-              <LogOut className="w-5 h-5" /> Log Out
+              <LogOut className="w-5 h-5" aria-hidden="true" /> Log Out
             </button>
           </div>
         }
@@ -149,7 +152,7 @@ export default function AppLayout() {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border z-50">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border z-50" aria-label="Primary">
       <div className="flex items-center justify-between px-1 py-3">
         {NAV_ITEMS.map((item) => {
             const active = location.pathname === item.path;
@@ -174,7 +177,7 @@ export default function AppLayout() {
                 active ? "text-primary" : "text-muted-foreground"}`
                 }>
 
-              <item.icon className="w-5 h-5" />
+              <item.icon className="w-5 h-5" aria-hidden="true" />
               <span className="text-[10px] leading-tight">{item.label}</span>
             </Link>);
 
