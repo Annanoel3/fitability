@@ -221,16 +221,26 @@ export default function WorkoutPage() {
     enableAudioMode();
     (async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const rec = new MediaRecorder(stream);
-        let bytes = 0;
-        rec.ondataavailable = (e) => { bytes += (e.data ? e.data.size : 0); };
-        rec.onstop = () => { stream.getTracks().forEach((t) => t.stop()); setMicTest("RECORD OK " + bytes + " bytes"); window.alert("Mic test: RECORD OK, " + bytes + " bytes"); };
-        rec.start();
-        setTimeout(() => { try { rec.stop(); } catch (e) {} }, 1000);
+        const VR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.VoiceRecorder;
+        if (!VR) { window.alert("Mic test: NO VoiceRecorder plugin found"); return; }
+        let perm = (await VR.hasAudioRecordingPermission()).value;
+        if (!perm) perm = (await VR.requestAudioRecordingPermission()).value;
+        if (!perm) { window.alert("Mic test: mic permission denied"); return; }
+        await VR.startRecording();
+        await new Promise((r) => setTimeout(r, 1500));
+        const rec = await VR.stopRecording();
+        const val = rec && rec.value ? rec.value : rec;
+        const b64 = val.recordDataBase64; const mime = val.mimeType || "audio/aac"; const dur = val.msDuration;
+        const bin = atob(b64); const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const AC = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AC();
+        let decoded = null, derr = null;
+        try { decoded = await ctx.decodeAudioData(bytes.buffer.slice(0)); } catch (e) { derr = String(e && (e.name || e.message)); }
+        if (decoded) window.alert("REC+DECODE OK: " + mime + ", " + dur + "ms, " + decoded.length + " samples @ " + decoded.sampleRate + "Hz");
+        else window.alert("REC OK, DECODE FAIL: " + derr + " (mime " + mime + ", " + dur + "ms)");
       } catch (err) {
-        const m = "MIC FAIL: " + (err && (err.name || err.message));
-        setMicTest(m); window.alert("Mic test: " + m);
+        window.alert("Mic test: REC FAIL: " + (err && (err.name || err.message)));
       }
     })();
     speakWelcome(workout?.title || "today's workout").then(() => {
