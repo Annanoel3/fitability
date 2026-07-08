@@ -107,6 +107,7 @@ function beep(freq, when, dur) {
 }
 function listenChime() { beep(660, 0, 0.14); }
 function gotItChime() { beep(880, 0, 0.1); beep(1150, 0.11, 0.12); }
+function stopChime() { beep(520, 0, 0.16); }
 
 export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
   const [voiceMode, setVoiceMode] = useState(false);
@@ -157,8 +158,9 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
         setStatus("Listening...");
         listenChime();
         setListening(true);
-        const t = await captureOnce(15000);
+        const t = await captureOnce(8000);
         setListening(false);
+        stopChime();
         const low = (t || "").toLowerCase();
         setStatus("");
         setBusy(false);
@@ -179,6 +181,7 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
           setListening(true);
           transcript = await captureOnce(Math.max(6000, (part.clipMs || 2500) + 4000));
           setListening(false);
+          stopChime();
         }
         if (!transcript) continue;
         setStatus("Heard: " + transcript);
