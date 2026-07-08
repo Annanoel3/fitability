@@ -148,11 +148,10 @@ export default function CoachChat() {
       const profiles = await base44.entities.UserProfile.filter({});
       if (profiles.length > 0) {
         setProfile(profiles[0]);
-        // Only send welcome once ever — tracked by a permanent localStorage flag
-        const hasEverWelcomed = localStorage.getItem("fitability_coach_welcomed");
-        if (!hasWelcomed.current && !hasEverWelcomed && messages.length === 0) {
+        // Show the welcome/intro whenever the chat is empty, or when the onboarding tour reaches the coach step
+        const inCoachTour = (typeof window !== "undefined" && window.fitabilityTourStep === "coach");
+        if (!hasWelcomed.current && (inCoachTour || messages.length === 0)) {
           hasWelcomed.current = true;
-          localStorage.setItem("fitability_coach_welcomed", "1");
           await sendWelcome(profiles[0]);
         }
       }
