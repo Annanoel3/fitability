@@ -63,11 +63,11 @@ const VOICE_STEPS = {
     apply: (p, onChange) => onChange({ activity_level: p.activity_level }),
   }] },
   4: { parts: [{
-    question: "Tell me about any pain, injuries, or parts of your body that limit you, and how they affect your day to day. Or just say I have none.",
+    question: "Tell me about any pain, injuries, or other things that limit you day to day. For example, back or joint pain, trouble with balance, trouble seeing or low vision, or trouble hearing. Tell me how they affect you, or just say I have none.",
     clipMs: 6000,
-    buildPrompt: (t) => "From the user description, extract the affected body zones and a short description for each. Use zone ids from this exact list: " + BODY_ZONES + ". Return JSON { marked_zones: [ids], zone_descriptions: { zoneId: shortDescription }, no_body_areas: boolean }. If they say none, set no_body_areas true and the others empty. The user said: " + t,
-    schema: { type: "object", properties: { marked_zones: { type: "array", items: { type: "string" } }, zone_descriptions: { type: "object" }, no_body_areas: { type: "boolean" } }, required: ["marked_zones"] },
-    apply: (p, onChange) => onChange({ marked_zones: Array.isArray(p.marked_zones) ? p.marked_zones : [], zone_descriptions: p.zone_descriptions || {}, no_body_areas: !!p.no_body_areas }),
+    buildPrompt: (t) => "From the user description, extract two things. First, the affected body zones using zone ids from this exact list: " + BODY_ZONES + ", with a short description for each. Second, any non-physical or sensory limitations they mention, such as low vision, blindness, trouble seeing, hearing loss, or similar, as a list of short plain-language labels. Return JSON { marked_zones: [ids], zone_descriptions: { zoneId: shortDescription }, no_body_areas: boolean, other_limitations: [strings] }. If they clearly have nothing at all, set no_body_areas true and both arrays empty. The user said: " + t,
+    schema: { type: "object", properties: { marked_zones: { type: "array", items: { type: "string" } }, zone_descriptions: { type: "object" }, no_body_areas: { type: "boolean" }, other_limitations: { type: "array", items: { type: "string" } } }, required: ["marked_zones"] },
+    apply: (p, onChange) => onChange({ marked_zones: Array.isArray(p.marked_zones) ? p.marked_zones : [], zone_descriptions: p.zone_descriptions || {}, no_body_areas: !!p.no_body_areas, disabilities: Array.isArray(p.other_limitations) ? p.other_limitations : [] }),
   }] },
   5: { type: "auto", question: "Got it." },
   6: { parts: [{
@@ -82,7 +82,7 @@ const VOICE_STEPS = {
     apply: (p, onChange) => { const u = {}; if (p.self_reported_fitness) u.self_reported_fitness = p.self_reported_fitness; if (p.condition_severity) u.condition_severity = p.condition_severity; if (p.current_abilities && typeof p.current_abilities === "object") u.current_abilities = p.current_abilities; if (Object.keys(u).length) onChange(u); },
   }] },
   7: { parts: [{
-    question: "Do you have any of these health risk factors? For example: history of falls, heart condition, osteoporosis, dizziness, recent surgery, or pregnancy. Or say none.",
+    question: "Do you have any health conditions I should know about? For example, a history of falls, a heart condition, osteoporosis, dizziness, a recent surgery, or pregnancy. Or say none.",
     clipMs: 4500,
     instruction: "Map the user health risk factors to this exact list and return JSON { risk_factors: [strings], no_risk_factors: boolean, risk_factor_details: string } using only values from: History of falls, Recent surgery (last 6 months), Osteoporosis, Heart condition, Dizziness/Vertigo, Seizure disorder, Blood clot history, Pacemaker/defibrillator, Oxygen dependent, Dialysis, Active cancer treatment, Pregnant, Recent hospitalization. Put extra detail in risk_factor_details. If they say none, set no_risk_factors true and risk_factors empty.",
     schema: { type: "object", properties: { risk_factors: { type: "array", items: { type: "string" } }, no_risk_factors: { type: "boolean" }, risk_factor_details: { type: "string" } }, required: ["risk_factors"] },
