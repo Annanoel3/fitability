@@ -168,7 +168,7 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
     try {
       if (!introSpokenRef.current) {
         introSpokenRef.current = true;
-        await speak("I'll ask each question out loud. Answer by speaking. When you are done talking, tap anywhere on the screen. If you would rather type, press and hold the button in the corner for three seconds.");
+        await speak("I'll ask each question out loud. Answer by speaking. When you are done talking, tap anywhere on the screen.");
       }
       if (cfg.type === "manual") {
         setStatus("Speaking...");
