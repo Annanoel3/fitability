@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { isSpeechSupported, captureOnce, stopCapture } from "@/lib/speechEngine";
+import { ABILITIES_CHECKLIST_GRADED, ABILITIES_CHECKLIST_GRADED_SEATED } from "@/lib/constants";
 import { Mic } from "lucide-react";
 
 const _ttsCache = {};
@@ -12,6 +13,8 @@ function setIfPresent(p, keys, onChange) {
   keys.forEach((k) => { if (p[k] !== undefined && p[k] !== null && p[k] !== "") u[k] = p[k]; });
   if (Object.keys(u).length) onChange(u);
 }
+
+const fmtAbilities = (arr) => arr.map((i) => i.id + " (" + i.options.join("/") + ")").join("; ");
 
 const VOICE_STEPS = {
   0: { parts: [{
@@ -66,8 +69,18 @@ const VOICE_STEPS = {
     schema: { type: "object", properties: { marked_zones: { type: "array", items: { type: "string" } }, zone_descriptions: { type: "object" }, no_body_areas: { type: "boolean" } }, required: ["marked_zones"] },
     apply: (p, onChange) => onChange({ marked_zones: Array.isArray(p.marked_zones) ? p.marked_zones : [], zone_descriptions: p.zone_descriptions || {}, no_body_areas: !!p.no_body_areas }),
   }] },
-  5: { type: "manual", question: "Here is what I understood about your body areas. Feel free to change anything on the screen, then say next to continue." },
-  6: { type: "manual", question: "For this step, please tap your ability answers on the screen. When you are finished, say next to continue." },
+  5: { type: "auto", question: "Got it." },
+  6: { parts: [{
+    question: "Now, tell me about your current fitness and what your body is able to do, in your own words. For example, how active or strong you feel day to day, and things like getting up from a chair, walking, climbing stairs, lifting, or keeping your balance.",
+    clipMs: 6000,
+    buildPrompt: (t, data) => {
+      const seated = ["Bedridden", "Mostly seated", "Wheelchair user"].includes(data.activity_level);
+      const list = fmtAbilities(seated ? ABILITIES_CHECKLIST_GRADED_SEATED : ABILITIES_CHECKLIST_GRADED);
+      return "From the user's spoken description of their fitness and physical abilities, return JSON with: self_reported_fitness (one of exactly: Just starting out, Light, Medium, Strong, Athletic), condition_severity (how much any conditions or injuries limit them, one of exactly: Not at all, A little, Moderately, Severely), and current_abilities, an object mapping ability ids to the single closest listed option based on what they said. Only include ability ids the user gave enough information to judge; omit all others. Do not guess wildly. Ability ids with their allowed options are: " + list + ". The user said: " + t;
+    },
+    schema: { type: "object", properties: { self_reported_fitness: { type: "string" }, condition_severity: { type: "string" }, current_abilities: { type: "object" } }, required: [] },
+    apply: (p, onChange) => { const u = {}; if (p.self_reported_fitness) u.self_reported_fitness = p.self_reported_fitness; if (p.condition_severity) u.condition_severity = p.condition_severity; if (p.current_abilities && typeof p.current_abilities === "object") u.current_abilities = p.current_abilities; if (Object.keys(u).length) onChange(u); },
+  }] },
   7: { parts: [{
     question: "Do you have any of these health risk factors? For example: history of falls, heart condition, osteoporosis, dizziness, recent surgery, or pregnancy. Or say none.",
     clipMs: 4500,
@@ -169,6 +182,12 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
       if (!introSpokenRef.current) {
         introSpokenRef.current = true;
         await speak("I'll ask each question out loud. Answer by speaking. When you are done talking, tap anywhere on the screen.");
+      }
+      if (cfg.type === "auto") {
+        if (cfg.question) { setStatus("Speaking..."); await speak(cfg.question); }
+        setStatus(""); setBusy(false);
+        if (onAdvance) onAdvance();
+        return;
       }
       if (cfg.type === "manual") {
         setStatus("Speaking...");
