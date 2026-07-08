@@ -118,6 +118,9 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
   const [listening, setListening] = useState(false);
   const ranStepRef = useRef(-1);
   const promptedRef = useRef(false);
+  const introSpokenRef = useRef(false);
+  const holdTimerRef = useRef(null);
+  const [holding, setHolding] = useState(false);
 
   const speak = async (text) => {
     try {
@@ -138,7 +141,18 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
   };
 
   const acceptVoice = () => { setShowPrompt(false); setDecided(true); setVoiceMode(true); };
-  const declineVoice = () => { setShowPrompt(false); setDecided(true); setVoiceMode(false); };
+  const declineVoice = () => { try { stopCapture(); } catch (e) {} setShowPrompt(false); setDecided(true); setVoiceMode(false); setListening(false); setHolding(false); };
+
+  const finishRecording = () => { if (listening) { try { stopCapture(); } catch (e) {} setListening(false); } };
+  const startHold = () => {
+    setHolding(true);
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = setTimeout(() => { setHolding(false); declineVoice(); }, 3000);
+  };
+  const cancelHold = () => {
+    setHolding(false);
+    if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
+  };
 
   useEffect(() => {
     if (!isSpeechSupported()) return;
@@ -152,13 +166,17 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
     if (!cfg) return;
     setBusy(true);
     try {
+      if (!introSpokenRef.current) {
+        introSpokenRef.current = true;
+        await speak("I'll ask each question out loud. Answer by speaking. When you are done talking, tap anywhere on the screen. If you would rather type, press and hold the button in the corner for three seconds.");
+      }
       if (cfg.type === "manual") {
         setStatus("Speaking...");
         await speak(cfg.question);
         setStatus("Listening...");
         listenChime();
         setListening(true);
-        const t = await captureOnce(8000);
+        const t = await captureOnce(20000);
         setListening(false);
         stopChime();
         const low = (t || "").toLowerCase();
@@ -179,7 +197,7 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
           setStatus("Listening...");
           listenChime();
           setListening(true);
-          transcript = await captureOnce(Math.max(6000, (part.clipMs || 2500) + 4000));
+          transcript = await captureOnce(25000);
           setListening(false);
           stopChime();
         }
@@ -231,14 +249,32 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
           </div>
         </div>
       )}
-      <div className="mb-4 flex items-center gap-3">
-        <button type="button" onClick={() => (voiceMode ? declineVoice() : acceptVoice())} className={"inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border " + (voiceMode ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border")}>
-          <Mic className="w-4 h-4" />
-          {voiceMode ? "Hands-free on - tap to type" : "Answer out loud"}
-        </button>
-        {voiceMode && status ? <span className="text-xs text-muted-foreground">{status}</span> : null}
-        {voiceMode && listening ? <button type="button" onClick={() => { stopCapture(); setListening(false); }} className="text-xs px-3 py-1.5 rounded-full bg-primary text-primary-foreground font-medium">Done speaking</button> : null}
-      </div>
+      {!voiceMode && (
+        <div className="mb-4 flex items-center gap-3">
+          <button type="button" onClick={acceptVoice} className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border bg-card text-foreground border-border">
+            <Mic className="w-4 h-4" />
+            Answer out loud
+          </button>
+        </div>
+      )}
+      {voiceMode && (
+        <>
+          {listening && (
+            <div onClick={finishRecording} role="button" aria-label="Tap anywhere on the screen when you are done talking" className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-background/80 p-6 text-center cursor-pointer">
+              <Mic className="w-20 h-20 text-primary animate-pulse" />
+              <p className="mt-6 text-xl font-bold text-foreground">Listening…</p>
+              <p className="mt-2 text-base text-muted-foreground">Tap anywhere on the screen when you're done talking</p>
+            </div>
+          )}
+          <div className="fixed top-3 right-3 z-50 flex items-center gap-2">
+            {status ? <span className="text-xs text-muted-foreground bg-card/90 px-2 py-1 rounded-full border border-border">{status}</span> : null}
+            <button type="button" onClick={() => { if (listening) finishRecording(); }} onPointerDown={startHold} onPointerUp={cancelHold} onPointerLeave={cancelHold} onPointerCancel={cancelHold} className={"inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-medium border select-none " + (holding ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border")}>
+              <Mic className="w-4 h-4" />
+              {holding ? "Keep holding…" : "Hold 3s to type"}
+            </button>
+          </div>
+        </>
+      )}
     </>
   );
 }
