@@ -51,7 +51,7 @@ const VOICE_STEPS = {
   2: { parts: [{
     question: "What are your main fitness goals? For example, improve balance, build strength, reduce pain, or improve mobility. You can name a few.",
     clipMs: 3500,
-    instruction: "Extract the user's fitness goals as a short list of concise phrases in their own words. Do not restrict them to any preset list. Return JSON { goals: [strings] }.",
+    instruction: "The user describes their fitness goals in their own words. Return JSON { goals: [strings] } listing EVERY goal they mention, not just the first. For each goal, if it matches one of these preset options use the EXACT preset text with the same capitalization: Lose weight, Improve mobility, Reduce pain, Improve balance, Build strength, Increase stamina, Improve flexibility, Walk farther, Stand longer, Wheelchair fitness, Improve independence, Fall prevention, Better heart health, Better daily functioning. If a goal does not match any preset, include it word for word as the user said it. Never drop a goal.",
     schema: { type: "object", properties: { goals: { type: "array", items: { type: "string" } } }, required: ["goals"] },
     apply: (p, onChange) => onChange({ goals: Array.isArray(p.goals) ? p.goals : [] }),
   }] },
@@ -84,7 +84,7 @@ const VOICE_STEPS = {
   7: { parts: [{
     question: "Do you have any health conditions I should know about? For example, a history of falls, a heart condition, osteoporosis, dizziness, a recent surgery, or pregnancy. Or say none.",
     clipMs: 4500,
-    instruction: "Map the user health risk factors to this exact list and return JSON { risk_factors: [strings], no_risk_factors: boolean, risk_factor_details: string } using only values from: History of falls, Recent surgery (last 6 months), Osteoporosis, Heart condition, Dizziness/Vertigo, Seizure disorder, Blood clot history, Pacemaker/defibrillator, Oxygen dependent, Dialysis, Active cancer treatment, Pregnant, Recent hospitalization. Put extra detail in risk_factor_details. If they say none, set no_risk_factors true and risk_factors empty.",
+    instruction: "Return JSON { risk_factors: [strings], no_risk_factors: boolean, risk_factor_details: string }. List EVERY condition the user mentions, not just the first. For each, if it matches one of these use the EXACT text: History of falls, Recent surgery (last 6 months), Osteoporosis, Heart condition, Dizziness/Vertigo, Seizure disorder, Blood clot history, Pacemaker/defibrillator, Oxygen dependent, Dialysis, Active cancer treatment, Pregnant, Recent hospitalization. If a condition does not match any of these, still record it in risk_factor_details in the user's own words. Put any extra detail in risk_factor_details too. If they clearly say none, set no_risk_factors true and risk_factors empty.",
     schema: { type: "object", properties: { risk_factors: { type: "array", items: { type: "string" } }, no_risk_factors: { type: "boolean" }, risk_factor_details: { type: "string" } }, required: ["risk_factors"] },
     apply: (p, onChange) => onChange({ risk_factors: Array.isArray(p.risk_factors) ? p.risk_factors : [], no_risk_factors: !!p.no_risk_factors, risk_factor_details: p.risk_factor_details || "" }),
   }] },
@@ -93,7 +93,7 @@ const VOICE_STEPS = {
     parts: [{
       question: "Last one. What equipment do you have? For example: resistance bands, dumbbells, an exercise mat, a cane or walker, a wheelchair, or none.",
       clipMs: 3500,
-      instruction: "Map the user equipment to ids from this exact list and return JSON { equipment: [ids] } using only: none, resistance_bands, dumbbells, mat, cane_walker, wheelchair.",
+      instruction: "Return JSON { equipment: [ids] } listing EVERY item the user mentions, not just the first. For each item, if it matches one of these ids use the EXACT id: none, resistance_bands, dumbbells, mat, cane_walker, wheelchair. If an item does not match any id, include it as a short lowercase label in the user's own words. Never drop an item.",
       schema: { type: "object", properties: { equipment: { type: "array", items: { type: "string" } } }, required: ["equipment"] },
       apply: (p, onChange) => onChange({ equipment: Array.isArray(p.equipment) ? p.equipment : [] }),
     }],
@@ -134,6 +134,12 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
   const introSpokenRef = useRef(false);
   const holdTimerRef = useRef(null);
   const [holding, setHolding] = useState(false);
+  const [hintPulse, setHintPulse] = useState(true);
+  useEffect(() => {
+    setHintPulse(true);
+    const t = setTimeout(() => setHintPulse(false), 9000);
+    return () => clearTimeout(t);
+  }, [voiceMode]);
 
   const speak = async (text) => {
     try {
@@ -160,7 +166,7 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
   const startHold = () => {
     setHolding(true);
     if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-    holdTimerRef.current = setTimeout(() => { setHolding(false); declineVoice(); }, 3000);
+    holdTimerRef.current = setTimeout(() => { setHolding(false); if (voiceMode) { declineVoice(); } else { acceptVoice(); } }, 3000);
   };
   const cancelHold = () => {
     setHolding(false);
@@ -274,9 +280,9 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
       )}
       {!voiceMode && (
         <div className="mb-4 flex items-center gap-3">
-          <button type="button" onClick={acceptVoice} className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border bg-card text-foreground border-border">
+          <button type="button" onPointerDown={startHold} onPointerUp={cancelHold} onPointerLeave={cancelHold} onPointerCancel={cancelHold} className={"inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border select-none transition-shadow " + (holding ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border") + (hintPulse ? " animate-pulse ring-2 ring-primary/60" : "")}>
             <Mic className="w-4 h-4" />
-            Answer out loud
+            {holding ? "Keep holding…" : "Hold to enter audio assist"}
           </button>
         </div>
       )}
@@ -291,9 +297,9 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
           )}
           <div className="fixed top-3 right-3 z-50 flex items-center gap-2">
             {status ? <span className="text-xs text-muted-foreground bg-card/90 px-2 py-1 rounded-full border border-border">{status}</span> : null}
-            <button type="button" onClick={() => { if (listening) finishRecording(); }} onPointerDown={startHold} onPointerUp={cancelHold} onPointerLeave={cancelHold} onPointerCancel={cancelHold} className={"inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-medium border select-none " + (holding ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border")}>
+            <button type="button" onClick={() => { if (listening) finishRecording(); }} onPointerDown={startHold} onPointerUp={cancelHold} onPointerLeave={cancelHold} onPointerCancel={cancelHold} className={"inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-medium border select-none transition-shadow " + (holding ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border") + (hintPulse ? " animate-pulse ring-2 ring-primary/60" : "")}>
               <Mic className="w-4 h-4" />
-              {holding ? "Keep holding…" : "Hold 3s to type"}
+              {holding ? "Keep holding…" : "Hold to switch to typing"}
             </button>
           </div>
         </>
