@@ -122,7 +122,7 @@ function listenChime() { beep(660, 0, 0.14); }
 function gotItChime() { beep(880, 0, 0.1); beep(1150, 0.11, 0.12); }
 function stopChime() { beep(520, 0, 0.16); }
 
-export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
+export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoVoice }) {
   const [voiceMode, setVoiceMode] = useState(false);
   const [decided, setDecided] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -173,6 +173,10 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance }) {
     promptedRef.current = true;
     setShowPrompt(true);
   }, [step, decided]);
+
+  useEffect(() => {
+    if (autoVoice && !decided) { setDecided(true); setVoiceMode(true); }
+  }, [autoVoice, decided]);
 
   const runStep = async () => {
     const cfg = VOICE_STEPS[step];
