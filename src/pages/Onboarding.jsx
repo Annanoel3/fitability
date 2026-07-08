@@ -100,6 +100,7 @@ export default function Onboarding() {
   const StepComponent = STEPS[step].component;
 
   const handleChange = (updates) => {
+    dataRef.current = { ...dataRef.current, ...updates };
     setData(prev => ({ ...prev, ...updates }));
   };
 
@@ -255,9 +256,12 @@ export default function Onboarding() {
     }
   };
 
-  const handleVoiceAdvance = () => {
-    if (step >= STEPS.length - 1) { handleFinish(); }
-    else { setStep((s) => s + 1); }
+  const handleVoiceAdvance = async () => {
+    if (step >= STEPS.length - 1) { handleFinish(); return; }
+    const next = step + 1;
+    try { await saveProgress(next, dataRef.current); }
+    catch (e) { console.error("Voice onboarding step save failed (answers kept locally):", e); }
+    finally { setStep(next); }
   };
 
   const handleStartOver = async () => {
