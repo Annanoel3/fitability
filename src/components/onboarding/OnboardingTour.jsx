@@ -20,6 +20,25 @@ const ANIM_STYLE = `
   .tour-overlay {
     animation: tour-fade-in 0.25s ease both;
   }
+  /* Tour action buttons — purple accent */
+  .tour-card button.bg-primary {
+    background-color: #7c3aed !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 14px 3px rgba(124, 58, 237, 0.45) !important;
+    border: none !important;
+  }
+  .tour-card button.bg-primary:hover {
+    background-color: #6d28d9 !important;
+  }
+  .tour-card button.text-muted-foreground {
+    color: #7c3aed !important;
+    background: rgba(124, 58, 237, 0.08) !important;
+    border-radius: 0.5rem;
+  }
+  .tour-card button.text-muted-foreground:hover {
+    color: #6d28d9 !important;
+    background: rgba(124, 58, 237, 0.14) !important;
+  }
 `;
 
 // Inject the shared tour animation styles once, when this module first loads
@@ -240,15 +259,15 @@ export default function OnboardingTour({ profile, onComplete }) {
         <style>{`
           
           @keyframes workout-btn-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.8); }
-            50%       { transform: scale(1.10); box-shadow: 0 0 0 26px hsl(var(--primary) / 0); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(124, 58, 237, 0.5); }
+            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(124, 58, 237, 0.5); }
           }
           [data-tour-start-workout="true"] {
             animation: workout-btn-pulse 1.2s ease-in-out infinite !important;
-            outline: 5px solid hsl(var(--primary)) !important;
-          outline-offset: 4px !important;
+            outline: 2px solid #7c3aed !important;
+          outline-offset: 2px !important;
           
-            outline-offset: 4px !important;
+            outline-offset: 2px !important;
             pointer-events: auto !important;
             position: relative;
             z-index: 101;
@@ -298,14 +317,14 @@ export default function OnboardingTour({ profile, onComplete }) {
         <style>{`
           
           @keyframes exercise-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.35); }
-            50%       { transform: scale(1.10); box-shadow: 0 0 0 24px hsl(var(--primary) / 0); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(124, 58, 237, 0.5); }
+            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(124, 58, 237, 0.5); }
           }
           [data-tour-first-exercise="true"] {
             animation: exercise-pulse 1.5s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
-            border: 3px solid hsl(var(--primary)) !important;
-            outline: 5px solid hsl(var(--primary)) !important;
-            outline-offset: 4px !important;
+            border: 2px solid #7c3aed !important;
+            outline: 2px solid #7c3aed !important;
+            outline-offset: 2px !important;
             
             pointer-events: auto !important;
           }
@@ -323,13 +342,13 @@ export default function OnboardingTour({ profile, onComplete }) {
       <div className="fixed inset-0 z-[100] pointer-events-none">
         <style>{`
           @keyframes create-pulse {
-            0%, 100% { transform: scale(1.04); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7); }
-            50%      { transform: scale(1.10); box-shadow: 0 0 0 22px hsl(var(--primary) / 0); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(124, 58, 237, 0.5); }
+            50%      { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(124, 58, 237, 0.5); }
           }
           [data-tour-create-exercise="true"] {
             animation: create-pulse 1.3s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
-            outline: 5px solid hsl(var(--primary)) !important;
-            outline-offset: 4px !important;
+            outline: 2px solid #7c3aed !important;
+            outline-offset: 2px !important;
             pointer-events: auto !important;
           }
           main, main * { pointer-events: auto !important; }
@@ -354,13 +373,13 @@ export default function OnboardingTour({ profile, onComplete }) {
         <style>{`
           
           @keyframes button-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.5); }
-            50%       { transform: scale(1.05); box-shadow: 0 0 0 22px hsl(var(--primary) / 0); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(124, 58, 237, 0.5); }
+            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(124, 58, 237, 0.5); }
           }
           [data-tour-log-button="true"] {
             animation: button-pulse 1.5s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
-          outline: 5px solid hsl(var(--primary)) !important;
-          outline-offset: 4px !important;
+          outline: 2px solid #7c3aed !important;
+          outline-offset: 2px !important;
             pointer-events: auto !important;
           }
           main, main * { pointer-events: auto !important; }
