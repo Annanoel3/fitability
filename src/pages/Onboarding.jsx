@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Heart } from "lucide-react";
 import { ABILITIES_CHECKLIST_GRADED, ABILITIES_CHECKLIST_GRADED_SEATED } from "@/lib/constants";
+import { isSpeechSupported, captureOnce, stopCapture } from "@/lib/speechEngine";
 import StepBasicInfo from "@/components/onboarding/StepBasicInfo";
 import StepGoals from "@/components/onboarding/StepGoals";
 import StepActivityLevel from "@/components/onboarding/StepActivityLevel";
@@ -40,6 +41,7 @@ export default function Onboarding() {
   const [existingProfileId, setExistingProfileId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [savedStep, setSavedStep] = useState(null); // non-null = show resume prompt
+  const [autoVoice, setAutoVoice] = useState(false);
 
   // Load any saved onboarding progress on mount
   useEffect(() => {
@@ -279,6 +281,38 @@ export default function Onboarding() {
     setSavedStep(null);
   };
 
+  const resumeActedRef = useRef(false);
+  const actResume = (fn, voiceWanted) => {
+    if (resumeActedRef.current) return;
+    resumeActedRef.current = true;
+    try { stopCapture(); } catch (e) {}
+    if (voiceWanted) setAutoVoice(true);
+    fn();
+  };
+  const speakResume = async (text) => {
+    try {
+      const res = await base44.functions.invoke("openaiTTS", { text, voice: "nova" });
+      const url = res && res.data && res.data.url;
+      if (!url) return;
+      await new Promise((resolve) => { const a = new Audio(url); a.onended = resolve; a.onerror = resolve; a.play().catch(() => resolve()); });
+    } catch (e) {}
+  };
+  useEffect(() => {
+    if (savedStep === null || resumeActedRef.current || !isSpeechSupported()) return;
+    let cancelled = false;
+    (async () => {
+      await speakResume("Welcome back. You were partway through setting up FitAbility. To keep going where you left off, say continue, or tap anywhere on the screen. Or, to start over from the beginning, say start over.");
+      if (cancelled || resumeActedRef.current) return;
+      let heard = "";
+      try { heard = await captureOnce(8000); } catch (e) {}
+      if (cancelled || resumeActedRef.current) return;
+      const low = (heard || "").toLowerCase();
+      if (/start over|start again|restart|begin again|from the beginning/.test(low)) { actResume(handleStartOver, false); }
+      else if (low.trim()) { actResume(handleResume, true); }
+    })();
+    return () => { cancelled = true; };
+  }, [savedStep]);
+
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -290,7 +324,7 @@ export default function Onboarding() {
   // Resume prompt — shown when a saved in-progress onboarding is found
   if (savedStep !== null) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
+      <div onClick={() => actResume(handleResume, true)} role="button" aria-label="Tap anywhere to continue where you left off" className="min-h-screen bg-background flex flex-col items-center justify-center px-6 cursor-pointer">
         <div className="max-w-sm w-full text-center space-y-6">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Heart className="w-7 h-7 text-primary" />
@@ -301,10 +335,10 @@ export default function Onboarding() {
             <p className="text-muted-foreground text-sm">
               You were on step {savedStep + 1} of {STEPS.length} — <strong>{STEPS[savedStep]?.label}</strong>. Want to pick up where you left off?
             </p>
-            <Button className="w-full gap-2" onClick={handleResume}>
+            <Button className="w-full gap-2" onClick={(e) => { e.stopPropagation(); actResume(handleResume, false); }}>
               Continue where I left off <ArrowRight className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" className="w-full text-muted-foreground text-sm" onClick={handleStartOver}>
+            <Button variant="ghost" className="w-full text-muted-foreground text-sm" onClick={(e) => { e.stopPropagation(); actResume(handleStartOver, false); }}>
               Start over from the beginning
             </Button>
           </div>
@@ -335,7 +369,7 @@ export default function Onboarding() {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
 
-          <VoiceOnboarding step={step} data={data} onChange={handleChange} onAdvance={handleVoiceAdvance} />
+          <VoiceOnboarding step={step} data={data} onChange={handleChange} onAdvance={handleVoiceAdvance} autoVoice={autoVoice} />
           <StepComponent data={data} onChange={handleChange} />
         </div>
       </div>
