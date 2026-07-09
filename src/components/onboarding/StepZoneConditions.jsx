@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic } from "lucide-react";
+import { Mic, Square } from "lucide-react";
 import { isSpeechSupported, captureOnce, stopCapture } from "@/lib/speechEngine";
 
 const ZONE_LABELS = {
@@ -183,9 +183,9 @@ export default function StepZoneConditions({ data, onChange }) {
                           ? "bg-red-500 text-white animate-pulse"
                           : "bg-[#4169E1] text-white hover:bg-[#4169E1]/90"
                       }`}>
-                        <Mic className="w-4 h-4" />
+                        {activeMic === zoneId ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                       </span>
-                      {activeMic === zoneId ? "Listening… tap to stop" : "Speak"}
+                      {activeMic === zoneId ? "Stop" : "Speak"}
                     </button>
                   </div>
                 )}
@@ -222,9 +222,9 @@ export default function StepZoneConditions({ data, onChange }) {
                     ? "bg-red-500 text-white animate-pulse"
                     : "bg-[#4169E1] text-white hover:bg-[#4169E1]/90"
                 }`}>
-                  <Mic className="w-4 h-4" />
+                  {activeMic === "_extra" ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                 </span>
-                {activeMic === "_extra" ? "Listening… tap to stop" : "Speak"}
+                {activeMic === "_extra" ? "Stop" : "Speak"}
               </button>
             </div>
           )}

@@ -234,13 +234,25 @@ export function listenUntilPause(timeoutMs, clipMs, pauseMs) {
   });
 }
 
-let _stopCapture = false;
-export function stopCapture() { _stopCapture = true; }
+// Active capture session — session-based so stopCapture always targets the right
+// session (not a shared boolean that a new captureOnce can clobber), and starting a
+// new capture stops any existing one (prevents mic conflicts with audio-assist / VoiceOnboarding).
+let _activeSession = null;
+
+export function stopCapture() {
+  if (_activeSession) _activeSession.aborted = true;
+}
 
 export async function captureOnce(maxMs, minMs) {
   const vr = getVR();
   if (!vr) return "";
-  _stopCapture = false;
+  // Stop any existing capture session before starting a new one
+  if (_activeSession) {
+    _activeSession.aborted = true;
+    await new Promise(r => setTimeout(r, 300));
+  }
+  const session = { aborted: false };
+  _activeSession = session;
   try {
     let granted = (await vr.hasAudioRecordingPermission()).value;
     if (!granted) granted = (await vr.requestAudioRecordingPermission()).value;
@@ -252,11 +264,15 @@ export async function captureOnce(maxMs, minMs) {
     const floor = minMs || 1200;
     while (Date.now() - start < cap) {
       await new Promise((r) => setTimeout(r, 100));
-      if (_stopCapture && Date.now() - start >= floor) break;
+      if (session.aborted && Date.now() - start >= floor) break;
     }
+    // If another session took over (it already stopped the recorder), bail out
+    if (_activeSession !== session) return "";
     let val = null;
     try { const rec = await vr.stopRecording(); val = rec && rec.value ? rec.value : rec; }
     catch (e) { return ""; }
+    // Clear the active session if it's still us
+    if (_activeSession === session) _activeSession = null;
     const b64 = val && val.recordDataBase64;
     if (!b64) return "";
     let pcm = null;
