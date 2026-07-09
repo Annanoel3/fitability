@@ -163,7 +163,28 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
     return () => clearTimeout(t);
   }, [voiceMode]);
 
+  const audioRef = useRef(null);
+  const speakIdRef = useRef(0);
+  const cancelledRef = useRef(false);
+  const speakResolveRef = useRef(null);
+
+  const stopAudio = () => {
+    speakIdRef.current++;
+    if (audioRef.current) {
+      try { audioRef.current.pause(); } catch (e) {}
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
+      audioRef.current = null;
+    }
+    if (speakResolveRef.current) {
+      const r = speakResolveRef.current;
+      speakResolveRef.current = null;
+      r();
+    }
+  };
+
   const speak = async (text) => {
+    const myId = ++speakIdRef.current;
     try {
       let url = _ttsCache[text];
       if (!url) {
@@ -172,17 +193,42 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
         if (url) _ttsCache[text] = url;
       }
       if (!url) return;
+      if (cancelledRef.current || speakIdRef.current !== myId) return;
       await new Promise((resolve) => {
+        speakResolveRef.current = resolve;
         const a = new Audio(url);
-        a.onended = resolve;
-        a.onerror = resolve;
-        a.play().catch(() => resolve());
+        audioRef.current = a;
+        const done = () => { speakResolveRef.current = null; if (audioRef.current === a) audioRef.current = null; resolve(); };
+        a.onended = done;
+        a.onerror = done;
+        a.play().catch(() => done());
       });
     } catch (e) {}
   };
 
-  const acceptVoice = () => { setShowPrompt(false); setDecided(true); setVoiceMode(true); };
-  const declineVoice = () => { try { stopCapture(); } catch (e) {} setShowPrompt(false); setDecided(true); setVoiceMode(false); setListening(false); setHolding(false); };
+  const teardown = () => {
+    cancelledRef.current = true;
+    stopAudio();
+    try { stopCapture(); } catch (e) {}
+    setListening(false);
+    setBusy(false);
+    setStatus("");
+  };
+
+  const acceptVoice = () => {
+    cancelledRef.current = false;
+    ranStepRef.current = -1;
+    setShowPrompt(false);
+    setDecided(true);
+    setVoiceMode(true);
+  };
+  const declineVoice = () => {
+    teardown();
+    setShowPrompt(false);
+    setDecided(true);
+    setVoiceMode(false);
+    setHolding(false);
+  };
 
   const finishRecording = () => { if (listening) { try { stopCapture(); } catch (e) {} setListening(false); } };
   const startHold = () => {
@@ -215,8 +261,10 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
         introSpokenRef.current = true;
         await speak("I'll ask each question out loud. Answer by speaking. When you are done talking, tap anywhere on the screen.");
       }
+      if (cancelledRef.current) { setBusy(false); return; }
       if (cfg.type === "auto") {
         if (cfg.question) { setStatus("Speaking..."); await speak(cfg.question); }
+        if (cancelledRef.current) { setBusy(false); setStatus(""); return; }
         setStatus(""); setBusy(false);
         if (onAdvance) onAdvance();
         return;
@@ -224,12 +272,14 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
       if (cfg.type === "manual") {
         setStatus("Speaking...");
         await speak(cfg.question);
+        if (cancelledRef.current) { setBusy(false); setStatus(""); return; }
         setStatus("Listening...");
         listenChime();
         setListening(true);
         const t = await captureOnce(20000);
         setListening(false);
         stopChime();
+        if (cancelledRef.current) { setBusy(false); setStatus(""); return; }
         const low = (t || "").toLowerCase();
         setStatus("");
         setBusy(false);
@@ -245,12 +295,14 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
         for (let attempt = 0; attempt < 2 && !transcript; attempt++) {
           setStatus("Speaking...");
           await speak(attempt === 0 ? part.question : "Sorry, I did not catch that. " + part.question);
+          if (cancelledRef.current) { setBusy(false); setStatus(""); return; }
           setStatus("Listening...");
           listenChime();
           setListening(true);
           transcript = await captureOnce(25000);
           setListening(false);
           stopChime();
+          if (cancelledRef.current) { setBusy(false); setStatus(""); return; }
         }
         if (!transcript) continue;
         setStatus("Heard: " + transcript);
@@ -262,11 +314,13 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
             parsed = res && res.data ? res.data : null;
           } catch (e) {}
         }
+        if (cancelledRef.current) { setBusy(false); setStatus(""); return; }
         if (parsed) part.apply(parsed, onChange);
       }
 
       if (cfg.finalMessage) { await speak(cfg.finalMessage); }
       else { gotItChime(); }
+      if (cancelledRef.current) { setBusy(false); setStatus(""); return; }
       setStatus("");
       setBusy(false);
       if (onAdvance) onAdvance();
@@ -282,6 +336,14 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
       runStep();
     }
   }, [voiceMode, step, busy]);
+
+  useEffect(() => {
+    if (!voiceMode) teardown();
+  }, [voiceMode]);
+
+  useEffect(() => {
+    return () => teardown();
+  }, []);
 
   if (!isSpeechSupported()) return null;
 
