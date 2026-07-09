@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Shield } from "lucide-react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { Shield, AlertCircle } from "lucide-react";
 
 const FRONT_SVG = "https://media.base44.com/images/public/6a2e01da2bef77611a127149/e4407373c_bodyfront.svg";
 const BACK_SVG = "https://media.base44.com/images/public/6a2e01da2bef77611a127149/a805393a8_bodyback.svg";
@@ -34,13 +34,25 @@ const ZONES = [
   { id: "right_foot",     label: "Right Foot / Ankle",     front: F(48.24, 310.32, 69, 75),   back: [64, 92]  },
 ];
 
-export default function StepBodyMap({ data, onChange }) {
+const StepBodyMap = forwardRef(function StepBodyMap({ data, onChange, onAdvance }, ref) {
   const [view, setView] = useState("front");
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const [skipBackNudge, setSkipBackNudge] = useState(false);
   const marked = data.marked_zones || [];
   const frontMarked = data.front_marked_zones || [];
   const backMarked = data.back_marked_zones || [];
   const noBodyAreas = data.no_body_areas || false;
   const toggleRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    requestAdvance: () => {
+      if (skipBackNudge || backMarked.length > 0 || noBodyAreas) {
+        return true;
+      }
+      setShowBackConfirm(true);
+      return false;
+    }
+  }));
 
   useEffect(() => {
     setTimeout(() => {
@@ -208,6 +220,44 @@ export default function StepBodyMap({ data, onChange }) {
       ) : (
         <p className="text-center text-sm text-muted-foreground">Nothing marked — tap Continue to skip.</p>
       )}
+
+      {showBackConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-card rounded-2xl p-6 max-w-sm w-full text-center shadow-xl border border-border space-y-4">
+            <div className="flex justify-center">
+              <AlertCircle className="w-10 h-10 text-accent" />
+            </div>
+            <h3 className="text-lg font-heading font-bold text-foreground">Check the back view?</h3>
+            <p className="text-sm text-muted-foreground">
+              You haven't marked any areas on the back of your body. Want to check the back view first?
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setShowBackConfirm(false);
+                  setView("back");
+                  toggleRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
+              >
+                Review back
+              </button>
+              <button
+                onClick={() => {
+                  setShowBackConfirm(false);
+                  setSkipBackNudge(true);
+                  if (onAdvance) onAdvance();
+                }}
+                className="w-full py-3 rounded-xl border border-border font-semibold text-sm text-foreground"
+              >
+                Continue anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+});
+
+export default StepBodyMap;

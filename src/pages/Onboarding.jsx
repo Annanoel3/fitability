@@ -42,6 +42,7 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(true);
   const [savedStep, setSavedStep] = useState(null); // non-null = show resume prompt
   const [autoVoice, setAutoVoice] = useState(false);
+  const stepRef = useRef(null);
 
   // Load any saved onboarding progress on mount
   useEffect(() => {
@@ -184,17 +185,24 @@ export default function Onboarding() {
     }
   };
 
-  const handleNext = async () => {
+  const performAdvance = async () => {
     setNavigating(true);
     const next = step + 1;
     try {
-      await saveProgress(next, data);
+      await saveProgress(next, dataRef.current);
     } catch (e) {
       console.error("Onboarding step save failed (answers kept locally):", e);
     } finally {
       setStep(next);
       setNavigating(false);
     }
+  };
+
+  const handleNext = async () => {
+    if (stepRef.current?.requestAdvance && !stepRef.current.requestAdvance()) {
+      return;
+    }
+    await performAdvance();
   };
 
   const handleFinish = async () => {
@@ -379,7 +387,12 @@ export default function Onboarding() {
         <div className="max-w-2xl mx-auto px-4 py-6 pb-44">
 
           <VoiceOnboarding step={step} data={data} onChange={handleChange} onAdvance={handleVoiceAdvance} autoVoice={autoVoice} />
-          <StepComponent data={data} onChange={handleChange} />
+          <StepComponent
+            ref={step === 4 ? stepRef : null}
+            onAdvance={step === 4 ? performAdvance : undefined}
+            data={data}
+            onChange={handleChange}
+          />
         </div>
       </div>
 

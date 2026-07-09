@@ -132,6 +132,9 @@ export default function StepZoneConditions({ data, onChange }) {
         <p className="text-muted-foreground mt-2 text-sm">
           Describe what's wrong in your own words — our AI will use this to keep unsafe exercises out of your plan.
         </p>
+        <p className="text-primary font-medium mt-2 text-sm">
+          ✏️ Type any conditions you have — for example: arthritis, back pain, diabetes
+        </p>
       </div>
 
       <div className="space-y-4">
@@ -156,7 +159,7 @@ export default function StepZoneConditions({ data, onChange }) {
                 <Textarea
                   value={value}
                   onChange={(e) => handleChange(zoneId, e.target.value)}
-                  placeholder={placeholder}
+                  placeholder={"Type here… " + placeholder}
                   className="resize-none text-sm min-h-[80px] bg-background"
                   rows={3}
                 />
@@ -186,10 +189,11 @@ export default function StepZoneConditions({ data, onChange }) {
           <span className="font-semibold text-sm text-foreground">Anything else the AI should know?</span>
         </div>
         <div className="p-4">
+          <p className="text-xs text-primary font-medium mb-2">✏️ Type any conditions here — for example: arthritis, back pain, diabetes</p>
           <Textarea
             value={descriptions["_extra"] || ""}
             onChange={(e) => handleChange("_extra", e.target.value)}
-            placeholder="e.g. I get dizzy when I stand up too fast, I've had a recent surgery, I'm recovering from COVID, I use a cane..."
+            placeholder="Type here… e.g. I get dizzy when I stand up too fast, I've had a recent surgery, I'm recovering from COVID, I use a cane..."
             className="resize-none text-sm min-h-[80px] bg-background"
             rows={3}
           />
