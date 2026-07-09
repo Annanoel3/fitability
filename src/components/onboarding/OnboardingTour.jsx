@@ -119,7 +119,7 @@ export default function OnboardingTour({ profile, onComplete }) {
         }, 2000);
       }
       if (e.detail === "create_exercise_filled" && tourStepRef.current === "create_exercise") {
-        setTimeout(() => advance("progress"), 2000);
+        advance("progress");
       }
       if (e.detail === "progress_logged" && tourStepRef.current === "progress_log") {
         // Hide popup, navigate home quickly and show final overlay
