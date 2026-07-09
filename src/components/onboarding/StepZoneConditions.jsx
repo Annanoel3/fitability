@@ -143,28 +143,6 @@ export default function StepZoneConditions({ data, onChange }) {
         </p>
       </div>
 
-      {micSupported && (
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => toggleMic("_extra")}
-              className={`flex-shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-full font-medium transition-colors ${
-                activeMic === "_extra"
-                  ? "bg-red-500 text-white animate-pulse"
-                  : "bg-[#4169E1] text-white hover:bg-[#4169E1]/90"
-              }`}
-            >
-              <Mic className="w-5 h-5" />
-            </button>
-            <div>
-              <p className="text-sm font-semibold text-foreground">Prefer to talk?</p>
-              <p className="text-xs text-muted-foreground">Click the mic to start talking, click again when you're done.</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="space-y-4">
         {markedZones.map(zoneId => {
           const label = ZONE_LABELS[zoneId] || zoneId;
@@ -192,18 +170,24 @@ export default function StepZoneConditions({ data, onChange }) {
                   rows={3}
                 />
                 {micSupported && (
-                  <button
-                    type="button"
-                    onClick={() => toggleMic(zoneId)}
-                    className={`mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full transition-colors ${
-                      activeMic === zoneId
-                        ? "bg-red-500 text-white animate-pulse"
-                        : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                    }`}
-                  >
-                    <Mic className="w-3.5 h-3.5" />
-                    {activeMic === zoneId ? "Listening…" : "Speak"}
-                  </button>
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleMic(zoneId)}
+                      className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
+                        activeMic === zoneId ? "text-red-500" : "text-[#4169E1]"
+                      }`}
+                    >
+                      <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
+                        activeMic === zoneId
+                          ? "bg-red-500 text-white animate-pulse"
+                          : "bg-[#4169E1] text-white hover:bg-[#4169E1]/90"
+                      }`}>
+                        <Mic className="w-4 h-4" />
+                      </span>
+                      {activeMic === zoneId ? "Listening… tap to stop" : "Speak"}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -225,18 +209,24 @@ export default function StepZoneConditions({ data, onChange }) {
             rows={3}
           />
           {micSupported && (
-            <button
-              type="button"
-              onClick={() => toggleMic("_extra")}
-              className={`mt-2 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full transition-colors ${
-                activeMic === "_extra"
-                  ? "bg-red-500 text-white animate-pulse"
-                  : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
-              }`}
-            >
-              <Mic className="w-3.5 h-3.5" />
-              {activeMic === "_extra" ? "Listening…" : "Speak"}
-            </button>
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => toggleMic("_extra")}
+                className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
+                  activeMic === "_extra" ? "text-red-500" : "text-[#4169E1]"
+                }`}
+              >
+                <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
+                  activeMic === "_extra"
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "bg-[#4169E1] text-white hover:bg-[#4169E1]/90"
+                }`}>
+                  <Mic className="w-4 h-4" />
+                </span>
+                {activeMic === "_extra" ? "Listening… tap to stop" : "Speak"}
+              </button>
+            </div>
           )}
         </div>
       </div>

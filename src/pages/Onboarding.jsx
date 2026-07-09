@@ -43,6 +43,7 @@ export default function Onboarding() {
   const [savedStep, setSavedStep] = useState(null); // non-null = show resume prompt
   const [autoVoice, setAutoVoice] = useState(false);
   const stepRef = useRef(null);
+  const scrollRef = useRef(null);
   const riskDetectionDoneRef = useRef(false);
 
   // Load any saved onboarding progress on mount
@@ -103,6 +104,11 @@ export default function Onboarding() {
 
   const progress = ((step + 1) / STEPS.length) * 100;
   const StepComponent = STEPS[step].component;
+
+  // Reset scroll to top whenever step changes so the heading shows first
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [step]);
 
   const handleChange = (updates) => {
     dataRef.current = { ...dataRef.current, ...updates };
@@ -418,7 +424,7 @@ export default function Onboarding() {
       </div>
 
       {/* Scrollable Step Content */}
-      <div className="flex-1 overflow-y-auto onboarding-scroll">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto onboarding-scroll">
         <style>{`
           .onboarding-scroll { scroll-padding-bottom: 11rem; }
           .onboarding-scroll input,
