@@ -104,21 +104,34 @@ export default function StepBodyMap({ data, onChange }) {
         ✓ No affected areas
       </button>
 
-      <div ref={toggleRef} className="flex justify-center gap-3 relative z-10">
-         {["front", "back"].map(v => (
-           <button
-             key={v}
-             onClick={() => setView(v)}
-             className={`px-10 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
-               view === v
-                 ? "bg-primary text-primary-foreground border-primary"
-                 : "bg-card text-muted-foreground border-border hover:border-primary/40"
-             }`}
-           >
-             {v.charAt(0).toUpperCase() + v.slice(1)}
-           </button>
-         ))}
-       </div>
+      <div ref={toggleRef} className="space-y-2 relative z-10">
+        <p className="text-center text-xs text-muted-foreground">
+          Front &amp; back — tap <span className={view === "back" ? "font-semibold text-primary" : "font-semibold text-foreground"}>Back</span> to mark areas on your back
+        </p>
+        <div className="flex justify-center gap-0 rounded-xl border-2 border-border overflow-hidden">
+          {["front", "back"].map(v => {
+            const isActive = view === v;
+            return (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`flex-1 px-6 py-3 text-sm font-bold transition-all ${
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                }`}
+              >
+                <span className="flex items-center justify-center gap-1.5">
+                  {v === "front" ? "👤" : "🔄"} {v.charAt(0).toUpperCase() + v.slice(1)}
+                  {v === "back" && !isActive && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold">!</span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="flex justify-center">
         <div className="relative select-none" style={{ height: `${BOX_H}px`, width: `${imgW}px` }}>
