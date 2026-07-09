@@ -65,9 +65,31 @@ const VOICE_STEPS = {
   4: { parts: [{
     question: "Tell me about any pain, injuries, or other things that limit you day to day. For example, back or joint pain, trouble with balance, trouble seeing or low vision, or trouble hearing. Tell me how they affect you, or just say I have none.",
     clipMs: 6000,
-    buildPrompt: (t) => "From the user description, extract two things. First, the affected body zones using zone ids from this exact list: " + BODY_ZONES + ", with a short description for each. Second, any non-physical or sensory limitations they mention, such as low vision, blindness, trouble seeing, hearing loss, or similar, as a list of short plain-language labels. Return JSON { marked_zones: [ids], zone_descriptions: { zoneId: shortDescription }, no_body_areas: boolean, other_limitations: [strings] }. If they clearly have nothing at all, set no_body_areas true and both arrays empty. The user said: " + t,
-    schema: { type: "object", properties: { marked_zones: { type: "array", items: { type: "string" } }, zone_descriptions: { type: "object" }, no_body_areas: { type: "boolean" }, other_limitations: { type: "array", items: { type: "string" } } }, required: ["marked_zones"] },
-    apply: (p, onChange) => onChange({ marked_zones: Array.isArray(p.marked_zones) ? p.marked_zones : [], zone_descriptions: p.zone_descriptions || {}, no_body_areas: !!p.no_body_areas, disabilities: Array.isArray(p.other_limitations) ? p.other_limitations : [] }),
+    buildPrompt: (t) => "You are extracting body areas from a user's spoken description of their pain, injuries, and limitations. " +
+      "Here are the available body zone IDs: " + BODY_ZONES + ". " +
+      "Map what the user says to the CLOSEST matching zone IDs — do NOT require exact wording. For example: 'lower back' or 'lumbar' maps to lower_back; 'shoulder blade' or 'upper back' maps to upper_back; 'hamstring' or 'thigh' maps to left_thigh and/or right_thigh (use both if side is not specified); 'kneecap' or 'patella' maps to left_knee and/or right_knee; 'calf' or 'shin' maps to left_calf and/or right_calf; 'ankle' or 'foot' maps to left_foot and/or right_foot; 'rotator cuff' or 'deltoid' maps to left_shoulder and/or right_shoulder; 'bicep' or 'tricep' maps to left_arm and/or right_arm; 'wrist' maps to left_wrist and/or right_wrist; 'hip' or 'glute' maps to left_hip and/or right_hip. " +
+      "If the user mentions a side (left/right), use only that side's zone. If no side is mentioned, include BOTH left and right zones. " +
+      "For each mapped zone, include a short description of what the user said about it in zone_descriptions. " +
+      "Also extract any non-physical or sensory limitations (low vision, blindness, trouble seeing, hearing loss, dizziness, etc.) into other_limitations. " +
+      "IMPORTANT: Do NOT silently drop anything. If the user mentions a body area, condition, or symptom that does not cleanly map to a zone ID, put it in the notes array as a plain-language string. " +
+      "If they clearly have nothing at all, set no_body_areas true and leave all arrays/objects empty. " +
+      "Return JSON { marked_zones: [zone_ids], zone_descriptions: { zoneId: shortDescription }, no_body_areas: boolean, other_limitations: [strings], notes: [strings] }. " +
+      "The user said: " + t,
+    schema: { type: "object", properties: { marked_zones: { type: "array", items: { type: "string" } }, zone_descriptions: { type: "object" }, no_body_areas: { type: "boolean" }, other_limitations: { type: "array", items: { type: "string" } }, notes: { type: "array", items: { type: "string" } } }, required: ["marked_zones"] },
+    apply: (p, onChange) => {
+      const zoneDescs = p.zone_descriptions || {};
+      const notes = Array.isArray(p.notes) ? p.notes.filter(n => n && n.trim()) : [];
+      if (notes.length) {
+        const existing = (zoneDescs["_extra"] || "").trim();
+        zoneDescs["_extra"] = existing ? existing + " " + notes.join("; ") : notes.join("; ");
+      }
+      onChange({
+        marked_zones: Array.isArray(p.marked_zones) ? p.marked_zones : [],
+        zone_descriptions: zoneDescs,
+        no_body_areas: !!p.no_body_areas,
+        disabilities: Array.isArray(p.other_limitations) ? p.other_limitations : [],
+      });
+    },
   }] },
   5: { type: "auto", question: "Got it." },
   6: { parts: [{

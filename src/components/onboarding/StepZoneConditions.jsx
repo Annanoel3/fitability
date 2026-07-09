@@ -133,9 +133,31 @@ export default function StepZoneConditions({ data, onChange }) {
           Describe what's wrong in your own words — our AI will use this to keep unsafe exercises out of your plan.
         </p>
         <p className="text-primary font-medium mt-2 text-sm">
-          ✏️ Type any conditions you have — for example: arthritis, back pain, diabetes
+          ✏️ Put EVERYTHING here — all your conditions, injuries, and limitations. The more you tell us, the safer your plan.
         </p>
       </div>
+
+      {mic.supported && (
+        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => toggleMic("_extra")}
+              className={`flex-shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-full font-medium transition-colors ${
+                activeMic === "_extra"
+                  ? "bg-red-500 text-white animate-pulse"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }`}
+            >
+              <Mic className="w-5 h-5" />
+            </button>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Prefer to talk?</p>
+              <p className="text-xs text-muted-foreground">Tap the mic to start talking, tap it again when you're done — say all your conditions out loud.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         {markedZones.map(zoneId => {

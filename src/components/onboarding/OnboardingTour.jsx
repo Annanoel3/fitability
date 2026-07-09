@@ -22,22 +22,22 @@ const ANIM_STYLE = `
   }
   /* Tour action buttons — purple accent */
   .tour-card button.bg-primary {
-    background-color: #7c3aed !important;
+    background-color: #a78bfa !important;
     color: #ffffff !important;
-    box-shadow: 0 0 14px 3px rgba(124, 58, 237, 0.45) !important;
+    box-shadow: 0 0 14px 3px rgba(167, 139, 250, 0.45) !important;
     border: none !important;
   }
   .tour-card button.bg-primary:hover {
-    background-color: #6d28d9 !important;
+    background-color: #8b5cf6 !important;
   }
   .tour-card button.text-muted-foreground {
-    color: #7c3aed !important;
-    background: rgba(124, 58, 237, 0.08) !important;
+    color: #a78bfa !important;
+    background: rgba(167, 139, 250, 0.08) !important;
     border-radius: 0.5rem;
   }
   .tour-card button.text-muted-foreground:hover {
-    color: #6d28d9 !important;
-    background: rgba(124, 58, 237, 0.14) !important;
+    color: #8b5cf6 !important;
+    background: rgba(167, 139, 250, 0.14) !important;
   }
 `;
 
@@ -259,12 +259,12 @@ export default function OnboardingTour({ profile, onComplete }) {
         <style>{`
           
           @keyframes workout-btn-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(124, 58, 237, 0.5); }
-            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(124, 58, 237, 0.5); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(167, 139, 250, 0.5); }
+            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(167, 139, 250, 0.5); }
           }
           [data-tour-start-workout="true"] {
             animation: workout-btn-pulse 1.2s ease-in-out infinite !important;
-            outline: 2px solid #7c3aed !important;
+            outline: 2px solid #a78bfa !important;
           outline-offset: 2px !important;
           
             outline-offset: 2px !important;
@@ -317,13 +317,13 @@ export default function OnboardingTour({ profile, onComplete }) {
         <style>{`
           
           @keyframes exercise-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(124, 58, 237, 0.5); }
-            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(124, 58, 237, 0.5); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(167, 139, 250, 0.5); }
+            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(167, 139, 250, 0.5); }
           }
           [data-tour-first-exercise="true"] {
             animation: exercise-pulse 1.5s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
-            border: 2px solid #7c3aed !important;
-            outline: 2px solid #7c3aed !important;
+            border: 2px solid #a78bfa !important;
+            outline: 2px solid #a78bfa !important;
             outline-offset: 2px !important;
             
             pointer-events: auto !important;
@@ -342,12 +342,12 @@ export default function OnboardingTour({ profile, onComplete }) {
       <div className="fixed inset-0 z-[100] pointer-events-none">
         <style>{`
           @keyframes create-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(124, 58, 237, 0.5); }
-            50%      { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(124, 58, 237, 0.5); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(167, 139, 250, 0.5); }
+            50%      { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(167, 139, 250, 0.5); }
           }
           [data-tour-create-exercise="true"] {
             animation: create-pulse 1.3s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
-            outline: 2px solid #7c3aed !important;
+            outline: 2px solid #a78bfa !important;
             outline-offset: 2px !important;
             pointer-events: auto !important;
           }
@@ -373,12 +373,12 @@ export default function OnboardingTour({ profile, onComplete }) {
         <style>{`
           
           @keyframes button-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(124, 58, 237, 0.5); }
-            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(124, 58, 237, 0.5); }
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(167, 139, 250, 0.5); }
+            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(167, 139, 250, 0.5); }
           }
           [data-tour-log-button="true"] {
             animation: button-pulse 1.5s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
-          outline: 2px solid #7c3aed !important;
+          outline: 2px solid #a78bfa !important;
           outline-offset: 2px !important;
             pointer-events: auto !important;
           }
