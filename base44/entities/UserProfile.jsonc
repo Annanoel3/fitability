@@ -76,6 +76,17 @@
       },
       "description": "Specific body limitations"
     },
+    "marked_zones": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Body zone IDs marked during onboarding body map step"
+    },
+    "zone_descriptions": {
+      "type": "object",
+      "description": "Per-zone description text from onboarding zone conditions step"
+    },
     "pain_areas": {
       "type": "object",
       "description": "Body area pain ratings 0-10"

@@ -93,6 +93,13 @@ const VOICE_STEPS = {
   }] },
   5: { type: "auto", question: "Got it." },
   6: { parts: [{
+    question: "Do you have any health conditions I should know about? For example, a history of falls, a heart condition, osteoporosis, dizziness, a recent surgery, or pregnancy. Or say none.",
+    clipMs: 4500,
+    instruction: "Return JSON { risk_factors: [strings], no_risk_factors: boolean, risk_factor_details: string }. List EVERY condition the user mentions, not just the first. For each, if it matches one of these use the EXACT text: History of falls, Recent surgery (last 6 months), Osteoporosis, Heart condition, Dizziness/Vertigo, Seizure disorder, Blood clot history, Pacemaker/defibrillator, Oxygen dependent, Dialysis, Active cancer treatment, Pregnant, Recent hospitalization. If a condition does not match any of these, still record it in risk_factor_details in the user's own words. Put any extra detail in risk_factor_details too. If they clearly say none, set no_risk_factors true and risk_factors empty.",
+    schema: { type: "object", properties: { risk_factors: { type: "array", items: { type: "string" } }, no_risk_factors: { type: "boolean" }, risk_factor_details: { type: "string" } }, required: ["risk_factors"] },
+    apply: (p, onChange) => onChange({ risk_factors: Array.isArray(p.risk_factors) ? p.risk_factors : [], no_risk_factors: !!p.no_risk_factors, risk_factor_details: p.risk_factor_details || "" }),
+  }] },
+  7: { parts: [{
     question: "Now, tell me about your current fitness and what your body is able to do, in your own words. For example, how active or strong you feel day to day, and things like getting up from a chair, walking, climbing stairs, lifting, or keeping your balance.",
     clipMs: 6000,
     buildPrompt: (t, data) => {
@@ -102,13 +109,6 @@ const VOICE_STEPS = {
     },
     schema: { type: "object", properties: { self_reported_fitness: { type: "string" }, condition_severity: { type: "string" }, current_abilities: { type: "object" } }, required: [] },
     apply: (p, onChange) => { const u = {}; if (p.self_reported_fitness) u.self_reported_fitness = p.self_reported_fitness; if (p.condition_severity) u.condition_severity = p.condition_severity; if (p.current_abilities && typeof p.current_abilities === "object") u.current_abilities = p.current_abilities; if (Object.keys(u).length) onChange(u); },
-  }] },
-  7: { parts: [{
-    question: "Do you have any health conditions I should know about? For example, a history of falls, a heart condition, osteoporosis, dizziness, a recent surgery, or pregnancy. Or say none.",
-    clipMs: 4500,
-    instruction: "Return JSON { risk_factors: [strings], no_risk_factors: boolean, risk_factor_details: string }. List EVERY condition the user mentions, not just the first. For each, if it matches one of these use the EXACT text: History of falls, Recent surgery (last 6 months), Osteoporosis, Heart condition, Dizziness/Vertigo, Seizure disorder, Blood clot history, Pacemaker/defibrillator, Oxygen dependent, Dialysis, Active cancer treatment, Pregnant, Recent hospitalization. If a condition does not match any of these, still record it in risk_factor_details in the user's own words. Put any extra detail in risk_factor_details too. If they clearly say none, set no_risk_factors true and risk_factors empty.",
-    schema: { type: "object", properties: { risk_factors: { type: "array", items: { type: "string" } }, no_risk_factors: { type: "boolean" }, risk_factor_details: { type: "string" } }, required: ["risk_factors"] },
-    apply: (p, onChange) => onChange({ risk_factors: Array.isArray(p.risk_factors) ? p.risk_factors : [], no_risk_factors: !!p.no_risk_factors, risk_factor_details: p.risk_factor_details || "" }),
   }] },
   8: {
     finalMessage: "All set. You can change any of your answers anytime in Settings.",
@@ -145,8 +145,12 @@ function gotItChime() { beep(880, 0, 0.1); beep(1150, 0.11, 0.12); }
 function stopChime() { beep(520, 0, 0.16); }
 
 export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoVoice }) {
-  const [voiceMode, setVoiceMode] = useState(false);
-  const [decided, setDecided] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(() => {
+    try { return localStorage.getItem("fitability_voice_mode") === "talk"; } catch (e) { return false; }
+  });
+  const [decided, setDecided] = useState(() => {
+    try { return !!localStorage.getItem("fitability_voice_mode"); } catch (e) { return false; }
+  });
   const [showPrompt, setShowPrompt] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
@@ -216,6 +220,7 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
   };
 
   const acceptVoice = () => {
+    try { localStorage.setItem("fitability_voice_mode", "talk"); } catch (e) {}
     cancelledRef.current = false;
     ranStepRef.current = -1;
     setShowPrompt(false);
@@ -223,6 +228,7 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
     setVoiceMode(true);
   };
   const declineVoice = () => {
+    try { localStorage.setItem("fitability_voice_mode", "tap"); } catch (e) {}
     teardown();
     setShowPrompt(false);
     setDecided(true);

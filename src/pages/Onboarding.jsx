@@ -25,8 +25,8 @@ const STEPS = [
   { key: "activity", label: "Activity", component: StepActivityLevel },
   { key: "disabilities", label: "Body Map", component: StepBodyMap },
   { key: "limitations", label: "Your Body", component: StepZoneConditions },
-  { key: "abilities", label: "Abilities", component: StepAbilities },
   { key: "risk", label: "Risk Factors", component: StepRiskFactors },
+  { key: "abilities", label: "Abilities", component: StepAbilities },
   { key: "equipment", label: "Equipment", component: StepEquipment },
 ];
 
@@ -86,6 +86,8 @@ export default function Onboarding() {
           activity_level: profile.activity_level,
           disabilities: profile.disabilities,
           body_limitations: profile.body_limitations,
+          marked_zones: profile.marked_zones || [],
+          zone_descriptions: profile.zone_descriptions || {},
           pain_areas: profile.pain_areas,
           current_abilities: profile.current_abilities,
           risk_factors: profile.risk_factors,
@@ -105,9 +107,16 @@ export default function Onboarding() {
   const progress = ((step + 1) / STEPS.length) * 100;
   const StepComponent = STEPS[step].component;
 
-  // Reset scroll to top whenever step changes so the heading shows first
+  // Reset scroll to top whenever step changes so the heading shows first.
+  // Double-RAF ensures the reset runs after the browser lays out the new step's
+  // content — steps from Body Map onward render SVGs / dynamic lists that change
+  // height after the initial paint, which would otherwise push scroll back down.
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    const reset = () => {
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    };
+    reset();
+    requestAnimationFrame(() => requestAnimationFrame(reset));
   }, [step]);
 
   const handleChange = (updates) => {
@@ -127,8 +136,11 @@ export default function Onboarding() {
     // Step 5: Zone Descriptions — optional, always allow continue
     if (step === 5) return true;
     
-    // Step 6: Abilities — require self_reported_fitness, condition_severity (if applicable), and all shown ability questions answered
-    if (step === 6) {
+    // Step 6: Risk Factors — require at least one selected OR no_risk_factors selected
+    if (step === 6) return (data.risk_factors || []).length > 0 || data.no_risk_factors || !!(data.risk_factor_other || "").trim();
+    
+    // Step 7: Abilities — require self_reported_fitness, condition_severity (if applicable), and all shown ability questions answered
+    if (step === 7) {
       if (!data.self_reported_fitness) return false;
       
       // condition_severity required only if user has conditions
@@ -152,9 +164,6 @@ export default function Onboarding() {
       return true;
     }
     
-    // Step 7: Risk Factors — require at least one selected OR no_risk_factors selected
-    if (step === 7) return (data.risk_factors || []).length > 0 || data.no_risk_factors || !!(data.risk_factor_other || "").trim();
-    
     // Step 8: Equipment — require at least one selected
     if (step === 8) return (data.equipment || []).length > 0;
     
@@ -173,6 +182,9 @@ export default function Onboarding() {
       goals: currentData.goals || [],
       activity_level: currentData.activity_level,
       disabilities: currentData.disabilities || [],
+      body_limitations: currentData.body_limitations || [],
+      marked_zones: currentData.marked_zones || [],
+      zone_descriptions: currentData.zone_descriptions || {},
       pain_areas: currentData.pain_areas || {},
       current_abilities: currentData.current_abilities || {},
       risk_factors: currentData.risk_factors || [],

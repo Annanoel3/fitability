@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, Square } from "lucide-react";
+import { Mic, Square, Loader2 } from "lucide-react";
 import { isSpeechSupported, captureOnce, stopCapture } from "@/lib/speechEngine";
 
 const ZONE_LABELS = {
@@ -74,6 +74,7 @@ export default function StepZoneConditions({ data, onChange }) {
   const markedZones = data.marked_zones || [];
   const descriptions = data.zone_descriptions || {};
   const [activeMic, setActiveMic] = useState(null);
+  const [transcribingZone, setTranscribingZone] = useState(null);
   const activeMicRef = useRef(null);
   const micSupported = isSpeechSupported();
 
@@ -90,6 +91,10 @@ export default function StepZoneConditions({ data, onChange }) {
 
   const toggleMic = async (zoneId) => {
     if (activeMicRef.current === zoneId) {
+      // Tap to stop — immediately show transcribing spinner while the
+      // captureOnce promise resolves with the transcript.
+      setActiveMic(null);
+      setTranscribingZone(zoneId);
       try { stopCapture(); } catch (e) {}
       return;
     }
@@ -109,6 +114,7 @@ export default function StepZoneConditions({ data, onChange }) {
       activeMicRef.current = null;
       setActiveMic(null);
     }
+    setTranscribingZone(prev => (prev === zoneId ? null : prev));
   };
 
   useEffect(() => {
@@ -132,6 +138,32 @@ export default function StepZoneConditions({ data, onChange }) {
         [zoneId]: value,
       }
     });
+  };
+
+  const renderMicButton = (zoneId) => {
+    const isActive = activeMic === zoneId;
+    const isTranscribing = transcribingZone === zoneId;
+    return (
+      <button
+        type="button"
+        onClick={() => toggleMic(zoneId)}
+        disabled={isTranscribing}
+        className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
+          isActive ? "text-red-500" : isTranscribing ? "text-muted-foreground" : "text-[#4169E1]"
+        }`}
+      >
+        <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
+          isActive
+            ? "bg-red-500 text-white animate-pulse"
+            : isTranscribing
+              ? "bg-muted text-muted-foreground"
+              : "bg-[#4169E1] text-white hover:bg-[#4169E1]/90"
+        }`}>
+          {isActive ? <Square className="w-4 h-4" /> : isTranscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+        </span>
+        {isActive ? "Stop" : isTranscribing ? "Transcribing…" : "Speak"}
+      </button>
+    );
   };
 
   return (
@@ -171,22 +203,7 @@ export default function StepZoneConditions({ data, onChange }) {
                 />
                 {micSupported && (
                   <div className="mt-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleMic(zoneId)}
-                      className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
-                        activeMic === zoneId ? "text-red-500" : "text-[#4169E1]"
-                      }`}
-                    >
-                      <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
-                        activeMic === zoneId
-                          ? "bg-red-500 text-white animate-pulse"
-                          : "bg-[#4169E1] text-white hover:bg-[#4169E1]/90"
-                      }`}>
-                        {activeMic === zoneId ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                      </span>
-                      {activeMic === zoneId ? "Stop" : "Speak"}
-                    </button>
+                    {renderMicButton(zoneId)}
                   </div>
                 )}
               </div>
@@ -210,22 +227,7 @@ export default function StepZoneConditions({ data, onChange }) {
           />
           {micSupported && (
             <div className="mt-3">
-              <button
-                type="button"
-                onClick={() => toggleMic("_extra")}
-                className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
-                  activeMic === "_extra" ? "text-red-500" : "text-[#4169E1]"
-                }`}
-              >
-                <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
-                  activeMic === "_extra"
-                    ? "bg-red-500 text-white animate-pulse"
-                    : "bg-[#4169E1] text-white hover:bg-[#4169E1]/90"
-                }`}>
-                  {activeMic === "_extra" ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                </span>
-                {activeMic === "_extra" ? "Stop" : "Speak"}
-              </button>
+              {renderMicButton("_extra")}
             </div>
           )}
         </div>
