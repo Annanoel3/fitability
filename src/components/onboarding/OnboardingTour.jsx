@@ -252,10 +252,10 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
-  // ── WORKOUT — non-blocking guide, button can be clicked freely ──
+  // ── WORKOUT — non-blocking guide, card anchored at top so button below is visible ──
   if (tourStep === "workout") {
     return (
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center px-5">
+      <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-6">
         <style>{`
           
           @keyframes workout-btn-pulse {
@@ -269,15 +269,15 @@ export default function OnboardingTour({ profile, onComplete }) {
             outline-offset: 2px !important;
             pointer-events: auto !important;
             position: relative;
-            z-index: 101;
+            z-index: 102;
           }
         `}</style>
-        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <span className="text-3xl">💪</span>
+        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-6 shadow-2xl text-center space-y-4 pointer-events-auto">
+          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <span className="text-2xl">💪</span>
           </div>
           <div>
-            <h3 className="font-heading font-bold text-xl text-foreground">Start your first workout!</h3>
+            <h3 className="font-heading font-bold text-lg text-foreground">Start your first workout!</h3>
             <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
               Tap the glowing button below to choose your workout type and intensity.
             </p>
