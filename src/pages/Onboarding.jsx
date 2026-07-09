@@ -367,7 +367,7 @@ export default function Onboarding() {
 
       {/* Scrollable Step Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
+        <div className="max-w-2xl mx-auto px-4 py-6 pb-44">
 
           <VoiceOnboarding step={step} data={data} onChange={handleChange} onAdvance={handleVoiceAdvance} autoVoice={autoVoice} />
           <StepComponent data={data} onChange={handleChange} />
@@ -375,35 +375,37 @@ export default function Onboarding() {
       </div>
 
       {/* Fixed Footer Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-10 bg-background/95 backdrop-blur-sm border-t border-border px-4 py-4">
-        <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <Button
-            variant="ghost"
-            onClick={() => setStep(s => s - 1)}
-            disabled={step === 0}
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back
-          </Button>
+      <div className="fixed bottom-0 left-0 right-0 z-10 bg-background/95 backdrop-blur-sm border-t border-border px-4 py-3">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-xs text-center text-muted-foreground mb-2 px-2">You can change any of these answers later in Settings.</p>
+          <div className="flex justify-between items-center">
+            <Button
+              variant="ghost"
+              onClick={() => setStep(s => s - 1)}
+              disabled={step === 0}
+              className="gap-2 h-11"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back
+            </Button>
 
-          {step < STEPS.length - 1 ? (
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed() || navigating}
-              className="gap-2 px-8 h-12 text-base"
-            >
-              Continue <ArrowRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button
-              onClick={handleFinish}
-              disabled={saving}
-              className="gap-2 px-8 h-12 text-base bg-primary"
-            >
-              {saving ? "Setting up your plan..." : "Start My Journey"}
-            </Button>
-          )}
-          <p className="text-xs text-center text-muted-foreground mt-4">You can change any of these answers later in Settings.</p>
+            {step < STEPS.length - 1 ? (
+              <Button
+                onClick={handleNext}
+                disabled={!canProceed() || navigating}
+                className="gap-2 px-6 h-11 text-sm"
+              >
+                Continue <ArrowRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleFinish}
+                disabled={saving}
+                className="gap-2 px-6 h-11 text-sm bg-primary"
+              >
+                {saving ? "Setting up your plan..." : "Start My Journey"}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
