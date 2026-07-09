@@ -87,6 +87,7 @@ export default function CoachChat() {
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const hasWelcomed = useRef(false);
+  const tourStepRef = useRef(null);
   const isTourCoachMessage = tourStep === "coach_message";
 
   const mic = useSpeechToText({
@@ -126,13 +127,16 @@ export default function CoachChat() {
   }, [messages]);
 
   useEffect(() => {
-    // Listen for tour step changes
+    // Listen for tour step changes — this is the reliable signal for the current tour step,
+    // used instead of reading window.fitabilityTourStep directly (which is racy).
     const handleTourChange = (e) => {
+      tourStepRef.current = e.detail.tourStep;
       setTourStep(e.detail.tourStep);
     };
     window.addEventListener("fitability-tour-step-change", handleTourChange);
     // Set initial tour step if already active
     if (window.fitabilityTourStep) {
+      tourStepRef.current = window.fitabilityTourStep;
       setTourStep(window.fitabilityTourStep);
     }
     return () => window.removeEventListener("fitability-tour-step-change", handleTourChange);
@@ -148,9 +152,10 @@ export default function CoachChat() {
       const profiles = await base44.entities.UserProfile.filter({});
       if (profiles.length > 0) {
         setProfile(profiles[0]);
-        // Show the welcome/intro whenever the chat is empty, or when the onboarding tour reaches the coach step
-        const inCoachTour = (typeof window !== "undefined" && window.fitabilityTourStep === "coach");
-        if (!hasWelcomed.current && (inCoachTour || messages.length === 0)) {
+        // Non-tour welcome: show intro when chat is empty and NOT in the coach tour step.
+        // The tour-step-watching effect below handles the coach tour welcome.
+        const inCoachTour = tourStepRef.current === "coach" || tourStepRef.current === "coach_message";
+        if (!hasWelcomed.current && !inCoachTour && messages.length === 0) {
           hasWelcomed.current = true;
           await sendWelcome(profiles[0]);
         }
@@ -158,6 +163,16 @@ export default function CoachChat() {
     };
     init();
   }, []);
+
+  // Drives the onboarding coach welcome — must not depend on fragile global timing.
+  // Fires when the tour reaches the "coach" (or "coach_message") step, whether CoachChat
+  // mounted before or after the tour advanced. Idempotent via hasWelcomed ref.
+  useEffect(() => {
+    if ((tourStep === "coach" || tourStep === "coach_message") && profile && !hasWelcomed.current) {
+      hasWelcomed.current = true;
+      sendWelcome(profile);
+    }
+  }, [tourStep, profile]);
 
   // Pre-fill message and disable input during coach message tour step
   useEffect(() => {
@@ -177,12 +192,18 @@ export default function CoachChat() {
   };
 
   const sendWelcome = async (prof) => {
+    // Use tourStepRef (reliable, updated via custom event) instead of window.fitabilityTourStep (racy)
+    const inCoachTour = tourStepRef.current === "coach" || tourStepRef.current === "coach_message";
     // Instant intro during the onboarding tour (skip the slow LLM round-trip)
-    if (window.fitabilityTourStep === "coach") {
+    if (inCoachTour) {
+      // USER-AUTHORED COPY — do not overwrite or regenerate — preserved character-for-character
       setMessages([{ role: "assistant", content: `Hi ${prof?.display_name || "there"}! 💪 I'm your FitAbility Coach. I can help you adjust and fine-tune your workouts, suggest modifications for exercises, answer fitness questions, and keep you moving safely.\n\nKeep me updated on any changes to your health and conditions — whether things are improving, getting tougher, or anything that affects your workouts. The better I understand you, the better I can support your fitness journey. I'll remember what you tell me and tailor your plan around it.` }]);
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "coach_message" } }));
-      }, 300);
+      // Only advance if we're still on the "coach" step; if already on "coach_message", don't re-dispatch
+      if (tourStepRef.current === "coach") {
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "coach_message" } }));
+        }, 300);
+      }
       return;
     }
     setSending(true);
@@ -197,7 +218,7 @@ export default function CoachChat() {
       const cleanReply = reply.replace(/\s*What can I help you with today\?.*$/i, "").trim();
       setMessages([{ role: "assistant", content: cleanReply }]);
       // If in coach tour step, advance to coach_message step
-      if (window.fitabilityTourStep === "coach") {
+      if (tourStepRef.current === "coach") {
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "coach_message" } }));
         }, 300);
