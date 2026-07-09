@@ -385,10 +385,9 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setShowResetDialog(true)}
-            className="text-xs text-muted-foreground/60 hover:text-destructive transition-colors underline-offset-2 hover:underline"
-          >
-            Reset ALL data
-          </button>
+            aria-label=""
+            className="w-3 h-3 rounded-full bg-transparent hover:bg-muted-foreground/20 transition-colors"
+          />
           <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
