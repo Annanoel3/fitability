@@ -41,8 +41,8 @@ export default function StepRiskFactors({ data, onChange }) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-heading font-bold text-foreground">Risk Factors</h2>
-        <p className="text-muted-foreground mt-2">Select any that apply, then rate how much each one affects you.</p>
+        <h2 className="text-2xl font-heading font-bold text-foreground">Confirm Your Risk Factors</h2>
+        <p className="text-muted-foreground mt-2">Based on what you told us, we've pre-selected these — tap any we missed, or uncheck any that don't apply.</p>
       </div>
 
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
@@ -104,6 +104,17 @@ export default function StepRiskFactors({ data, onChange }) {
             </div>
           );
         })}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+        <label className="text-sm font-medium text-foreground">Other</label>
+        <input
+          type="text"
+          value={data.risk_factor_other || ""}
+          onChange={(e) => onChange({ risk_factor_other: e.target.value, no_risk_factors: false })}
+          placeholder="Any other risk factor not listed above"
+          className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
       </div>
     </div>
   );

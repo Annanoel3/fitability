@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Heart } from "lucide-react";
-import { ABILITIES_CHECKLIST_GRADED, ABILITIES_CHECKLIST_GRADED_SEATED } from "@/lib/constants";
+import { ABILITIES_CHECKLIST_GRADED, ABILITIES_CHECKLIST_GRADED_SEATED, RISK_FACTORS } from "@/lib/constants";
 import { isSpeechSupported, captureOnce, stopCapture } from "@/lib/speechEngine";
 import StepBasicInfo from "@/components/onboarding/StepBasicInfo";
 import StepGoals from "@/components/onboarding/StepGoals";
@@ -43,6 +43,7 @@ export default function Onboarding() {
   const [savedStep, setSavedStep] = useState(null); // non-null = show resume prompt
   const [autoVoice, setAutoVoice] = useState(false);
   const stepRef = useRef(null);
+  const riskDetectionDoneRef = useRef(false);
 
   // Load any saved onboarding progress on mount
   useEffect(() => {
@@ -88,6 +89,7 @@ export default function Onboarding() {
           current_abilities: profile.current_abilities,
           risk_factors: profile.risk_factors,
           risk_factor_details: profile.risk_factor_details || {},
+          risk_factor_other: profile.risk_factor_other || "",
           is_veteran: profile.is_veteran,
           veteran_details: profile.veteran_details,
           fitness_mode: profile.fitness_mode,
@@ -145,7 +147,7 @@ export default function Onboarding() {
     }
     
     // Step 7: Risk Factors — require at least one selected OR no_risk_factors selected
-    if (step === 7) return (data.risk_factors || []).length > 0 || data.no_risk_factors;
+    if (step === 7) return (data.risk_factors || []).length > 0 || data.no_risk_factors || !!(data.risk_factor_other || "").trim();
     
     // Step 8: Equipment — require at least one selected
     if (step === 8) return (data.equipment || []).length > 0;
@@ -169,6 +171,7 @@ export default function Onboarding() {
       current_abilities: currentData.current_abilities || {},
       risk_factors: currentData.risk_factors || [],
           risk_factor_details: currentData.risk_factor_details || {},
+          risk_factor_other: currentData.risk_factor_other || "",
       is_veteran: currentData.is_veteran || false,
       veteran_details: currentData.veteran_details || {},
       equipment: currentData.equipment || [],
@@ -185,10 +188,44 @@ export default function Onboarding() {
     }
   };
 
+  const detectRiskFactors = async (currentData) => {
+    const zoneDescs = currentData.zone_descriptions || {};
+    const textParts = [];
+    Object.entries(zoneDescs).forEach(([zone, desc]) => {
+      if (desc && desc.trim()) {
+        if (zone === "_extra") textParts.push(desc.trim());
+        else textParts.push(zone.replace(/_/g, " ") + ": " + desc.trim());
+      }
+    });
+    const combinedText = textParts.join("; ");
+    if (!combinedText.trim()) return;
+    const prompt = "You are a medical intake assistant. The user described their pain, injuries, and health conditions during onboarding. Detect which of these 13 risk factors are clearly implied by what they said. Risk factors (return EXACT text from this list): " + RISK_FACTORS.join(", ") + ". Rules: Only include a risk factor if the user's description CLEARLY implies it. Do not guess. If the user mentions a health condition that is NOT one of the 13 presets but is clinically relevant (e.g. severe diabetes, COPD, recent injury), put it in other_notes as a short description. If the user has nothing relevant, return empty arrays and empty other_notes. Return JSON { risk_factors: [exact preset strings], other_notes: string }. User's description: " + combinedText;
+    const schema = { type: "object", properties: { risk_factors: { type: "array", items: { type: "string" } }, other_notes: { type: "string" } }, required: ["risk_factors"] };
+    try {
+      const res = await base44.functions.invoke("openaiChat", { prompt, response_json_schema: schema });
+      const parsed = res && res.data ? res.data : null;
+      if (parsed && Array.isArray(parsed.risk_factors)) {
+        const detected = parsed.risk_factors.filter((r) => RISK_FACTORS.includes(r));
+        const details = {};
+        detected.forEach((r) => { details[r] = { severity: "", note: "" }; });
+        const updates = { risk_factors: detected, risk_factor_details: details };
+        if (parsed.other_notes && parsed.other_notes.trim()) updates.risk_factor_other = parsed.other_notes.trim();
+        dataRef.current = { ...dataRef.current, ...updates };
+        setData((prev) => ({ ...prev, ...updates }));
+      }
+    } catch (e) {
+      console.error("Risk factor detection failed:", e);
+    }
+  };
+
   const performAdvance = async () => {
     setNavigating(true);
     const next = step + 1;
     try {
+      if (step === 5 && !riskDetectionDoneRef.current) {
+        riskDetectionDoneRef.current = true;
+        await detectRiskFactors(dataRef.current);
+      }
       await saveProgress(next, dataRef.current);
     } catch (e) {
       console.error("Onboarding step save failed (answers kept locally):", e);
@@ -243,6 +280,7 @@ export default function Onboarding() {
       current_abilities: data.current_abilities || {},
       risk_factors: data.risk_factors || [],
           risk_factor_details: data.risk_factor_details || {},
+          risk_factor_other: data.risk_factor_other || "",
       is_veteran: data.is_veteran || false,
       veteran_details: data.veteran_details || {},
       equipment: data.equipment || [],
@@ -269,7 +307,13 @@ export default function Onboarding() {
   const handleVoiceAdvance = async () => {
     if (step >= STEPS.length - 1) { handleFinish(); return; }
     const next = step + 1;
-    try { await saveProgress(next, dataRef.current); }
+    try {
+      if (step === 5 && !riskDetectionDoneRef.current) {
+        riskDetectionDoneRef.current = true;
+        await detectRiskFactors(dataRef.current);
+      }
+      await saveProgress(next, dataRef.current);
+    }
     catch (e) { console.error("Voice onboarding step save failed (answers kept locally):", e); }
     finally { setStep(next); }
   };

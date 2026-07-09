@@ -89,11 +89,16 @@
       "items": {
         "type": "string"
       },
-      "description": "Risk factors like fall history, surgery, etc."
+      "description": "Selected preset risk factors"
     },
     "risk_factor_details": {
       "type": "object",
       "description": "Per risk factor { severity: string, note: string }"
+    },
+    "risk_factor_other": {
+      "type": "string",
+      "description": "Free-text 'Other' risk factor not in the preset list",
+      "default": ""
     },
     "is_veteran": {
       "type": "boolean",
