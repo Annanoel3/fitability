@@ -366,7 +366,16 @@ export default function Onboarding() {
       </div>
 
       {/* Scrollable Step Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto onboarding-scroll">
+        <style>{`
+          .onboarding-scroll { scroll-padding-bottom: 11rem; }
+          .onboarding-scroll input,
+          .onboarding-scroll select,
+          .onboarding-scroll textarea,
+          .onboarding-scroll [tabindex]:not([tabindex="-1"]) {
+            scroll-margin-bottom: 11rem;
+          }
+        `}</style>
         <div className="max-w-2xl mx-auto px-4 py-6 pb-44">
 
           <VoiceOnboarding step={step} data={data} onChange={handleChange} onAdvance={handleVoiceAdvance} autoVoice={autoVoice} />
