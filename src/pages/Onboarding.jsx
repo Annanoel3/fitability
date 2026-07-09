@@ -347,29 +347,9 @@ export default function Onboarding() {
     if (voiceWanted) setAutoVoice(true);
     fn();
   };
-  const speakResume = async (text) => {
-    try {
-      const res = await base44.functions.invoke("openaiTTS", { text, voice: "nova" });
-      const url = res && res.data && res.data.url;
-      if (!url) return;
-      await new Promise((resolve) => { const a = new Audio(url); a.onended = resolve; a.onerror = resolve; a.play().catch(() => resolve()); });
-    } catch (e) {}
-  };
-  useEffect(() => {
-    if (savedStep === null || resumeActedRef.current || !isSpeechSupported()) return;
-    let cancelled = false;
-    (async () => {
-      await speakResume("Welcome back. You were partway through setting up FitAbility. To keep going where you left off, say continue, or tap anywhere on the screen. Or, to start over from the beginning, say start over.");
-      if (cancelled || resumeActedRef.current) return;
-      let heard = "";
-      try { heard = await captureOnce(8000); } catch (e) {}
-      if (cancelled || resumeActedRef.current) return;
-      const low = (heard || "").toLowerCase();
-      if (/start over|start again|restart|begin again|from the beginning/.test(low)) { actResume(handleStartOver, false); }
-      else if (low.trim()) { actResume(handleResume, true); }
-    })();
-    return () => { cancelled = true; };
-  }, [savedStep]);
+  // Resume is fully silent — no auto-TTS, no auto-mic. Voice/TTS only starts if the
+  // user explicitly opts in via the VoiceOnboarding prompt or "Hold to enter audio assist".
+  // The resume screen below uses buttons; tapping the card background does NOT force voice on.
 
   if (loading) {
     return (
@@ -382,7 +362,7 @@ export default function Onboarding() {
   // Resume prompt — shown when a saved in-progress onboarding is found
   if (savedStep !== null) {
     return (
-      <div onClick={() => actResume(handleResume, true)} role="button" aria-label="Tap anywhere to continue where you left off" className="min-h-screen bg-background flex flex-col items-center justify-center px-6 cursor-pointer">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
         <div className="max-w-sm w-full text-center space-y-6">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Heart className="w-7 h-7 text-primary" />
