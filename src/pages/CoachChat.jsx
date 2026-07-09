@@ -312,14 +312,6 @@ export default function CoachChat() {
 
       {isTourCoachMessage &&
       <style>{`
-          @keyframes button-pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(174, 104, 75, 0.7); }
-            50% { transform: scale(1.3); box-shadow: 0 0 0 10px rgba(174, 104, 75, 0); }
-          }
-          [data-tour-coach-send] {
-            animation: button-pulse 1.5s ease-in-out infinite !important;
-            pointer-events: auto !important;
-          }
           [data-tour-coach-input] {
             color: hsl(var(--foreground)) !important;
           }
@@ -366,13 +358,15 @@ export default function CoachChat() {
           {isTourCoachMessage && (
             <style>{`
               @keyframes coach-send-pulse {
-                0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7); transform: scale(1.06); }
-                50%      { box-shadow: 0 0 0 14px hsl(var(--primary) / 0); transform: scale(1.14); }
+                0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(196, 181, 253, 0.5); }
+                50%      { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(196, 181, 253, 0.5); }
               }
               [data-tour-send-btn="true"] {
                 animation: coach-send-pulse 1.1s ease-in-out infinite !important;
-                outline: 3px solid hsl(var(--primary)) !important;
-                outline-offset: 3px !important;
+                border: 2px solid #c4b5fd !important;
+                outline: 2px solid #c4b5fd !important;
+                outline-offset: 2px !important;
+                pointer-events: auto !important;
               }
             `}</style>
           )}

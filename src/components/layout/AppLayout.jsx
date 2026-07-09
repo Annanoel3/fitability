@@ -195,19 +195,19 @@ export default function AppLayout() {
       {/* Tour pulsing styles for library, progress and home */}
       <style key={tourStep}>{`
         @keyframes icon-pulse {
-          0%, 100% { transform: scale(1.06); box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7); }
-          50%      { transform: scale(1.14); box-shadow: 0 0 0 16px hsl(var(--primary) / 0); }
+          0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(196, 181, 253, 0.5); }
+          50%      { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(196, 181, 253, 0.5); }
         }
         nav a[data-tour-coach-nav],
         nav a[data-tour-library-nav],
         nav a[data-tour-progress-nav],
         nav a[data-tour-home-nav] {
           animation: icon-pulse 1.1s ease-in-out infinite !important;
-          background: hsl(var(--primary) / 0.18) !important;
-          outline: 3px solid hsl(var(--primary)) !important;
+          border: 2px solid #c4b5fd !important;
+          outline: 2px solid #c4b5fd !important;
           outline-offset: 2px !important;
           border-radius: 14px !important;
-          color: hsl(var(--primary)) !important;
+          color: #c4b5fd !important;
         }
       `}</style>
     </div>);
