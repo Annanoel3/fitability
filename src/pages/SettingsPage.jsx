@@ -7,20 +7,36 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
+import {
   User, FileText, LogOut, Loader2,
-  ChevronRight, Eye, Save, MessageSquare, Sun, Moon
+  ChevronRight, Eye, Save, MessageSquare, Sun, Moon, AlertTriangle
 } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { useAccessibility } from "@/lib/AccessibilityContext";
+import { useAuth } from "@/lib/AuthContext";
 import EquipmentEditor from "@/components/settings/EquipmentEditor";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { dark, toggle } = useTheme();
   const { updatePrefs } = useAccessibility();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -363,6 +379,53 @@ export default function SettingsPage() {
       <Button variant="outline" onClick={handleLogout} className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
         <LogOut className="w-4 h-4" /> Log Out
       </Button>
+
+      {user?.role === "admin" && (
+        <div className="pt-8 flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowResetDialog(true)}
+            className="text-xs text-muted-foreground/60 hover:text-destructive transition-colors underline-offset-2 hover:underline"
+          >
+            Reset ALL data
+          </button>
+          <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                  Wipe all data?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  This wipes ALL accounts and data and cannot be undone — are you sure?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={resetting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={resetting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    setResetting(true);
+                    try {
+                      await base44.functions.invoke("clearAllUserData", {});
+                      toast({ title: "All data cleared" });
+                      setShowResetDialog(false);
+                      base44.auth.logout("/login");
+                    } catch (err) {
+                      toast({ title: "Reset failed", description: err.message, variant: "destructive" });
+                      setResetting(false);
+                    }
+                  }}
+                >
+                  {resetting ? "Wiping…" : "Yes, wipe all data"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
     </div>
   );
 }
