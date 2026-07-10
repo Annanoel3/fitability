@@ -35,8 +35,11 @@ export function findLibraryMatch(llmExercise, libLookup) {
 }
 
 // --- SAFE VARIANT SUBSTITUTION ---
-// When an exercise is flagged for a restricted joint, try to find a condition-specific
-// variant of the same movement that is safe for this user (e.g. seated march vs standing march).
+// When an exercise would be removed, look for a REAL library variant of the SAME movement
+// that is safe for this user. The library provides genuine variants (assisted, supported,
+// reduced range, lower intensity, etc.) — we never fabricate or force a "seated" label.
+// If no real safe variant exists, the exercise is dropped and the fallback backfills
+// a DIFFERENT safe exercise.
 function findSafeVariant(llmExercise, libLookup, userRestrictionTags, userEquipment) {
   const key = normalizeName(llmExercise.name);
   const variants = libLookup[key];
@@ -61,7 +64,8 @@ function findSafeVariant(llmExercise, libLookup, userRestrictionTags, userEquipm
 
 // --- NEVER-EMPTY FALLBACK ---
 // If after filtering/substitution the main exercise set is below the minimum target,
-// backfill with known-safe seated/low-impact exercises from the library.
+// backfill with known-safe exercises from the library (whatever genuinely passes the
+// user's safety filter — not forced into any particular position).
 export function findFallbackExercises(library, userRestrictionTags, userEquipment, userCapabilityTags, needed, excludeNames) {
   const excludeSet = new Set((excludeNames || []).map(n => normalizeName(n)));
 
@@ -134,7 +138,7 @@ export function safetyCheckExercises(llmExercises, library, userRestrictionTags,
   const keptExercises = [];
 
   for (const ex of (llmExercises || [])) {
-    // Guardrail 1: cannot_stand + Standing → try seated variant first
+    // Guardrail 1: cannot_stand + Standing → look for a real safe library variant
     if (userRestrictionTags.has('cannot_stand') && ex.position === 'Standing') {
       const safeVariant = findSafeVariant(ex, libLookup, userRestrictionTags, userEquipment);
       if (safeVariant) {
@@ -143,11 +147,11 @@ export function safetyCheckExercises(llmExercises, library, userRestrictionTags,
           name: safeVariant.name,
           position: safeVariant.position,
           restriction_tags: safeVariant.restriction_tags || [],
-          safety_notes: (ex.safety_notes || '') + (ex.safety_notes ? ' ' : '') + `Substituted with safe seated/supported variant: ${safeVariant.name}.`,
+          safety_notes: (ex.safety_notes || '') + (ex.safety_notes ? ' ' : '') + `Substituted with safer library variant: ${safeVariant.name}.`,
         });
         continue;
       }
-      removedBySafety.push(ex.name + ' (standing, no safe seated variant)');
+      removedBySafety.push(ex.name + ' (standing, no safe variant in library)');
       continue;
     }
 
@@ -166,7 +170,7 @@ export function safetyCheckExercises(llmExercises, library, userRestrictionTags,
           name: safeVariant.name,
           position: safeVariant.position,
           restriction_tags: safeVariant.restriction_tags || [],
-          safety_notes: (ex.safety_notes || '') + (ex.safety_notes ? ' ' : '') + `Substituted with safer variant: ${safeVariant.name}.`,
+          safety_notes: (ex.safety_notes || '') + (ex.safety_notes ? ' ' : '') + `Substituted with safer library variant: ${safeVariant.name}.`,
         });
         continue;
       }
@@ -190,7 +194,7 @@ export function safetyCheckExercises(llmExercises, library, userRestrictionTags,
           name: safeVariant.name,
           position: safeVariant.position,
           restriction_tags: safeVariant.restriction_tags || [],
-          safety_notes: (ex.safety_notes || '') + (ex.safety_notes ? ' ' : '') + `Substituted with easier variant: ${safeVariant.name}.`,
+          safety_notes: (ex.safety_notes || '') + (ex.safety_notes ? ' ' : '') + `Substituted with easier library variant: ${safeVariant.name}.`,
         });
         continue;
       }
@@ -214,7 +218,7 @@ export function safetyCheckExercises(llmExercises, library, userRestrictionTags,
     fallbackExercises = findFallbackExercises(library, userRestrictionTags, userEquipment, userCapabilityTags, needed, currentNames);
     exercises = [...exercises, ...fallbackExercises];
     if (fallbackExercises.length > 0) {
-      safetyNotes += ` Backfilled with ${fallbackExercises.length} safe seated/low-impact exercise(s): ${fallbackExercises.map(e => e.name).join(', ')}.`;
+      safetyNotes += ` Backfilled with ${fallbackExercises.length} safe exercise(s): ${fallbackExercises.map(e => e.name).join(', ')}.`;
     }
   }
 
