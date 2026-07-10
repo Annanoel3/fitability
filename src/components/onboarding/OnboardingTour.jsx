@@ -66,10 +66,10 @@ if (typeof document !== "undefined" && !document.getElementById("fitability-tour
 export default function OnboardingTour({ profile, onComplete }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [tourStep, setTourStep] = useState("welcome");
+  const [tourStep, setTourStep] = useState("intro_1");
   const [showWorkoutBridge, setShowWorkoutBridge] = useState(false);
   const [emojiClickCount, setEmojiClickCount] = useState(0);
-  const tourStepRef = useRef("welcome");
+  const tourStepRef = useRef("intro_1");
 
   const advance = (step) => {
     tourStepRef.current = step;
@@ -77,7 +77,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     window.fitabilityTourStep = step;
     window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: step } }));
     // Ensure user is on the correct page for each step
-    if (step === "welcome" || step === "workout") navigate("/");
+    if (step === "intro_1" || step === "intro_2" || step === "welcome" || step === "workout") navigate("/");
     // coach prompt: user taps the nav icon (no auto-navigation)
     if (step === "library_exercise") navigate("/exercises");
     if (step === "progress_log") navigate("/progress");
@@ -150,8 +150,8 @@ export default function OnboardingTour({ profile, onComplete }) {
 
   // Broadcast initial step on mount
   useEffect(() => {
-    window.fitabilityTourStep = "welcome";
-    window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "welcome" } }));
+    window.fitabilityTourStep = "intro_1";
+    window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "intro_1" } }));
   }, []);
 
   // Dim + lock overlay: one light scrim behind every tour popup, at z-45 (below the
@@ -215,6 +215,53 @@ export default function OnboardingTour({ profile, onComplete }) {
         onClick={e => e.stopPropagation()}
         onTouchStart={e => e.stopPropagation()}
       />
+    );
+  }
+
+  // ── STAGE 1 INTRO ── (shown before any tour step)
+  if (tourStep === "intro_1") {
+    return (
+      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5">
+        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-4">
+          <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <span>👋</span>
+          </div>
+          <div>
+            <h2 className="font-heading font-bold text-foreground">Welcome to FitAbility!</h2>
+            <p className="text-muted-foreground mt-2 leading-relaxed">
+              Want a quick walkthrough? I'll show you around so you know how everything works — it only takes a minute.
+            </p>
+          </div>
+          <Button className="w-full h-10 gap-2" onClick={() => advance("intro_2")}>
+            Show me around <ArrowRight className="w-4 h-4" />
+          </Button>
+          <button onClick={completeTour} className="w-full text-muted-foreground py-1 hover:text-foreground transition-colors">
+            Skip tour
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── STAGE 2 INTRO ── (after "Show me around", before tour steps begin)
+  if (tourStep === "intro_2") {
+    return (
+      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5">
+        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-4">
+          <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <span>✨</span>
+          </div>
+          <div>
+            <h2 className="font-heading font-bold text-foreground">You're in the tour</h2>
+            <p className="text-muted-foreground mt-2 leading-relaxed">
+              Just follow the glowing icons — tap wherever they point, and I'll guide you through step by step. Some buttons are paused until the tour's done. When you finish, the app is all yours!
+            </p>
+          </div>
+          <Button className="w-full h-10 gap-2" onClick={() => advance("welcome")}>
+            Got it, let's go <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
     );
   }
 
