@@ -12,7 +12,21 @@ const ANIM_STYLE = `
   }
   .tour-card {
     animation: tour-pop-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    max-width: 20rem;
+    max-height: 68vh;
+    overflow-y: auto;
+    padding: 1.25rem 1.25rem;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    margin: 0 auto;
+    -webkit-overflow-scrolling: touch;
   }
+  .tour-card h2 { font-size: 1.125rem; }
+  .tour-card h3 { font-size: 1rem; }
+  .tour-card .tour-icon {
+    width: 3rem; height: 3rem;
+  }
+  .tour-card .tour-icon span { font-size: 1.5rem; }
   @keyframes tour-fade-in {
     0%   { opacity: 0; }
     100% { opacity: 1; }
@@ -177,13 +191,13 @@ export default function OnboardingTour({ profile, onComplete }) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center px-5">
         
-        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-7 shadow-2xl text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
-            <span className="text-3xl">🎉</span>
+        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-3">
+          <div className="tour-icon rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+            <span>🎉</span>
           </div>
           <div>
-            <h3 className="font-heading font-bold text-xl text-foreground">Workout is on its way!</h3>
-            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            <h3 className="font-heading font-bold text-foreground">Workout is on its way!</h3>
+            <p className="text-muted-foreground mt-2 leading-relaxed">
               Great job! Your personalized workout is being generated. Next up — meet your AI Coach who can adjust your workouts anytime.
             </p>
           </div>
@@ -217,34 +231,34 @@ export default function OnboardingTour({ profile, onComplete }) {
     return (
       <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5">
         
-        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-7 shadow-2xl text-center space-y-5">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto cursor-pointer" onClick={handleEmojiClick}>
-            <span className="text-3xl">🎉</span>
+        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-4">
+          <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto cursor-pointer" onClick={handleEmojiClick}>
+            <span>🎉</span>
           </div>
           <div>
-            <h2 className="font-heading font-bold text-2xl text-foreground">Welcome to FitAbility!</h2>
-            <p className="text-muted-foreground text-sm mt-3 leading-relaxed">
+            <h2 className="font-heading font-bold text-foreground">Welcome to FitAbility!</h2>
+            <p className="text-muted-foreground mt-2 leading-relaxed">
               This is your Home — where you'll check in each day, start your personalized workout, and track your streak. Let's take a quick tour.
             </p>
           </div>
-          <div className="space-y-2 text-left bg-muted/50 rounded-xl p-4">
-            <div className="flex items-center gap-3 text-sm text-foreground">
-              <Bot className="w-5 h-5 text-primary flex-shrink-0" />
+          <div className="space-y-2 text-left bg-muted/50 rounded-xl p-3">
+            <div className="flex items-center gap-2 text-foreground">
+              <Bot className="w-4 h-4 text-primary flex-shrink-0" />
               <span><strong>Coach</strong> — adjust workouts, ask questions</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-foreground">
-              <BookOpen className="w-5 h-5 text-primary flex-shrink-0" />
+            <div className="flex items-center gap-2 text-foreground">
+              <BookOpen className="w-4 h-4 text-primary flex-shrink-0" />
               <span><strong>Library</strong> — browse all safe exercises</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-foreground">
-              <TrendingUp className="w-5 h-5 text-primary flex-shrink-0" />
+            <div className="flex items-center gap-2 text-foreground">
+              <TrendingUp className="w-4 h-4 text-primary flex-shrink-0" />
               <span><strong>Progress</strong> — see your journey over time</span>
             </div>
           </div>
-          <Button className="w-full h-12 text-base gap-2" onClick={() => advance("workout")}>
+          <Button className="w-full h-10 gap-2" onClick={() => advance("workout")}>
             Show me around <ArrowRight className="w-4 h-4" />
           </Button>
-          <button onClick={completeTour} className="w-full text-sm text-muted-foreground py-1 mt-1 hover:text-foreground transition-colors">
+          <button onClick={completeTour} className="w-full text-muted-foreground py-1 hover:text-foreground transition-colors">
             Skip the tour, I'll explore on my own
           </button>
         </div>
@@ -272,13 +286,13 @@ export default function OnboardingTour({ profile, onComplete }) {
             z-index: 102;
           }
         `}</style>
-        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-6 shadow-2xl text-center space-y-4 pointer-events-auto">
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <span className="text-2xl">💪</span>
+        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-3 pointer-events-auto">
+          <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <span>💪</span>
           </div>
           <div>
-            <h3 className="font-heading font-bold text-lg text-foreground">Start your first workout!</h3>
-            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            <h3 className="font-heading font-bold text-foreground">Start your first workout!</h3>
+            <p className="text-muted-foreground mt-2 leading-relaxed">
               Tap the glowing button below to choose your workout type and intensity.
             </p>
           </div>
@@ -393,17 +407,17 @@ export default function OnboardingTour({ profile, onComplete }) {
     return (
       <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5">
         
-        <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-sm p-8 shadow-2xl text-center space-y-5">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <span className="text-3xl">🎯</span>
+        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-4">
+          <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <span>🎯</span>
           </div>
           <div>
-            <h3 className="font-heading font-bold text-xl text-foreground">You're all set!</h3>
-            <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+            <h3 className="font-heading font-bold text-foreground">You're all set!</h3>
+            <p className="text-muted-foreground mt-2 leading-relaxed">
               You now know the essentials. Check in daily, start your workout from Home, and visit your Coach anytime you have questions or need to adjust your plan.
             </p>
           </div>
-          <Button className="w-full h-12 text-base gap-2" onClick={completeTour}>
+          <Button className="w-full h-10 gap-2" onClick={completeTour}>
             Let's go! <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
@@ -418,13 +432,13 @@ function NavSpotlight({ icon, title, message }) {
   return (
     <div className="fixed inset-0 z-[99] pointer-events-none flex items-center justify-center px-5 pb-24">
       
-      <div className="tour-card bg-card rounded-3xl border border-border w-full max-w-xs p-8 shadow-2xl text-center space-y-5 pointer-events-auto">
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+      <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-3 pointer-events-auto">
+        <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
           {icon}
         </div>
         <div>
-          <h3 className="font-heading font-bold text-lg text-foreground">{title}</h3>
-          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{message}</p>
+          <h3 className="font-heading font-bold text-foreground">{title}</h3>
+          <p className="text-muted-foreground mt-2 leading-relaxed">{message}</p>
         </div>
       </div>
     </div>
