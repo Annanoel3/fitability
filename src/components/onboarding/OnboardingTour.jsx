@@ -154,7 +154,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     const hiddenSteps = ["done", "coach_message", "workout_picking", "library_exercise_clicked", "navigating_home", "progress_log"];
     const visible = tourStep && !hiddenSteps.includes(tourStep);
     el.style.background = visible ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0)";
-    const allowScroll = tourStep === "library_exercise";
+    const allowScroll = tourStep === "library_exercise" || tourStep === "coach" || tourStep === "coach_message";
     el.style.pointerEvents = (visible && !allowScroll) ? "auto" : "none";
     return () => {
       const e = document.getElementById("tour-backdrop");
