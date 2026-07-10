@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { buildUserTags, difficultyAllowed } from "@/lib/userTags";
+import { safetyCheckExercises } from "@/lib/workoutSafety";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import CheckInCard from "@/components/dashboard/CheckInCard";
@@ -340,22 +341,15 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
     // First LLM call already has full safety context + pre-filtered library + deterministic check below
     const finalResult = { ...result };
 
-        // -- DETERMINISTIC SAFETY RE-CHECK: drop any AI exercise that violates the user's hard restrictions --
+    // -- DETERMINISTIC SAFETY RE-CHECK: name-match, substitute safe variants, never-empty fallback --
     let safetyLib = [];
     try { safetyLib = await base44.entities.Exercise.list('-created_date', 500); } catch (e) {}
-    const libByName = {};
-    safetyLib.forEach(ex => { libByName[(ex.name || '').toLowerCase().trim()] = ex; });
-    const removedBySafety = [];
-    finalResult.exercises = (finalResult.exercises || []).filter(ex => {
-      if (userRestrictionTags.has('cannot_stand') && ex.position === 'Standing') { removedBySafety.push(ex.name); return false; }
-      const lib = libByName[(ex.name || '').toLowerCase().trim()];
-      const tags = lib ? (lib.restriction_tags || []) : (ex.restriction_tags || []);
-      if (tags.some(t => userRestrictionTags.has(t))) { removedBySafety.push(ex.name); return false; }
-      if (lib && !difficultyAllowed(lib.difficulty, userRestrictionTags)) { removedBySafety.push(ex.name); return false; }
-      return true;
-    });
+    const { exercises: safeExercises, safetyNotes } = safetyCheckExercises(
+      finalResult.exercises, safetyLib, userRestrictionTags, userEquipment, userCapabilityTags
+    );
+    finalResult.exercises = safeExercises;
     const safetyPassed = true;
-    if (removedBySafety.length) { finalResult.safety_review = (finalResult.safety_review || '') + ' Final deterministic safety check removed: ' + removedBySafety.join(', ') + '.'; }
+    if (safetyNotes) { finalResult.safety_review = (finalResult.safety_review || '') + ' ' + safetyNotes; }
 
     const created = await base44.entities.WorkoutPlan.create({
       title: finalResult.title,
