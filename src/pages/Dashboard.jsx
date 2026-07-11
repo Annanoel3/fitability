@@ -544,7 +544,7 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
                 window.fitabilityTourStep = "workout_picking";
                 setShowWorkoutPicker(true);
               }} className="w-full h-12">
-                <Sparkles className="w-4 h-4 mr-2" /> Start Your First Workout
+                <Sparkles className="w-4 h-4 mr-2" /> Start Today's Workout
               </Button>
             ) : (
               <p className="text-center text-xs text-muted-foreground">Complete your check-in above to unlock today's workout.</p>
