@@ -280,3 +280,48 @@ export function difficultyAllowed(exerciseDifficulty, restrictionSet) {
   const cap = restrictionSet.has('very_low_mobility') ? 2 : 4;
   return (DIFFICULTY_RANK[exerciseDifficulty] || 1) <= cap;
 }
+
+// ── DIFFICULTY FLOOR ──
+// A minimum difficulty driven by the user's capability level, activity, and self-reported fitness.
+// This raises the bar for capable users so they get Moderate/Advanced work instead of
+// gentle defaults. It does NOT override safety — the ceiling (difficultyAllowed) still
+// applies on top, and restriction_tags still filter first. The floor only raises the
+// minimum among exercises that are already safe for the user.
+//
+// Returns a DIFFICULTY_RANK value (1=Beginner, 2=Easy, 3=Moderate, 4=Advanced).
+export function getDifficultyFloor(profile, restrictionSet) {
+  // Restricted users: no floor — keep everything gentle
+  if (restrictionSet.has('very_low_mobility')) return 1;
+  if (restrictionSet.has('cannot_stand')) return 1;
+
+  const ca = profile.current_abilities || {};
+  const fitness = profile.self_reported_fitness;
+  const activity = profile.activity_level;
+
+  // Athletic → Advanced floor
+  if (fitness === 'Athletic') return 4;
+  // Strong → Moderate floor
+  if (fitness === 'Strong') return 3;
+
+  // Count graded capability signals from the abilities checklist
+  let signals = 0;
+  if (ca.pushups && !['None', '0-5'].includes(ca.pushups)) signals++;
+  if (ca.plank && !['Cannot', 'Under 10 sec'].includes(ca.plank)) signals++;
+  if (ca.cardio && ca.cardio !== 'Cannot') signals++;
+  if (ca.stairs && ca.stairs !== 'Less than 1') signals++;
+  if (ca.balance && !["Can't", 'Under 10 sec'].includes(ca.balance)) signals++;
+  if (ca.lift && !['Light only', 'Cannot lift anything'].includes(ca.lift)) signals++;
+
+  // Seated set users are non-ambulatory — already caught by very_low_mobility/cannot_stand above
+
+  // Medium fitness with 3+ capability signals → Moderate floor
+  if (fitness === 'Medium' && signals >= 3) return 3;
+  // Medium fitness with 1+ signals → Easy floor
+  if (fitness === 'Medium' && signals >= 1) return 2;
+  // Light fitness with 4+ signals → Easy floor
+  if (fitness === 'Light' && signals >= 4) return 2;
+  // Active lifestyle without restrictions → at least Easy floor
+  if (activity === 'Active' || activity === 'Moderate activity') return 2;
+
+  return 1;
+}

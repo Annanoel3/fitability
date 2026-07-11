@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { buildUserTags, difficultyAllowed } from "@/lib/userTags";
+import { buildUserTags, difficultyAllowed, getDifficultyFloor, DIFFICULTY_RANK } from "@/lib/userTags";
 import { safetyCheckExercises } from "@/lib/workoutSafety";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,37 @@ import ArchivedWorkouts from "@/components/dashboard/ArchivedWorkouts";
 // Exercise restriction_tags use these exact strings. User tags are generated here and matched against them.
 // When adding a new tag here, also add it to the tagExistingExercises function vocabulary.
 
+// ── FIX 1: CONDITION-SPECIFIC VARIANT DETECTION ──
+// Exercises with condition labels (PD:, HC:, (Knee Pain), Post-Surgery, etc.) are
+// modified variants designed for users with that specific condition. They should NOT
+// be surfaced to users who don't have the matching restriction — doing so floods the
+// LLM context with gentle/adaptive exercises and misleads it into over-modifying.
+// Each marker maps to the restriction tag a user must have for the variant to be relevant.
+const CONDITION_VARIANT_MARKERS = [
+  { pattern: /PD:|parkinson/i, tag: 'parkinsons' },
+  { pattern: /HC:|heart condition/i, tag: 'heart_condition' },
+  { pattern: /knee\s*pain/i, tag: 'knee_pain' },
+  { pattern: /post.?surg/i, tag: 'post_surgery' },
+  { pattern: /MS:|multiple\s*sclerosis/i, tag: 'multiple_sclerosis' },
+  { pattern: /CP:|cerebral\s*palsy/i, tag: 'cerebral_palsy' },
+  { pattern: /stroke/i, tag: 'stroke_recovery' },
+  { pattern: /wheelchair/i, tag: 'wheelchair_user' },
+  { pattern: /\(supported\)|\(assisted\)/i, tag: 'balance_issues' },
+  { pattern: /osteoporosis/i, tag: 'osteoporosis' },
+  { pattern: /vertigo/i, tag: 'vertigo' },
+  { pattern: /pregnan/i, tag: 'pregnancy' },
+];
 
+// Returns true if the exercise name contains a condition-specific marker that the
+// user does NOT have — meaning this variant should be excluded from their candidate pool.
+function isUnwantedConditionVariant(name, userRestrictionTags) {
+  for (const { pattern, tag } of CONDITION_VARIANT_MARKERS) {
+    if (pattern.test(name || '')) {
+      if (!userRestrictionTags.has(tag)) return true;
+    }
+  }
+  return false;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -149,6 +179,7 @@ export default function Dashboard() {
 
     // Build granular user tags from full profile
     const { restriction: userRestrictionTags, capability: userCapabilityTags } = buildUserTags(p);
+    const difficultyFloor = getDifficultyFloor(p, userRestrictionTags);
     // chair and wall are always available — everyone has them
     const userEquipment = [...new Set([
       'chair', 'wall',
@@ -166,13 +197,27 @@ export default function Dashboard() {
         const requiredEquip = (ex.equipment_tags || []);
         if (requiredEquip.length > 0 && !requiredEquip.every(eq => userEquipment.includes(eq))) return false;
         if (recentExerciseNames.has(ex.name)) return false;
+        // Don't surface condition-specific variants for users without the matching condition
+        if (isUnwantedConditionVariant(ex.name, userRestrictionTags)) return false;
         return true;
       });
     } catch (e) { /* library may be empty, LLM will generate from scratch */ }
 
-    candidateExercises.sort((a, b) => ((b.suitable_for_tags || []).some(t => userCapabilityTags.has(t)) ? 1 : 0) - ((a.suitable_for_tags || []).some(t => userCapabilityTags.has(t)) ? 1 : 0));
+    // Sort: (1) exercises at/above difficulty floor first, (2) then by capability tag match.
+    // This ensures harder standard exercises reach the LLM pool instead of flooding it
+    // with Beginner/Easy gentle variants that happen to match broad capability tags.
+    candidateExercises.sort((a, b) => {
+      const aDiff = DIFFICULTY_RANK[a.difficulty] || 1;
+      const bDiff = DIFFICULTY_RANK[b.difficulty] || 1;
+      const aAbove = aDiff >= difficultyFloor ? 1 : 0;
+      const bAbove = bDiff >= difficultyFloor ? 1 : 0;
+      if (aAbove !== bAbove) return bAbove - aAbove;
+      const aMatch = (a.suitable_for_tags || []).filter(t => userCapabilityTags.has(t)).length;
+      const bMatch = (b.suitable_for_tags || []).filter(t => userCapabilityTags.has(t)).length;
+      return bMatch - aMatch;
+    });
     const libraryContext = candidateExercises.length > 0
-      ? `\n\nEXERCISE LIBRARY — ALREADY HARD-FILTERED FOR THIS USER'S SPECIFIC TAGS:\nEvery exercise below has been verified safe for this individual. Select from this list first. Exercises marked [BEST FIT] are especially well-suited to this person — prioritize including several of them. Strongly prefer exercises that need NO equipment — bodyweight only, or at most a chair or wall; only choose equipment-based exercises (resistance bands, dumbbells, mat) when they add clear, specific value for this user. You may also create new exercises that would pass the same tag filter.\n${candidateExercises.slice(0, 70).map(ex => `${(ex.suitable_for_tags || []).some(t => userCapabilityTags.has(t)) ? "[BEST FIT] " : "• "}${ex.name} [${ex.category}, ${ex.position}, ${ex.difficulty}]${ex.description ? ' — ' + ex.description.slice(0, 80) : ''}`).join('\n')}`
+      ? `\n\nEXERCISE LIBRARY — ALREADY HARD-FILTERED FOR THIS USER'S SPECIFIC TAGS:\nEvery exercise below has been verified safe for this individual. Select from this list first. Exercises are sorted with appropriately challenging, standard (non-condition-specific) variants first — prioritize including several from the top of the list. Condition-specific variants have been excluded unless the user has that condition. Strongly prefer exercises that need NO equipment — bodyweight only, or at most a chair or wall; only choose equipment-based exercises (resistance bands, dumbbells, mat) when they add clear, specific value for this user. You may also create new exercises that would pass the same tag filter.\n${candidateExercises.slice(0, 70).map(ex => `${(ex.suitable_for_tags || []).some(t => userCapabilityTags.has(t)) ? "[BEST FIT] " : "• "}${ex.name} [${ex.category}, ${ex.position}, ${ex.difficulty}]${ex.description ? ' — ' + ex.description.slice(0, 80) : ''}`).join('\n')}`
       : "";
 
     const restrictionTagsList = Array.from(userRestrictionTags).join(', ') || 'none';
