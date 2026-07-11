@@ -298,30 +298,41 @@ export function getDifficultyFloor(profile, restrictionSet) {
   const fitness = profile.self_reported_fitness;
   const activity = profile.activity_level;
 
-  // Athletic → Advanced floor
-  if (fitness === 'Athletic') return 4;
-  // Strong → Moderate floor
-  if (fitness === 'Strong') return 3;
+  // ── BASE FLOOR — driven by fitness, abilities, activity (PRIMARY drivers) ──
+  let floor = 1;
+  if (fitness === 'Athletic') floor = 4;
+  else if (fitness === 'Strong') floor = 3;
+  else {
+    let signals = 0;
+    if (ca.pushups && !['None', '0-5'].includes(ca.pushups)) signals++;
+    if (ca.plank && !['Cannot', 'Under 10 sec'].includes(ca.plank)) signals++;
+    if (ca.cardio && ca.cardio !== 'Cannot') signals++;
+    if (ca.stairs && ca.stairs !== 'Less than 1') signals++;
+    if (ca.balance && !["Can't", 'Under 10 sec'].includes(ca.balance)) signals++;
+    if (ca.lift && !['Light only', 'Cannot lift anything'].includes(ca.lift)) signals++;
 
-  // Count graded capability signals from the abilities checklist
-  let signals = 0;
-  if (ca.pushups && !['None', '0-5'].includes(ca.pushups)) signals++;
-  if (ca.plank && !['Cannot', 'Under 10 sec'].includes(ca.plank)) signals++;
-  if (ca.cardio && ca.cardio !== 'Cannot') signals++;
-  if (ca.stairs && ca.stairs !== 'Less than 1') signals++;
-  if (ca.balance && !["Can't", 'Under 10 sec'].includes(ca.balance)) signals++;
-  if (ca.lift && !['Light only', 'Cannot lift anything'].includes(ca.lift)) signals++;
+    if (fitness === 'Medium' && signals >= 3) floor = 3;
+    else if (fitness === 'Medium' && signals >= 1) floor = 2;
+    else if (fitness === 'Light' && signals >= 4) floor = 2;
+    else if (activity === 'Active' || activity === 'Moderate activity') floor = 2;
+  }
 
-  // Seated set users are non-ambulatory — already caught by very_low_mobility/cannot_stand above
+  // ── FIX B: Sex as a SMALL secondary nudge (+0.5 for male) ──
+  // Never a full tier; primary drivers dominate. A fit woman still gets
+  // challenging work; an unfit man is NOT over-challenged. The nudge only
+  // affects sort ordering (which exercises are "above floor"), not pool
+  // membership or the ceiling.
+  if (profile.sex === 'Male') floor = Math.min(floor + 0.5, 4);
 
-  // Medium fitness with 3+ capability signals → Moderate floor
-  if (fitness === 'Medium' && signals >= 3) return 3;
-  // Medium fitness with 1+ signals → Easy floor
-  if (fitness === 'Medium' && signals >= 1) return 2;
-  // Light fitness with 4+ signals → Easy floor
-  if (fitness === 'Light' && signals >= 4) return 2;
-  // Active lifestyle without restrictions → at least Easy floor
-  if (activity === 'Active' || activity === 'Moderate activity') return 2;
+  // ── FIX A1: BMI cap — lowers the floor for obese users ──
+  // Applied LAST so it always wins over the sex nudge. BMI≥35 → cap at 1
+  // (Beginner); BMI≥30 → cap at 2 (Easy). This prevents an obese-but-otherwise-
+  // able user from being pushed to Moderate/Advanced work.
+  const bmi = (profile.weight_lbs && profile.height_inches)
+    ? (profile.weight_lbs / (profile.height_inches * profile.height_inches)) * 703
+    : null;
+  if (bmi && bmi >= 35) floor = Math.min(floor, 1);
+  else if (bmi && bmi >= 30) floor = Math.min(floor, 2);
 
-  return 1;
+  return floor;
 }
