@@ -68,6 +68,17 @@ const ANIM_STYLE = `
     animation: tour-demo-pulse 1.5s ease-in-out infinite;
     padding-bottom: 0.5rem;
   }
+  .tour-tour-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: hsl(var(--foreground));
+    animation: tour-demo-pulse 1.5s ease-in-out infinite;
+    padding-bottom: 0.5rem;
+  }
 `;
 
 // Inject the shared tour animation styles once, when this module first loads
@@ -189,7 +200,7 @@ function DraggableTourCard({ children, tourStep }) {
           <Move className="w-6 h-6" />
         </div>
         <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl pointer-events-auto">
-          <div className="tour-demo-label">DEMO</div>
+          <div className="tour-tour-label">TOUR</div>
           {children}
         </div>
       </div>
