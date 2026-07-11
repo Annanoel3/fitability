@@ -57,6 +57,17 @@ const ANIM_STYLE = `
     0%, 100% { opacity: 0.45; transform: scale(1); }
     50%      { opacity: 1;    transform: scale(1.08); }
   }
+  @keyframes tour-drag-wiggle {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25%      { transform: translate(2px, -1px) rotate(8deg); }
+    50%      { transform: translate(0, 2px) rotate(0deg); }
+    75%      { transform: translate(-2px, -1px) rotate(-8deg); }
+  }
+  .tour-drag-hint {
+    animation: tour-drag-wiggle 2s ease-in-out infinite;
+    color: #c4b5fd !important;
+    background: rgba(196, 181, 253, 0.12) !important;
+  }
   .tour-demo-label, .tour-tour-label {
     display: flex;
     align-items: center;
@@ -100,7 +111,7 @@ if (typeof document !== "undefined" && !document.getElementById("fitability-tour
 // isDragging stays false for touches that start elsewhere.
 // Clamps position so at least 48px of the card stays visible on every edge.
 // Resets drag offset when the tour step changes (each popup starts centered).
-function DraggableTourCard({ children, tourStep }) {
+function DraggableTourCard({ children, tourStep, showDragHint = false }) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
   const isDragging = useRef(false);
@@ -186,11 +197,16 @@ function DraggableTourCard({ children, tourStep }) {
         <div
           onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; startDrag(t.clientX, t.clientY); }}
           onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startDrag(e.clientX, e.clientY); }}
-          className="absolute top-2 right-2 z-20 p-2 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground hover:bg-muted/70 transition-colors pointer-events-auto"
+          className={`absolute top-2 right-2 z-20 p-2 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground hover:bg-muted/70 transition-colors pointer-events-auto ${showDragHint ? "tour-drag-hint" : ""}`}
           style={{ touchAction: 'none' }}
           aria-label="Drag to move"
         >
           <Move className="w-6 h-6" />
+          {showDragHint && (
+            <span className="absolute -bottom-1 right-1/2 translate-x-1/2 translate-y-full whitespace-nowrap text-[0.625rem] font-semibold text-muted-foreground bg-muted/80 px-1.5 py-0.5 rounded-md">
+              drag me ↗
+            </span>
+          )}
         </div>
         <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl pointer-events-auto">
           <div className="tour-tour-label">DEMO MODE</div>
@@ -409,7 +425,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     };
 
     return (
-      <DraggableTourCard tourStep={tourStep}>
+      <DraggableTourCard tourStep={tourStep} showDragHint={true}>
         <div className="text-center space-y-4">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto cursor-pointer" onClick={handleEmojiClick}>
             <span>🎉</span>
