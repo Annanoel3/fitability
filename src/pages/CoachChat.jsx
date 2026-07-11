@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Send, Bot, Loader2, CheckCircle2, Mic } from "lucide-react";
+import { Send, Bot, Loader2, CheckCircle2, Mic, ArrowRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
 
@@ -389,7 +389,19 @@ export default function CoachChat() {
                 outline-offset: 2px !important;
                 pointer-events: auto !important;
               }
+              @keyframes coach-send-arrow-bounce {
+                0%, 100% { transform: translateX(0); }
+                50%      { transform: translateX(8px); }
+              }
+              .tour-send-arrow {
+                animation: coach-send-arrow-bounce 0.8s ease-in-out infinite;
+              }
             `}</style>
+          )}
+          {isTourCoachMessage && (
+            <div className="tour-send-arrow flex items-center text-[#c4b5fd] font-bold text-sm whitespace-nowrap mr-1 my-2 pointer-events-none">
+              Press send <ArrowRight className="w-4 h-4 ml-1" />
+            </div>
           )}
           <Button
             onClick={() => sendMessage()}
