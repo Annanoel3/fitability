@@ -167,7 +167,7 @@ function DraggableTourCard({ children, tourStep }) {
         <div
           onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; startDrag(t.clientX, t.clientY); }}
           onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startDrag(e.clientX, e.clientY); }}
-          className="absolute top-1.5 right-1.5 z-20 p-1.5 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-colors"
+          className="absolute top-1.5 right-1.5 z-20 p-1.5 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-colors pointer-events-auto"
           style={{ touchAction: 'none' }}
           aria-label="Drag to move"
         >
