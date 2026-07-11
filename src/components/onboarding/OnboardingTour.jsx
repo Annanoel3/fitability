@@ -57,17 +57,6 @@ const ANIM_STYLE = `
     0%, 100% { opacity: 0.45; transform: scale(1); }
     50%      { opacity: 1;    transform: scale(1.08); }
   }
-  @keyframes tour-drag-wiggle {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    25%      { transform: translate(2px, -1px) rotate(8deg); }
-    50%      { transform: translate(0, 2px) rotate(0deg); }
-    75%      { transform: translate(-2px, -1px) rotate(-8deg); }
-  }
-  .tour-drag-hint {
-    animation: tour-drag-wiggle 2s ease-in-out infinite;
-    color: #c4b5fd !important;
-    background: rgba(196, 181, 253, 0.12) !important;
-  }
   .tour-demo-label, .tour-tour-label {
     display: flex;
     align-items: center;
@@ -111,16 +100,46 @@ if (typeof document !== "undefined" && !document.getElementById("fitability-tour
 // isDragging stays false for touches that start elsewhere.
 // Clamps position so at least 48px of the card stays visible on every edge.
 // Resets drag offset when the tour step changes (each popup starts centered).
-function DraggableTourCard({ children, tourStep, showDragHint = false }) {
+function DraggableTourCard({ children, tourStep, autoDemoDrag = false, onUserDrag, onDemoComplete }) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [demoAnimating, setDemoAnimating] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
   const isDragging = useRef(false);
+  const autoAnimating = useRef(false);
+  const userDraggedFired = useRef(false);
+  const onUserDragRef = useRef(onUserDrag);
+  const onDemoCompleteRef = useRef(onDemoComplete);
   const cardRef = useRef(null);
+
+  // Keep callback refs current (doMove runs from a []-deps effect)
+  useEffect(() => {
+    onUserDragRef.current = onUserDrag;
+    onDemoCompleteRef.current = onDemoComplete;
+  });
 
   // Reset drag position when step changes — each popup starts centered
   useEffect(() => {
     setDragOffset({ x: 0, y: 0 });
+    userDraggedFired.current = false;
   }, [tourStep]);
+
+  // Auto-demo: animate the card position to show the user it's draggable
+  useEffect(() => {
+    if (!autoDemoDrag) return;
+    autoAnimating.current = true;
+    setDemoAnimating(true);
+
+    const t1 = setTimeout(() => setDragOffset({ x: 90, y: -40 }), 900);
+    const t2 = setTimeout(() => setDragOffset({ x: -80, y: 40 }), 2000);
+    const t3 = setTimeout(() => setDragOffset({ x: 0, y: 0 }), 3100);
+    const t4 = setTimeout(() => {
+      autoAnimating.current = false;
+      setDemoAnimating(false);
+      onDemoCompleteRef.current?.();
+    }, 4100);
+
+    return () => { [t1, t2, t3, t4].forEach(clearTimeout); };
+  }, [autoDemoDrag]);
 
   // Window-level move/end listeners — registered once on mount.
   // Using refs (isDragging, dragStart) avoids stale-closure issues.
@@ -148,6 +167,10 @@ function DraggableTourCard({ children, tourStep, showDragHint = false }) {
         newY = Math.max(minY, Math.min(maxY, newY));
       }
       setDragOffset({ x: newX, y: newY });
+      if (!autoAnimating.current && !userDraggedFired.current && onUserDragRef.current) {
+        userDraggedFired.current = true;
+        onUserDragRef.current();
+      }
     };
 
     const onTouchMove = (e) => {
@@ -175,6 +198,8 @@ function DraggableTourCard({ children, tourStep, showDragHint = false }) {
   }, []);
 
   const startDrag = (clientX, clientY) => {
+    autoAnimating.current = false;
+    setDemoAnimating(false);
     isDragging.current = true;
     dragStart.current = {
       x: clientX,
@@ -191,22 +216,18 @@ function DraggableTourCard({ children, tourStep, showDragHint = false }) {
         className="relative"
         style={{
           transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
+          transition: demoAnimating ? 'transform 0.9s ease-in-out' : 'none',
         }}
       >
         {/* Drag handle — top-right corner, pointer-events enabled */}
         <div
           onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; startDrag(t.clientX, t.clientY); }}
           onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startDrag(e.clientX, e.clientY); }}
-          className={`absolute top-2 right-2 z-20 p-2 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground hover:bg-muted/70 transition-colors pointer-events-auto ${showDragHint ? "tour-drag-hint" : ""}`}
+          className={`absolute top-2 right-2 z-20 p-2 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground hover:bg-muted/70 transition-colors pointer-events-auto ${autoDemoDrag && demoAnimating ? "text-[#c4b5fd] bg-[rgba(196,181,253,0.12)]" : ""}`}
           style={{ touchAction: 'none' }}
           aria-label="Drag to move"
         >
           <Move className="w-6 h-6" />
-          {showDragHint && (
-            <span className="absolute -bottom-1 right-1/2 translate-x-1/2 translate-y-full whitespace-nowrap text-[0.625rem] font-semibold text-muted-foreground bg-muted/80 px-1.5 py-0.5 rounded-md">
-              drag me ↗
-            </span>
-          )}
         </div>
         <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl pointer-events-auto">
           <div className="tour-tour-label">DEMO MODE</div>
@@ -223,6 +244,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   const [tourStep, setTourStep] = useState("welcome");
   const [showWorkoutBridge, setShowWorkoutBridge] = useState(false);
   const [emojiClickCount, setEmojiClickCount] = useState(0);
+  const [dragDemoPhase, setDragDemoPhase] = useState("animating");
   const tourStepRef = useRef("welcome");
 
   const advance = (step) => {
@@ -230,8 +252,10 @@ export default function OnboardingTour({ profile, onComplete }) {
     setTourStep(step);
     window.fitabilityTourStep = step;
     window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: step } }));
+    // Reset drag demo phase when entering that step
+    if (step === "drag_demo") setDragDemoPhase("animating");
     // Ensure user is on the correct page for each step
-    if (step === "intro_2" || step === "welcome" || step === "workout") navigate("/");
+    if (step === "intro_2" || step === "welcome" || step === "workout" || step === "drag_demo") navigate("/");
     // coach prompt: user taps the nav icon (no auto-navigation)
     if (step === "library_exercise") navigate("/exercises");
     if (step === "progress_log") navigate("/progress");
@@ -392,6 +416,64 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
+  // ── DRAG DEMO — dedicated step showing popups are draggable ──
+  if (tourStep === "drag_demo") {
+    return (
+      <DraggableTourCard
+        tourStep={tourStep}
+        autoDemoDrag={true}
+        onDemoComplete={() => setDragDemoPhase("try_it")}
+        onUserDrag={() => {
+          setDragDemoPhase("dragged");
+          setTimeout(() => advance("intro_2"), 1500);
+        }}
+      >
+        {dragDemoPhase === "animating" && (
+          <div className="text-center space-y-3">
+            <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+              <Move className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-foreground">Popups are draggable!</h3>
+              <p className="text-muted-foreground mt-2 leading-relaxed">
+                If a popup is ever in your way, grab the ✥ handle in the corner and drag it wherever you like. Watch this…
+              </p>
+            </div>
+          </div>
+        )}
+        {dragDemoPhase === "try_it" && (
+          <div className="text-center space-y-3">
+            <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+              <span>👆</span>
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-foreground">Your turn!</h3>
+              <p className="text-muted-foreground mt-2 leading-relaxed">
+                Try grabbing the ✥ handle in the top-right corner and dragging this card around.
+              </p>
+            </div>
+            <Button className="w-full h-10 gap-2" onClick={() => advance("intro_2")}>
+              Continue <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+        {dragDemoPhase === "dragged" && (
+          <div className="text-center space-y-3">
+            <div className="tour-icon rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+              <span>✓</span>
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-foreground">You've got it!</h3>
+              <p className="text-muted-foreground mt-2 leading-relaxed">
+                Now you can move any popup whenever you need to.
+              </p>
+            </div>
+          </div>
+        )}
+      </DraggableTourCard>
+    );
+  }
+
   // ── EXPLAINER ── (after "Show me around", before tour steps begin)
   if (tourStep === "intro_2") {
     return (
@@ -425,7 +507,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     };
 
     return (
-      <DraggableTourCard tourStep={tourStep} showDragHint={true}>
+      <DraggableTourCard tourStep={tourStep}>
         <div className="text-center space-y-4">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto cursor-pointer" onClick={handleEmojiClick}>
             <span>🎉</span>
@@ -450,7 +532,7 @@ export default function OnboardingTour({ profile, onComplete }) {
               <span><strong>Progress</strong> — see your journey over time</span>
             </div>
           </div>
-          <Button className="w-full h-10 gap-2" onClick={() => advance("intro_2")}>
+          <Button className="w-full h-10 gap-2" onClick={() => advance("drag_demo")}>
             Show me around <ArrowRight className="w-4 h-4" />
           </Button>
           <button onClick={completeTour} className="w-full text-muted-foreground py-1 hover:text-foreground transition-colors">
