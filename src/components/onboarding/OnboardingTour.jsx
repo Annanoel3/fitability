@@ -166,10 +166,10 @@ function DraggableTourCard({ children, tourStep }) {
 export default function OnboardingTour({ profile, onComplete }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [tourStep, setTourStep] = useState("intro_1");
+  const [tourStep, setTourStep] = useState("welcome");
   const [showWorkoutBridge, setShowWorkoutBridge] = useState(false);
   const [emojiClickCount, setEmojiClickCount] = useState(0);
-  const tourStepRef = useRef("intro_1");
+  const tourStepRef = useRef("welcome");
 
   const advance = (step) => {
     tourStepRef.current = step;
@@ -177,7 +177,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     window.fitabilityTourStep = step;
     window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: step } }));
     // Ensure user is on the correct page for each step
-    if (step === "intro_1" || step === "intro_2" || step === "welcome" || step === "workout") navigate("/");
+    if (step === "intro_2" || step === "welcome" || step === "workout") navigate("/");
     // coach prompt: user taps the nav icon (no auto-navigation)
     if (step === "library_exercise") navigate("/exercises");
     if (step === "progress_log") navigate("/progress");
@@ -250,8 +250,8 @@ export default function OnboardingTour({ profile, onComplete }) {
 
   // Broadcast initial step on mount
   useEffect(() => {
-    window.fitabilityTourStep = "intro_1";
-    window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "intro_1" } }));
+    window.fitabilityTourStep = "welcome";
+    window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "welcome" } }));
   }, []);
 
   // Dim + lock overlay: one light scrim behind every tour popup, at z-45 (below the
@@ -317,32 +317,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
-  // ── STAGE 1 INTRO ── (shown before any tour step)
-  if (tourStep === "intro_1") {
-    return (
-      <DraggableTourCard tourStep={tourStep}>
-        <div className="text-center space-y-4">
-          <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <span>👋</span>
-          </div>
-          <div>
-            <h2 className="font-heading font-bold text-foreground">Welcome to FitAbility!</h2>
-            <p className="text-muted-foreground mt-2 leading-relaxed">
-              Want a quick walkthrough? I'll show you around so you know how everything works — it only takes a minute.
-            </p>
-          </div>
-          <Button className="w-full h-10 gap-2" onClick={() => advance("intro_2")}>
-            Show me around <ArrowRight className="w-4 h-4" />
-          </Button>
-          <button onClick={completeTour} className="w-full text-muted-foreground py-1 hover:text-foreground transition-colors">
-            Skip tour
-          </button>
-        </div>
-      </DraggableTourCard>
-    );
-  }
-
-  // ── STAGE 2 INTRO ── (after "Show me around", before tour steps begin)
+  // ── EXPLAINER ── (after "Show me around", before tour steps begin)
   if (tourStep === "intro_2") {
     return (
       <DraggableTourCard tourStep={tourStep}>
@@ -356,7 +331,7 @@ export default function OnboardingTour({ profile, onComplete }) {
               Just follow the glowing icons — tap wherever they point, and I'll guide you through step by step. Some buttons are paused until the tour's done. When you finish, the app is all yours!
             </p>
           </div>
-          <Button className="w-full h-10 gap-2" onClick={() => advance("welcome")}>
+          <Button className="w-full h-10 gap-2" onClick={() => advance("workout")}>
             Got it, let's go <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
@@ -400,7 +375,7 @@ export default function OnboardingTour({ profile, onComplete }) {
               <span><strong>Progress</strong> — see your journey over time</span>
             </div>
           </div>
-          <Button className="w-full h-10 gap-2" onClick={() => advance("workout")}>
+          <Button className="w-full h-10 gap-2" onClick={() => advance("intro_2")}>
             Show me around <ArrowRight className="w-4 h-4" />
           </Button>
           <button onClick={completeTour} className="w-full text-muted-foreground py-1 hover:text-foreground transition-colors">

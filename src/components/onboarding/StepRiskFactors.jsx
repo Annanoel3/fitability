@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { Textarea } from "@/components/ui/textarea";
 import { RISK_FACTORS } from "@/lib/constants";
-import { Check, AlertTriangle } from "lucide-react";
+import { Check, AlertTriangle, Mic, Square, Loader2 } from "lucide-react";
+import { isSpeechSupported, captureOnce, stopCapture } from "@/lib/speechEngine";
 
 const SEVERITY_OPTIONS = [
   "A little — I manage it well",
@@ -12,6 +14,10 @@ export default function StepRiskFactors({ data, onChange }) {
   const selected = data.risk_factors || [];
   const details = data.risk_factor_details || {};
   const noRiskFactors = data.no_risk_factors || false;
+  const [activeMic, setActiveMic] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const activeMicRef = useRef(false);
+  const micSupported = isSpeechSupported();
 
   const toggle = (item) => {
     const isSel = selected.includes(item);
@@ -37,6 +43,34 @@ export default function StepRiskFactors({ data, onChange }) {
       },
     });
   };
+
+  const toggleMic = async () => {
+    if (activeMicRef.current) {
+      setActiveMic(false);
+      setTranscribing(true);
+      try { stopCapture(); } catch (e) {}
+      return;
+    }
+    activeMicRef.current = true;
+    setActiveMic(true);
+    try {
+      const transcript = await captureOnce(120000);
+      if (activeMicRef.current && transcript) {
+        const current = (data.risk_factor_other || "").trim();
+        const merged = current ? `${current} ${transcript}` : transcript;
+        onChange({ risk_factor_other: merged, no_risk_factors: false });
+      }
+    } catch (e) {}
+    if (activeMicRef.current) {
+      activeMicRef.current = false;
+      setActiveMic(false);
+    }
+    setTranscribing(false);
+  };
+
+  useEffect(() => {
+    return () => { try { stopCapture(); } catch (e) {} };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -106,15 +140,43 @@ export default function StepRiskFactors({ data, onChange }) {
         })}
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-        <label className="text-sm font-medium text-foreground">Other</label>
-        <input
-          type="text"
-          value={data.risk_factor_other || ""}
-          onChange={(e) => onChange({ risk_factor_other: e.target.value, no_risk_factors: false })}
-          placeholder="Any other risk factor not listed above"
-          className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3 bg-secondary/40 border-b border-border">
+          <span className="text-lg">💬</span>
+          <span className="font-semibold text-sm text-foreground">Anything else the AI should know?</span>
+        </div>
+        <div className="p-4">
+          <Textarea
+            value={data.risk_factor_other || ""}
+            onChange={(e) => onChange({ risk_factor_other: e.target.value, no_risk_factors: false })}
+            placeholder="Type here… e.g. I get dizzy when I stand up too fast, I've had a recent surgery, I'm recovering from COVID, I use a cane..."
+            className="resize-none text-sm min-h-[80px] bg-background"
+            rows={3}
+          />
+          {micSupported && (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={toggleMic}
+                disabled={transcribing}
+                className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
+                  activeMic ? "text-red-500" : transcribing ? "text-muted-foreground" : "text-[#4169E1]"
+                }`}
+              >
+                <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
+                  activeMic
+                    ? "bg-red-500 text-white animate-pulse"
+                    : transcribing
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-[#4169E1] text-white hover:bg-[#4169E1]/90"
+                }`}>
+                  {activeMic ? <Square className="w-4 h-4" /> : transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+                </span>
+                {activeMic ? "Stop" : transcribing ? "Transcribing…" : "Speak"}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

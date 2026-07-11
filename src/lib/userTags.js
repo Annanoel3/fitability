@@ -2,7 +2,8 @@ export function buildUserTags(profile) {
   const restriction = new Set(); // exercises with ANY of these tags are excluded for this user
   const capability = new Set();  // passed to LLM to guide exercise selection toward suitable exercises
   const p = profile;
-  const limitations = (p.body_limitations || []).join(' ').toLowerCase();
+  const otherNotes = (p.risk_factor_other || '').toLowerCase();
+  const limitations = (p.body_limitations || []).join(' ').toLowerCase() + ' ' + otherNotes;
   const disabilities = (p.disabilities || []).join(' ').toLowerCase();
   const allText = limitations + ' ' + disabilities;
 

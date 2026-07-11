@@ -247,7 +247,7 @@ ${(p.body_limitations || []).length > 0 ? (p.body_limitations || []).map(l => ` 
 Pain Areas (0–10 severity):
 ${Object.entries(p.pain_areas || {}).length > 0 ? Object.entries(p.pain_areas).map(([area, level]) => `  • ${area}: ${level}/10${level >= 7 ? ' (SEVERE — avoid all loading of this area)' : level >= 4 ? ' (MODERATE — work around carefully)' : ' (mild)'}`).join('\n') : '  None reported'}
 ${abilitiesBlock}
-Risk Factors: ${(p.risk_factors || []).join(', ') || 'None'}
+Risk Factors: ${(p.risk_factors || []).join(', ') || 'None'}${p.risk_factor_other ? `\nOther health notes: ${p.risk_factor_other}` : ''}
 
 Today's check-in — Mood: ${(checkin || todayCheckin)?.mood || 'N/A'} | Energy: ${(checkin || todayCheckin)?.energy || 'N/A'}
 ${coachMemoryBlock}${riskDetailBlock}
