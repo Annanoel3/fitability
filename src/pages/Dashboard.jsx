@@ -538,8 +538,13 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
           {/* Start Workout button — only shows after check-in or when a workout exists */}
           {(todayWorkout || todayCheckin) && !generating && (
             <Button
+              data-tour-start-workout={tourStep === "workout" ? "true" : undefined}
               onClick={() => {
-                window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "workout_button_clicked" }));
+                if (tourStep === "workout" || tourStep === "workout_picking") {
+                  window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "workout_button_clicked" }));
+                  window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "workout_picking" } }));
+                  window.fitabilityTourStep = "workout_picking";
+                }
                 setShowWorkoutPicker(true);
               }}
               variant="outline"

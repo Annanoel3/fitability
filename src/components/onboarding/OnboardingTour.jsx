@@ -57,36 +57,19 @@ const ANIM_STYLE = `
     0%, 100% { opacity: 0.45; transform: scale(1); }
     50%      { opacity: 1;    transform: scale(1.08); }
   }
-  .tour-demo-label {
+  .tour-demo-label, .tour-tour-label {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9375rem;
-    font-weight: 800;
-    letter-spacing: 0.15em;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
     color: hsl(var(--foreground));
     animation: tour-demo-pulse 1.5s ease-in-out infinite;
-    padding: 0.375rem 0.75rem;
+    padding: 0.2rem 0.5rem;
     margin-bottom: 0.25rem;
     background: rgba(196, 181, 253, 0.18);
-    border-radius: 0.5rem;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .tour-tour-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9375rem;
-    font-weight: 800;
-    letter-spacing: 0.15em;
-    color: hsl(var(--foreground));
-    animation: tour-demo-pulse 1.5s ease-in-out infinite;
-    padding: 0.375rem 0.75rem;
-    margin-bottom: 0.25rem;
-    background: rgba(196, 181, 253, 0.18);
-    border-radius: 0.5rem;
+    border-radius: 0.375rem;
     width: fit-content;
     margin-left: auto;
     margin-right: auto;
@@ -350,11 +333,11 @@ export default function OnboardingTour({ profile, onComplete }) {
         <div className="tour-demo-banner" style={{
           background: "rgba(196, 181, 253, 0.2)",
           border: "1px solid #c4b5fd",
-          borderRadius: "0.625rem",
-          padding: "0.5rem 1.25rem",
-          fontSize: "0.9375rem",
-          fontWeight: 800,
-          letterSpacing: "0.15em",
+          borderRadius: "0.5rem",
+          padding: "0.3rem 0.75rem",
+          fontSize: "0.6875rem",
+          fontWeight: 700,
+          letterSpacing: "0.12em",
           color: "hsl(var(--foreground))",
           animation: "tour-demo-pulse 1.5s ease-in-out infinite",
         }}>
