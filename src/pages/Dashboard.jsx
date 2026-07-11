@@ -547,7 +547,7 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
                 }
                 setShowWorkoutPicker(true);
               }}
-              variant="outline"
+              variant={tourStep === "workout" ? "default" : "outline"}
               className="w-full h-12"
             >
               <Sparkles className="w-4 h-4 mr-2" /> {todayWorkout ? "Start a New Workout" : "Choose Today's Workout"}
