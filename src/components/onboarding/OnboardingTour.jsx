@@ -13,7 +13,7 @@ const ANIM_STYLE = `
   .tour-card {
     animation: tour-pop-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
     max-width: 20rem;
-    max-height: 68vh;
+    max-height: 85vh;
     overflow-y: auto;
     padding: 0 1.25rem 1.25rem 1.25rem;
     font-size: 0.8125rem;
@@ -508,7 +508,7 @@ export default function OnboardingTour({ profile, onComplete }) {
 
     return (
       <DraggableTourCard tourStep={tourStep}>
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-3">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto cursor-pointer" onClick={handleEmojiClick}>
             <span>🎉</span>
           </div>
