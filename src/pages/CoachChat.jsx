@@ -390,30 +390,32 @@ export default function CoachChat() {
                 pointer-events: auto !important;
               }
               @keyframes coach-send-arrow-bounce {
-                0%, 100% { transform: translateX(-50%) translateY(0); }
-                50%      { transform: translateX(-50%) translateY(16px); }
+                0%, 100% { transform: translateY(0); }
+                50%      { transform: translateY(8px); }
               }
               .tour-send-arrow {
                 animation: coach-send-arrow-bounce 1s ease-in-out infinite;
               }
             `}</style>
           )}
-          {isTourCoachMessage && (
-            <div className="tour-send-arrow fixed left-1/2 z-[100] pointer-events-none" style={{ bottom: "5rem" }}>
-              <ArrowDownRight className="w-16 h-16 text-[#c4b5fd] drop-shadow-[0_0_12px_rgba(196,181,253,0.7)]" />
-            </div>
-          )}
-          <Button
-            onClick={() => sendMessage()}
-            data-tour-send-btn={isTourCoachMessage ? "true" : undefined}
-            disabled={sendButtonDisabled()}
-            size="icon"
-            className="rounded-xl my-2 flex-shrink-0"
-            style={isTourCoachMessage ? { pointerEvents: "auto" } : {}}
-            data-tour-coach-send={isTourCoachMessage ? "true" : undefined}>
-            
-            <Send className="w-4 h-4" />
-          </Button>
+          <div className="relative flex-shrink-0">
+            {isTourCoachMessage && (
+              <div className="tour-send-arrow absolute z-[100] pointer-events-none" style={{ right: "3.5rem", bottom: "-0.25rem" }}>
+                <ArrowDownRight className="w-12 h-12 text-[#c4b5fd] drop-shadow-[0_0_12px_rgba(196,181,253,0.7)]" />
+              </div>
+            )}
+            <Button
+              onClick={() => sendMessage()}
+              data-tour-send-btn={isTourCoachMessage ? "true" : undefined}
+              disabled={sendButtonDisabled()}
+              size="icon"
+              className="rounded-xl my-2 flex-shrink-0"
+              style={isTourCoachMessage ? { pointerEvents: "auto" } : {}}
+              data-tour-coach-send={isTourCoachMessage ? "true" : undefined}>
+
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>);
