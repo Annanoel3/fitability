@@ -54,11 +54,9 @@ const StepBodyMap = forwardRef(function StepBodyMap({ data, onChange, onAdvance 
     }
   }));
 
-  useEffect(() => {
-    setTimeout(() => {
-      toggleRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
-  }, []);
+  // No scrollIntoView on mount — the parent Onboarding.jsx handles scroll reset.
+  // Calling scrollIntoView here would fire AFTER the parent's reset and re-scroll
+  // the user to the middle of the step (the toggle is mid-content).
 
   const toggle = (id) => {
     const currentViewMarked = view === "front" ? frontMarked : backMarked;

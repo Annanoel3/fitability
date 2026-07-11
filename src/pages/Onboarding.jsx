@@ -113,10 +113,20 @@ export default function Onboarding() {
   // height after the initial paint, which would otherwise push scroll back down.
   useEffect(() => {
     const reset = () => {
+      // Reset the inner overflow-y-auto container
       if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      // Reset window/document — on mobile the page scrolls at the body level
+      // because min-h-screen lets the container grow beyond the viewport,
+      // so flex-1's overflow-y-auto never engages and scroll lives on window
+      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+      window.scrollTo(0, 0);
     };
     reset();
+    // Double rAF: runs after first paint and after layout settles
     requestAnimationFrame(() => requestAnimationFrame(reset));
+    // Additional reset after a short delay for late layout (SVGs, dynamic lists)
+    const t = setTimeout(reset, 150);
+    return () => clearTimeout(t);
   }, [step]);
 
   const handleChange = (updates) => {
