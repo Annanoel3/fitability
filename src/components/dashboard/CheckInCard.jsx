@@ -18,7 +18,7 @@ const ENERGIES = [
   { value: "Exhausted", icon: BatteryWarning, label: "Exhausted" }
 ];
 
-export default function CheckInCard({ onCheckInComplete }) {
+export default function CheckInCard({ onCheckInComplete, tourActive, onTourWorkoutClick }) {
   const [mood, setMood] = useState(null);
   const [energy, setEnergy] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -88,8 +88,9 @@ export default function CheckInCard({ onCheckInComplete }) {
       </div>
 
       <Button
-        onClick={handleSubmit}
-        disabled={!mood || !energy || saving}
+        data-tour-start-workout={tourActive ? "true" : undefined}
+        onClick={tourActive && onTourWorkoutClick ? onTourWorkoutClick : handleSubmit}
+        disabled={tourActive ? false : (!mood || !energy || saving)}
         className="w-full h-12"
       >
         {saving ? "Saving..." : "Start Today's Workout"}

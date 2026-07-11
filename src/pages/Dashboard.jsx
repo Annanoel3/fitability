@@ -490,7 +490,16 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
       {!generating && !emergency && (
         <>
           {!todayCheckin && !todayWorkout && (
-            <CheckInCard onCheckInComplete={handleCheckIn} />
+            <CheckInCard
+              onCheckInComplete={handleCheckIn}
+              tourActive={tourStep === "workout"}
+              onTourWorkoutClick={() => {
+                window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "workout_button_clicked" }));
+                window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "workout_picking" } }));
+                window.fitabilityTourStep = "workout_picking";
+                setShowWorkoutPicker(true);
+              }}
+            />
           )}
 
           {todayWorkout && (
@@ -526,16 +535,11 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
             </Link>
           )}
 
-          {/* Single persistent Start Workout button — shows after check-in, with workout, or during tour */}
-          {(todayWorkout || todayCheckin || tourStep === "workout") && !generating && (
+          {/* Start Workout button — only shows after check-in or when a workout exists */}
+          {(todayWorkout || todayCheckin) && !generating && (
             <Button
-              data-tour-start-workout={tourStep === "workout" ? "true" : undefined}
               onClick={() => {
                 window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "workout_button_clicked" }));
-                if (tourStep === "workout") {
-                  window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "workout_picking" } }));
-                  window.fitabilityTourStep = "workout_picking";
-                }
                 setShowWorkoutPicker(true);
               }}
               variant="outline"
