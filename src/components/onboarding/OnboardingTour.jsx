@@ -15,7 +15,7 @@ const ANIM_STYLE = `
     max-width: 20rem;
     max-height: 68vh;
     overflow-y: auto;
-    padding: 1.25rem 1.25rem;
+    padding: 0 1.25rem 1.25rem 1.25rem;
     font-size: 0.8125rem;
     line-height: 1.4;
     margin: 0 auto;
@@ -67,12 +67,10 @@ const ANIM_STYLE = `
     color: hsl(var(--foreground));
     animation: tour-demo-pulse 1.5s ease-in-out infinite;
     padding: 0.2rem 0.5rem;
-    margin-bottom: 0.25rem;
+    margin: 0.625rem auto 0.5rem auto;
     background: rgba(196, 181, 253, 0.18);
     border-radius: 0.375rem;
     width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
   }
 `;
 
