@@ -61,23 +61,35 @@ const ANIM_STYLE = `
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
+    font-size: 0.9375rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
     color: hsl(var(--foreground));
     animation: tour-demo-pulse 1.5s ease-in-out infinite;
-    padding-bottom: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    margin-bottom: 0.25rem;
+    background: rgba(196, 181, 253, 0.18);
+    border-radius: 0.5rem;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
   }
   .tour-tour-label {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
+    font-size: 0.9375rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
     color: hsl(var(--foreground));
     animation: tour-demo-pulse 1.5s ease-in-out infinite;
-    padding-bottom: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    margin-bottom: 0.25rem;
+    background: rgba(196, 181, 253, 0.18);
+    border-radius: 0.5rem;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
   }
 `;
 
@@ -200,7 +212,7 @@ function DraggableTourCard({ children, tourStep }) {
           <Move className="w-6 h-6" />
         </div>
         <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl pointer-events-auto">
-          <div className="tour-tour-label">TOUR</div>
+          <div className="tour-tour-label">DEMO MODE</div>
           {children}
         </div>
       </div>
@@ -329,7 +341,28 @@ export default function OnboardingTour({ profile, onComplete }) {
     onComplete();
   };
 
-  if (tourStep === "done" || tourStep === "coach_message" || tourStep === "workout_picking") return null;
+  if (tourStep === "done" || tourStep === "workout_picking") return null;
+
+  // Demo banner during coach_message step — no popup card, just a clear indicator
+  if (tourStep === "coach_message") {
+    return (
+      <div className="fixed top-0 left-0 right-0 z-[100] flex justify-center pt-3 px-4 pointer-events-none">
+        <div className="tour-demo-banner" style={{
+          background: "rgba(196, 181, 253, 0.2)",
+          border: "1px solid #c4b5fd",
+          borderRadius: "0.625rem",
+          padding: "0.5rem 1.25rem",
+          fontSize: "0.9375rem",
+          fontWeight: 800,
+          letterSpacing: "0.15em",
+          color: "hsl(var(--foreground))",
+          animation: "tour-demo-pulse 1.5s ease-in-out infinite",
+        }}>
+          DEMO MODE
+        </div>
+      </div>
+    );
+  }
 
   // Bridge overlay shown after workout is generated
   if (tourStep === "workout_generated" || showWorkoutBridge) {
