@@ -399,9 +399,7 @@ export default function CoachChat() {
             `}</style>
           )}
           {isTourCoachMessage && (
-            <div className="tour-send-arrow flex items-center text-[#c4b5fd] font-bold text-sm whitespace-nowrap mr-1 my-2 pointer-events-none">
-              Press send <ArrowRight className="w-4 h-4 ml-1" />
-            </div>
+            <ArrowRight className="tour-send-arrow w-6 h-6 text-[#c4b5fd] my-2 mr-1 pointer-events-none" />
           )}
           <Button
             onClick={() => sendMessage()}
