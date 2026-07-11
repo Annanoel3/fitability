@@ -390,8 +390,8 @@ export default function CoachChat() {
                 pointer-events: auto !important;
               }
               @keyframes coach-send-arrow-bounce {
-                0%, 100% { transform: translate(-30%, -20%); }
-                50%      { transform: translate(10%, 30%); }
+                0%, 100% { transform: translateX(-50%) translateY(0); }
+                50%      { transform: translateX(-50%) translateY(16px); }
               }
               .tour-send-arrow {
                 animation: coach-send-arrow-bounce 1s ease-in-out infinite;
@@ -399,8 +399,8 @@ export default function CoachChat() {
             `}</style>
           )}
           {isTourCoachMessage && (
-            <div className="tour-send-arrow fixed left-1/2 top-1/2 z-[100] pointer-events-none" style={{ transform: "translate(-30%, -20%)" }}>
-              <ArrowDownRight className="w-10 h-10 text-[#c4b5fd] drop-shadow-[0_0_8px_rgba(196,181,253,0.6)]" />
+            <div className="tour-send-arrow fixed left-1/2 z-[100] pointer-events-none" style={{ bottom: "5rem" }}>
+              <ArrowDownRight className="w-16 h-16 text-[#c4b5fd] drop-shadow-[0_0_12px_rgba(196,181,253,0.7)]" />
             </div>
           )}
           <Button
