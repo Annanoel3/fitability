@@ -447,7 +447,7 @@ export default function OnboardingTour({ profile, onComplete }) {
             outline-offset: 2px !important;
             pointer-events: auto !important;
             position: relative;
-            z-index: 102;
+            z-index: 50;
           }
         `}</style>
         <div className="text-center space-y-3">
