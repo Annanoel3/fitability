@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Bot, BookOpen, TrendingUp, ArrowRight, GripVertical } from "lucide-react";
+import { Bot, BookOpen, TrendingUp, ArrowRight, Move } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Shared smooth entrance animation injected once
@@ -167,11 +167,11 @@ function DraggableTourCard({ children, tourStep }) {
         <div
           onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; startDrag(t.clientX, t.clientY); }}
           onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startDrag(e.clientX, e.clientY); }}
-          className="absolute top-1.5 right-1.5 z-20 p-1.5 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-colors pointer-events-auto"
+          className="absolute top-2 right-2 z-20 p-2 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground hover:bg-muted/70 transition-colors pointer-events-auto"
           style={{ touchAction: 'none' }}
           aria-label="Drag to move"
         >
-          <GripVertical className="w-4 h-4" />
+          <Move className="w-6 h-6" />
         </div>
         <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl pointer-events-auto">
           {children}
