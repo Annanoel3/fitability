@@ -66,71 +66,92 @@ if (typeof document !== "undefined" && !document.getElementById("fitability-tour
 // ── DRAGGABLE TOUR CARD — shared wrapper for ALL tour popups ──
 // Centers every popup in the middle of the screen by default.
 // Adds a drag handle (GripVertical icon) in the top-right corner.
-// Uses pointer events (pointerdown/pointermove/pointerup) for cross-device
-// dragging — works with both mouse and touch.
+//
+// DRAG IMPLEMENTATION: window-level touch + mouse listeners (NOT Pointer Events).
+// Pointer Events / setPointerCapture do NOT fire reliably inside Capacitor mobile
+// WebViews on touch — the touchmove never fires after touchstart.  Instead we:
+//   1. onTouchStart / onMouseDown on the handle → set isDragging ref + record start.
+//   2. touchmove / mousemove on WINDOW (registered once, passive:false) → update
+//      offset.  Window-level listeners fire even when the finger leaves the
+//      handle, which is what makes dragging actually work on a phone.
+//   3. e.preventDefault() on touchmove stops the WebView from scrolling/zooming.
+//   4. touch-action:none on the handle prevents the browser intercepting the
+//      gesture before JS runs.
+// Buttons inside the card are unaffected — drag only starts from the handle, and
+// isDragging stays false for touches that start elsewhere.
 // Clamps position so at least 48px of the card stays visible on every edge.
 // Resets drag offset when the tour step changes (each popup starts centered).
 function DraggableTourCard({ children, tourStep }) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
+  const isDragging = useRef(false);
   const cardRef = useRef(null);
-  const handleRef = useRef(null);
 
   // Reset drag position when step changes — each popup starts centered
   useEffect(() => {
     setDragOffset({ x: 0, y: 0 });
   }, [tourStep]);
 
-  const handlePointerDown = (e) => {
-    e.stopPropagation();
-    setIsDragging(true);
+  // Window-level move/end listeners — registered once on mount.
+  // Using refs (isDragging, dragStart) avoids stale-closure issues.
+  useEffect(() => {
+    const doMove = (clientX, clientY) => {
+      if (!isDragging.current) return;
+      const dx = clientX - dragStart.current.x;
+      const dy = clientY - dragStart.current.y;
+      let newX = dragStart.current.offsetX + dx;
+      let newY = dragStart.current.offsetY + dy;
+
+      const card = cardRef.current;
+      if (card) {
+        const rect = card.getBoundingClientRect();
+        const margin = 48;
+        const halfW = rect.width / 2;
+        const halfH = rect.height / 2;
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        const maxX = window.innerWidth - margin - centerX + halfW;
+        const minX = margin - centerX - halfW;
+        const maxY = window.innerHeight - margin - centerY + halfH;
+        const minY = margin - centerY - halfH;
+        newX = Math.max(minX, Math.min(maxX, newX));
+        newY = Math.max(minY, Math.min(maxY, newY));
+      }
+      setDragOffset({ x: newX, y: newY });
+    };
+
+    const onTouchMove = (e) => {
+      if (!isDragging.current) return;
+      e.preventDefault(); // stop the WebView from scrolling/zooming during drag
+      const t = e.touches[0];
+      doMove(t.clientX, t.clientY);
+    };
+    const onTouchEnd = () => { isDragging.current = false; };
+    const onMouseMove = (e) => doMove(e.clientX, e.clientY);
+    const onMouseUp = () => { isDragging.current = false; };
+
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
+    window.addEventListener('touchcancel', onTouchEnd);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
+
+  const startDrag = (clientX, clientY) => {
+    isDragging.current = true;
     dragStart.current = {
-      x: e.clientX,
-      y: e.clientY,
+      x: clientX,
+      y: clientY,
       offsetX: dragOffset.x,
       offsetY: dragOffset.y,
     };
-    if (handleRef.current) {
-      handleRef.current.setPointerCapture(e.pointerId);
-    }
-  };
-
-  const handlePointerMove = (e) => {
-    if (!isDragging) return;
-    const dx = e.clientX - dragStart.current.x;
-    const dy = e.clientY - dragStart.current.y;
-    let newX = dragStart.current.offsetX + dx;
-    let newY = dragStart.current.offsetY + dy;
-
-    // Clamp so at least 48px of the card remains visible on every edge
-    const card = cardRef.current;
-    if (card) {
-      const rect = card.getBoundingClientRect();
-      const margin = 48;
-      const halfW = rect.width / 2;
-      const halfH = rect.height / 2;
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-
-      const maxX = window.innerWidth - margin - centerX + halfW;
-      const minX = margin - centerX - halfW;
-      const maxY = window.innerHeight - margin - centerY + halfH;
-      const minY = margin - centerY - halfH;
-
-      newX = Math.max(minX, Math.min(maxX, newX));
-      newY = Math.max(minY, Math.min(maxY, newY));
-    }
-
-    setDragOffset({ x: newX, y: newY });
-  };
-
-  const handlePointerUp = (e) => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    if (handleRef.current && handleRef.current.hasPointerCapture(e.pointerId)) {
-      handleRef.current.releasePointerCapture(e.pointerId);
-    }
   };
 
   return (
@@ -140,16 +161,13 @@ function DraggableTourCard({ children, tourStep }) {
         className="relative"
         style={{
           transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
-          touchAction: 'none',
         }}
       >
         {/* Drag handle — top-right corner, pointer-events enabled */}
         <div
-          ref={handleRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          className="absolute top-1.5 right-1.5 z-20 p-1.5 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-colors touch-none"
+          onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; startDrag(t.clientX, t.clientY); }}
+          onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startDrag(e.clientX, e.clientY); }}
+          className="absolute top-1.5 right-1.5 z-20 p-1.5 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-colors"
           style={{ touchAction: 'none' }}
           aria-label="Drag to move"
         >
