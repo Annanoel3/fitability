@@ -526,27 +526,26 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
             </Link>
           )}
 
-          {/* Start Workout button — shown after check-in or during tour */}
-          {todayWorkout && (
-            <Button data-tour-start-workout="true" onClick={() => { window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "workout_button_clicked" })); setShowWorkoutPicker(true); }} variant="outline" className="w-full h-11">
-              <Sparkles className="w-4 h-4 mr-2" /> Start a New Workout
-            </Button>
-          )}
-          {!todayWorkout && !generating && (
-            (todayCheckin || tourStep === "workout") ? (
-              <Button data-tour-start-workout="true" onClick={() => {
+          {/* Single persistent Start Workout button — shows after check-in, with workout, or during tour */}
+          {(todayWorkout || todayCheckin || tourStep === "workout") && !generating && (
+            <Button
+              data-tour-start-workout={tourStep === "workout" ? "true" : undefined}
+              onClick={() => {
                 window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "workout_button_clicked" }));
                 if (tourStep === "workout") {
                   window.dispatchEvent(new CustomEvent("fitability-tour-step-change", { detail: { tourStep: "workout_picking" } }));
                   window.fitabilityTourStep = "workout_picking";
                 }
                 setShowWorkoutPicker(true);
-              }} className="w-full h-12">
-                <Sparkles className="w-4 h-4 mr-2" /> Choose Today's Workout
-              </Button>
-            ) : !todayCheckin ? (
-              <p className="text-center text-xs text-muted-foreground">Complete your check-in above to unlock today's workout.</p>
-            ) : null
+              }}
+              variant="outline"
+              className="w-full h-12"
+            >
+              <Sparkles className="w-4 h-4 mr-2" /> {todayWorkout ? "Start a New Workout" : "Choose Today's Workout"}
+            </Button>
+          )}
+          {!todayWorkout && !todayCheckin && tourStep !== "workout" && !generating && (
+            <p className="text-center text-xs text-muted-foreground">Complete your check-in above to unlock today's workout.</p>
           )}
         </>
       )}
