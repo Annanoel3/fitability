@@ -13,20 +13,17 @@ const ANIM_STYLE = `
   .tour-card {
     animation: tour-pop-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
     max-width: 20rem;
-    max-height: 85vh;
-    overflow-y: auto;
     padding: 0 1.25rem 1.25rem 1.25rem;
     font-size: 0.8125rem;
-    line-height: 1.4;
+    line-height: 1.35;
     margin: 0 auto;
-    -webkit-overflow-scrolling: touch;
   }
-  .tour-card h2 { font-size: 1.125rem; }
-  .tour-card h3 { font-size: 1rem; }
+  .tour-card h2 { font-size: 1.0625rem; }
+  .tour-card h3 { font-size: 0.9375rem; }
   .tour-card .tour-icon {
-    width: 3rem; height: 3rem;
+    width: 2.25rem; height: 2.25rem;
   }
-  .tour-card .tour-icon span { font-size: 1.5rem; }
+  .tour-card .tour-icon span { font-size: 1.25rem; }
   @keyframes tour-fade-in {
     0%   { opacity: 0; }
     100% { opacity: 1; }
@@ -67,7 +64,7 @@ const ANIM_STYLE = `
     color: hsl(var(--foreground));
     animation: tour-demo-pulse 1.5s ease-in-out infinite;
     padding: 0.2rem 0.5rem;
-    margin: 0.625rem auto 0.5rem auto;
+    margin: 0.375rem auto 0.25rem auto;
     background: rgba(196, 181, 253, 0.18);
     border-radius: 0.375rem;
     width: fit-content;
@@ -478,7 +475,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   if (tourStep === "intro_2") {
     return (
       <DraggableTourCard tourStep={tourStep}>
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-2">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <span>✨</span>
           </div>
@@ -508,7 +505,7 @@ export default function OnboardingTour({ profile, onComplete }) {
 
     return (
       <DraggableTourCard tourStep={tourStep}>
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-2">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto cursor-pointer" onClick={handleEmojiClick}>
             <span>🎉</span>
           </div>
@@ -518,7 +515,7 @@ export default function OnboardingTour({ profile, onComplete }) {
               This is your Home — where you'll check in each day, start your personalized workout, and track your streak. Let's take a quick tour.
             </p>
           </div>
-          <div className="space-y-2 text-left bg-muted/50 rounded-xl p-3">
+          <div className="space-y-1.5 text-left bg-muted/50 rounded-xl p-2.5">
             <div className="flex items-center gap-2 text-foreground">
               <Bot className="w-4 h-4 text-primary flex-shrink-0" />
               <span><strong>Coach</strong> — adjust workouts, ask questions</span>
@@ -706,7 +703,7 @@ export default function OnboardingTour({ profile, onComplete }) {
   if (tourStep === "home_end") {
     return (
       <DraggableTourCard tourStep={tourStep}>
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-2">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <span>🎯</span>
           </div>
