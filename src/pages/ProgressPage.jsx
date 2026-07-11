@@ -159,6 +159,9 @@ export default function ProgressPage() {
 
       {showLogForm && (
         <div className="bg-card rounded-2xl border border-border p-6 space-y-5">
+          {isTourProgressLog && (
+            <div className="tour-demo-label">DEMO</div>
+          )}
           <h3 className="font-heading font-semibold">Log Today's Progress</h3>
           {demoCaption && (
             <p className="text-sm text-primary font-medium animate-pulse">{demoCaption}</p>

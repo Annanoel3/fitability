@@ -82,6 +82,9 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       {tourFilling && <div className="absolute inset-0 z-[60]" aria-hidden="true" />}
       <div className="bg-card rounded-2xl border border-border w-full max-w-md shadow-xl flex flex-col max-h-[90vh]">
+        {tourFilling && (
+          <div className="tour-demo-label px-5 pt-4">DEMO</div>
+        )}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
           <div>
             <h2 className="font-heading font-bold text-lg">Create Exercise</h2>

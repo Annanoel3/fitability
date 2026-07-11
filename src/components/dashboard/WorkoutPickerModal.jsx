@@ -56,6 +56,9 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
       {isTourPicking && <div className="absolute inset-0 z-[60]" aria-hidden="true" />}
       <div className="bg-card rounded-2xl border border-border w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] my-auto md:my-0 mb-20 md:mb-0">
+        {isTourPicking && (
+          <div className="tour-demo-label px-5 pt-4">DEMO</div>
+        )}
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
           <h2 className="font-heading font-bold text-lg">Choose Your Workout</h2>
