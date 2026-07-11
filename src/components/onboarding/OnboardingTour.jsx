@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Bot, BookOpen, TrendingUp, ArrowRight } from "lucide-react";
+import { Bot, BookOpen, TrendingUp, ArrowRight, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Shared smooth entrance animation injected once
@@ -61,6 +61,106 @@ if (typeof document !== "undefined" && !document.getElementById("fitability-tour
   styleEl.id = "fitability-tour-anim";
   styleEl.textContent = ANIM_STYLE;
   document.head.appendChild(styleEl);
+}
+
+// ── DRAGGABLE TOUR CARD — shared wrapper for ALL tour popups ──
+// Centers every popup in the middle of the screen by default.
+// Adds a drag handle (GripVertical icon) in the top-right corner.
+// Uses pointer events (pointerdown/pointermove/pointerup) for cross-device
+// dragging — works with both mouse and touch.
+// Clamps position so at least 48px of the card stays visible on every edge.
+// Resets drag offset when the tour step changes (each popup starts centered).
+function DraggableTourCard({ children, tourStep }) {
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
+  const cardRef = useRef(null);
+  const handleRef = useRef(null);
+
+  // Reset drag position when step changes — each popup starts centered
+  useEffect(() => {
+    setDragOffset({ x: 0, y: 0 });
+  }, [tourStep]);
+
+  const handlePointerDown = (e) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    dragStart.current = {
+      x: e.clientX,
+      y: e.clientY,
+      offsetX: dragOffset.x,
+      offsetY: dragOffset.y,
+    };
+    if (handleRef.current) {
+      handleRef.current.setPointerCapture(e.pointerId);
+    }
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStart.current.x;
+    const dy = e.clientY - dragStart.current.y;
+    let newX = dragStart.current.offsetX + dx;
+    let newY = dragStart.current.offsetY + dy;
+
+    // Clamp so at least 48px of the card remains visible on every edge
+    const card = cardRef.current;
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      const margin = 48;
+      const halfW = rect.width / 2;
+      const halfH = rect.height / 2;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+
+      const maxX = window.innerWidth - margin - centerX + halfW;
+      const minX = margin - centerX - halfW;
+      const maxY = window.innerHeight - margin - centerY + halfH;
+      const minY = margin - centerY - halfH;
+
+      newX = Math.max(minX, Math.min(maxX, newX));
+      newY = Math.max(minY, Math.min(maxY, newY));
+    }
+
+    setDragOffset({ x: newX, y: newY });
+  };
+
+  const handlePointerUp = (e) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (handleRef.current && handleRef.current.hasPointerCapture(e.pointerId)) {
+      handleRef.current.releasePointerCapture(e.pointerId);
+    }
+  };
+
+  return (
+    <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5 pointer-events-none">
+      <div
+        ref={cardRef}
+        className="relative"
+        style={{
+          transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
+          touchAction: 'none',
+        }}
+      >
+        {/* Drag handle — top-right corner, pointer-events enabled */}
+        <div
+          ref={handleRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          className="absolute top-1.5 right-1.5 z-20 p-1.5 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-colors touch-none"
+          style={{ touchAction: 'none' }}
+          aria-label="Drag to move"
+        >
+          <GripVertical className="w-4 h-4" />
+        </div>
+        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl pointer-events-auto">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function OnboardingTour({ profile, onComplete }) {
@@ -186,12 +286,11 @@ export default function OnboardingTour({ profile, onComplete }) {
 
   if (tourStep === "done" || tourStep === "coach_message" || tourStep === "workout_picking") return null;
 
-  // Bridge overlay shown after workout is generated — block clicks, show message
+  // Bridge overlay shown after workout is generated
   if (tourStep === "workout_generated" || showWorkoutBridge) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center px-5">
-        
-        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-3">
+      <DraggableTourCard tourStep={tourStep}>
+        <div className="text-center space-y-3">
           <div className="tour-icon rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
             <span>🎉</span>
           </div>
@@ -202,7 +301,7 @@ export default function OnboardingTour({ profile, onComplete }) {
             </p>
           </div>
         </div>
-      </div>
+      </DraggableTourCard>
     );
   }
 
@@ -221,8 +320,8 @@ export default function OnboardingTour({ profile, onComplete }) {
   // ── STAGE 1 INTRO ── (shown before any tour step)
   if (tourStep === "intro_1") {
     return (
-      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5">
-        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-4">
+      <DraggableTourCard tourStep={tourStep}>
+        <div className="text-center space-y-4">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <span>👋</span>
           </div>
@@ -239,15 +338,15 @@ export default function OnboardingTour({ profile, onComplete }) {
             Skip tour
           </button>
         </div>
-      </div>
+      </DraggableTourCard>
     );
   }
 
   // ── STAGE 2 INTRO ── (after "Show me around", before tour steps begin)
   if (tourStep === "intro_2") {
     return (
-      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5">
-        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-4">
+      <DraggableTourCard tourStep={tourStep}>
+        <div className="text-center space-y-4">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <span>✨</span>
           </div>
@@ -261,7 +360,7 @@ export default function OnboardingTour({ profile, onComplete }) {
             Got it, let's go <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
-      </div>
+      </DraggableTourCard>
     );
   }
 
@@ -276,9 +375,8 @@ export default function OnboardingTour({ profile, onComplete }) {
     };
 
     return (
-      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5">
-        
-        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-4">
+      <DraggableTourCard tourStep={tourStep}>
+        <div className="text-center space-y-4">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto cursor-pointer" onClick={handleEmojiClick}>
             <span>🎉</span>
           </div>
@@ -309,16 +407,15 @@ export default function OnboardingTour({ profile, onComplete }) {
             Skip the tour, I'll explore on my own
           </button>
         </div>
-      </div>
+      </DraggableTourCard>
     );
   }
 
-  // ── WORKOUT — non-blocking guide, card anchored at top so button below is visible ──
+  // ── WORKOUT — centered guide, pulsing button below stays clickable ──
   if (tourStep === "workout") {
     return (
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center px-5 pt-6">
+      <DraggableTourCard tourStep={tourStep}>
         <style>{`
-          
           @keyframes workout-btn-pulse {
             0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(196, 181, 253, 0.5); }
             50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(196, 181, 253, 0.5); }
@@ -333,7 +430,7 @@ export default function OnboardingTour({ profile, onComplete }) {
             z-index: 102;
           }
         `}</style>
-        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-3 pointer-events-auto">
+        <div className="text-center space-y-3">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <span>💪</span>
           </div>
@@ -344,33 +441,49 @@ export default function OnboardingTour({ profile, onComplete }) {
             </p>
           </div>
         </div>
-      </div>
+      </DraggableTourCard>
     );
   }
 
   // ── COACH — pulse Coach icon, wait for user to tap ──
   if (tourStep === "coach") {
     return (
-      <NavSpotlight
-        icon={<Bot className="w-7 h-7 text-primary" />}
-        title="Meet your Coach"
-        message="Your AI fitness coach adjusts your workouts and remembers your conditions. Tap the Coach icon below to meet them!"
-      />
+      <DraggableTourCard tourStep={tourStep}>
+        <div className="text-center space-y-3">
+          <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <Bot className="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-heading font-bold text-foreground">Meet your Coach</h3>
+            <p className="text-muted-foreground mt-2 leading-relaxed">
+              Your AI fitness coach adjusts your workouts and remembers your conditions. Tap the Coach icon below to meet them!
+            </p>
+          </div>
+        </div>
+      </DraggableTourCard>
     );
   }
 
   // ── LIBRARY — pulse Library icon, wait for user to tap ──
   if (tourStep === "library") {
     return (
-      <NavSpotlight
-        icon={<BookOpen className="w-7 h-7 text-primary" />}
-        title="Your Exercise Library"
-        message="Browse exercises filtered for your abilities, and create your own custom exercises too! Tap Library below to explore."
-      />
+      <DraggableTourCard tourStep={tourStep}>
+        <div className="text-center space-y-3">
+          <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <BookOpen className="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-heading font-bold text-foreground">Your Exercise Library</h3>
+            <p className="text-muted-foreground mt-2 leading-relaxed">
+              Browse exercises filtered for your abilities, and create your own custom exercises too! Tap Library below to explore.
+            </p>
+          </div>
+        </div>
+      </DraggableTourCard>
     );
   }
 
-  // ── LIBRARY EXERCISE — popup at top, pulse first exercise, disappears on tap ──
+  // ── LIBRARY EXERCISE — CSS-only pulse, no popup card ──
   if (tourStep === "library_exercise") {
     return (
       <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-10">
@@ -393,9 +506,7 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
-
-
-  // ── PROGRESS LOG — popup, disappears immediately when user saves ──
+  // ── CREATE EXERCISE — CSS-only pulse, no popup card ──
   if (tourStep === "create_exercise") {
     return (
       <div className="fixed inset-0 z-[100] pointer-events-none">
@@ -417,16 +528,26 @@ export default function OnboardingTour({ profile, onComplete }) {
     );
   }
 
+  // ── PROGRESS — pulse Progress icon, wait for user to tap ──
   if (tourStep === "progress") {
     return (
-      <NavSpotlight
-        icon={<TrendingUp className="w-7 h-7 text-primary" />}
-        title="Track your progress"
-        message="Last one - tap Progress below to log how things are going."
-      />
+      <DraggableTourCard tourStep={tourStep}>
+        <div className="text-center space-y-3">
+          <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <TrendingUp className="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-heading font-bold text-foreground">Track your progress</h3>
+            <p className="text-muted-foreground mt-2 leading-relaxed">
+              Last one - tap Progress below to log how things are going.
+            </p>
+          </div>
+        </div>
+      </DraggableTourCard>
     );
   }
 
+  // ── PROGRESS LOG — CSS-only pulse, no popup card ──
   if (tourStep === "progress_log") {
     return (
       <div className="fixed inset-0 z-[100] pointer-events-none flex items-end justify-center px-5 pb-32">
@@ -452,9 +573,8 @@ export default function OnboardingTour({ profile, onComplete }) {
   // ── HOME END — final "You're all set!" modal ──
   if (tourStep === "home_end") {
     return (
-      <div className="tour-overlay fixed inset-0 z-[100] flex items-center justify-center px-5">
-        
-        <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-4">
+      <DraggableTourCard tourStep={tourStep}>
+        <div className="text-center space-y-4">
           <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <span>🎯</span>
           </div>
@@ -468,26 +588,9 @@ export default function OnboardingTour({ profile, onComplete }) {
             Let's go! <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
-      </div>
+      </DraggableTourCard>
     );
   }
 
   return null;
-}
-
-function NavSpotlight({ icon, title, message }) {
-  return (
-    <div className="fixed inset-0 z-[99] pointer-events-none flex items-center justify-center px-5 pb-24">
-      
-      <div className="tour-card bg-card rounded-3xl border border-border shadow-2xl text-center space-y-3 pointer-events-auto">
-        <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-          {icon}
-        </div>
-        <div>
-          <h3 className="font-heading font-bold text-foreground">{title}</h3>
-          <p className="text-muted-foreground mt-2 leading-relaxed">{message}</p>
-        </div>
-      </div>
-    </div>
-  );
 }
