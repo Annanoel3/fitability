@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
+import TapIndicator from "@/components/onboarding/TapIndicator";
 
 const MOOD_EMOJIS = ["😞", "😕", "😐", "🙂", "😄"];
 
@@ -21,8 +22,18 @@ export default function ProgressPage() {
   const [tourStep, setTourStep] = useState(null);
   const [demoCaption, setDemoCaption] = useState("");
   const [demoPressing, setDemoPressing] = useState(false);
+  const [tapTarget, setTapTarget] = useState(null);
   const demoTimersRef = useRef([]);
   const isTourProgressLog = tourStep === "progress_log";
+
+  // Refs for each element the demo "taps" during the tour
+  const demoRefs = {
+    activityYes: useRef(null),
+    energy: useRef(null),
+    pain: useRef(null),
+    mood: useRef(null),
+    save: useRef(null),
+  };
 
   useEffect(() => {
     loadData();
@@ -45,11 +56,23 @@ export default function ProgressPage() {
     if (!showLogForm || tourStep !== "progress_log") return;
     demoTimersRef.current.forEach(clearTimeout);
     setDemoCaption("Here's how you'll log each day...");
+
+    // Helper: flash tap indicator on a field for 600ms
+    const flashTap = (key, at) => setTimeout(() => {
+      setTapTarget(key);
+      setTimeout(() => setTapTarget(null), 600);
+    }, at);
+
     const t1 = setTimeout(() => setLogData(p => ({ ...p, activity_pct: 100 })), 350);
+    const tap1 = flashTap("activityYes", 300);
     const t2 = setTimeout(() => setLogData(p => ({ ...p, energy_level: 7 })), 1100);
+    const tap2 = flashTap("energy", 1050);
     const t3 = setTimeout(() => setLogData(p => ({ ...p, overall_pain: 2 })), 1850);
+    const tap3 = flashTap("pain", 1800);
     const t4 = setTimeout(() => setLogData(p => ({ ...p, mood_score: 4 })), 2600);
+    const tap4 = flashTap("mood", 2550);
     const t5 = setTimeout(() => { setDemoCaption("Saving your check-in…"); setDemoPressing(true); }, 3400);
+    const tap5 = flashTap("save", 3350);
     const t6 = setTimeout(() => {
       setDemoPressing(false);
       setDemoCaption("");
@@ -57,7 +80,7 @@ export default function ProgressPage() {
       setLogData({});
       window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "progress_logged" }));
     }, 4400);
-    demoTimersRef.current = [t1, t2, t3, t4, t5, t6];
+    demoTimersRef.current = [t1, t2, t3, t4, t5, t6, tap1, tap2, tap3, tap4, tap5];
     return () => demoTimersRef.current.forEach(clearTimeout);
   }, [showLogForm, tourStep]);
 
@@ -171,6 +194,7 @@ export default function ProgressPage() {
             <Label className="text-sm">Activity Completed Today?</Label>
             <div className="flex gap-3 mt-2">
               <button
+                ref={demoRefs.activityYes}
                 onClick={() => setLogData(p => ({ ...p, activity_pct: 100 }))}
                 className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${logData.activity_pct === 100 ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
               >
@@ -185,7 +209,7 @@ export default function ProgressPage() {
             </div>
           </div>
 
-          <div>
+          <div ref={demoRefs.energy}>
             <Label className="text-sm">Energy Level ({logData.energy_level ?? 5}/10)</Label>
             <Slider
               min={1} max={10} step={1}
@@ -195,7 +219,7 @@ export default function ProgressPage() {
             />
           </div>
 
-          <div>
+          <div ref={demoRefs.pain}>
             <Label className="text-sm">Pain Level ({logData.overall_pain ?? 0}/10)</Label>
             <Slider
               min={0} max={10} step={1}
@@ -211,6 +235,7 @@ export default function ProgressPage() {
               {MOOD_EMOJIS.map((emoji, i) => (
                 <button
                   key={i}
+                  ref={i === 3 ? demoRefs.mood : null}
                   onClick={() => setLogData(p => ({ ...p, mood_score: i + 1 }))}
                   className={`text-2xl p-1.5 rounded-lg transition-all ${logData.mood_score === i + 1 ? "bg-primary/20 scale-125" : "opacity-50 hover:opacity-80"}`}
                 >
@@ -247,6 +272,7 @@ export default function ProgressPage() {
           {isTourProgressLog && showLogForm && <div className="fixed inset-0 z-[60]" aria-hidden="true" />}
           <div className="flex gap-2">
             <Button
+              ref={demoRefs.save}
               onClick={saveProgress}
               disabled={saving}
               data-tour-save-btn={isTourProgressLog ? "true" : undefined}
@@ -269,6 +295,17 @@ export default function ProgressPage() {
             <Button variant="ghost" onClick={() => setShowLogForm(false)}>Cancel</Button>
           </div>
         </div>
+      )}
+
+      {/* Tap indicators — rendered above everything during demo */}
+      {isTourProgressLog && showLogForm && (
+        <>
+          <TapIndicator targetRef={demoRefs.activityYes} active={tapTarget === "activityYes"} />
+          <TapIndicator targetRef={demoRefs.energy} active={tapTarget === "energy"} />
+          <TapIndicator targetRef={demoRefs.pain} active={tapTarget === "pain"} />
+          <TapIndicator targetRef={demoRefs.mood} active={tapTarget === "mood"} />
+          <TapIndicator targetRef={demoRefs.save} active={tapTarget === "save"} />
+        </>
       )}
 
       {/* Summary cards */}
