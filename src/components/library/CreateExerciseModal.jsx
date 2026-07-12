@@ -45,26 +45,26 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
     if (window.fitabilityTourStep !== "create_exercise") return;
     setTourFilling(true);
 
-    // Helper: flash tap indicator on a field for 600ms
+    // Helper: flash tap indicator on a field for 900ms
     const flashTap = (key, at) => setTimeout(() => {
       setTapTarget(key);
-      setTimeout(() => setTapTarget(null), 600);
+      setTimeout(() => setTapTarget(null), 900);
     }, at);
 
     const steps = [
-      [250,  () => setForm(f => ({ ...f, name: "Seated Marches" }))],
-      [950,  () => setForm(f => ({ ...f, default_sets: 3 }))],
-      [1650, () => setForm(f => ({ ...f, default_reps: 12 }))],
-      [2350, () => setForm(f => ({ ...f, description: "Gentle warm-up — march in place at your own pace." }))],
-      [3150, () => setForm(f => ({ ...f, category: "Cardio" }))],
-      [3850, () => setForm(f => ({ ...f, position: "Seated" }))],
-      [4500, () => {
+      [500,  () => setForm(f => ({ ...f, name: "Seated Marches" }))],
+      [1800, () => setForm(f => ({ ...f, default_sets: 3 }))],
+      [3100, () => setForm(f => ({ ...f, default_reps: 12 }))],
+      [4400, () => setForm(f => ({ ...f, description: "Gentle warm-up — march in place at your own pace." }))],
+      [5800, () => setForm(f => ({ ...f, category: "Cardio" }))],
+      [7100, () => setForm(f => ({ ...f, position: "Seated" }))],
+      [8300, () => {
         if (bodyRef.current) {
           bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
         }
         setDemoPressing(true);
       }],
-      [5800, () => {
+      [10000, () => {
         setTourFilling(false);
         setDemoPressing(false);
         onClose();
@@ -73,13 +73,13 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
     ];
     // Tap indicators fire slightly before each field is filled
     const taps = [
-      flashTap("name", 200),
-      flashTap("sets", 900),
-      flashTap("reps", 1600),
-      flashTap("description", 2300),
-      flashTap("category", 3100),
-      flashTap("position", 3800),
-      flashTap("create", 4400),
+      flashTap("name", 400),
+      flashTap("sets", 1700),
+      flashTap("reps", 3000),
+      flashTap("description", 4300),
+      flashTap("category", 5700),
+      flashTap("position", 7000),
+      flashTap("create", 8200),
     ];
     const timers = steps.map(([delay, fn]) => setTimeout(fn, delay));
     return () => { timers.forEach(clearTimeout); taps.forEach(clearTimeout); };
