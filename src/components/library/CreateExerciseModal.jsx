@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, Loader2, Check } from "lucide-react";
+import TapIndicator from "@/components/onboarding/TapIndicator";
 
 const CATEGORIES = ["Warmup", "Strength", "Cardio", "Balance", "Flexibility", "Cooldown", "Breathing", "Recovery"];
 const POSITIONS = ["Seated", "Standing", "Wheelchair", "Lying down"];
@@ -14,7 +15,19 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [tourFilling, setTourFilling] = useState(false);
   const [demoPressing, setDemoPressing] = useState(false);
+  const [tapTarget, setTapTarget] = useState(null);
   const bodyRef = useRef(null);
+
+  // Refs for each field the demo "taps" during the tour
+  const fieldRefs = {
+    name: useRef(null),
+    sets: useRef(null),
+    reps: useRef(null),
+    description: useRef(null),
+    category: useRef(null),
+    position: useRef(null),
+    create: useRef(null),
+  };
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -31,6 +44,13 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
   useEffect(() => {
     if (window.fitabilityTourStep !== "create_exercise") return;
     setTourFilling(true);
+
+    // Helper: flash tap indicator on a field for 600ms
+    const flashTap = (key, at) => setTimeout(() => {
+      setTapTarget(key);
+      setTimeout(() => setTapTarget(null), 600);
+    }, at);
+
     const steps = [
       [250,  () => setForm(f => ({ ...f, name: "Seated Marches" }))],
       [950,  () => setForm(f => ({ ...f, default_sets: 3 }))],
@@ -51,8 +71,18 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
         window.dispatchEvent(new CustomEvent("fitability-tour-action", { detail: "create_exercise_filled" }));
       }],
     ];
+    // Tap indicators fire slightly before each field is filled
+    const taps = [
+      flashTap("name", 200),
+      flashTap("sets", 900),
+      flashTap("reps", 1600),
+      flashTap("description", 2300),
+      flashTap("category", 3100),
+      flashTap("position", 3800),
+      flashTap("create", 4400),
+    ];
     const timers = steps.map(([delay, fn]) => setTimeout(fn, delay));
-    return () => timers.forEach(clearTimeout);
+    return () => { timers.forEach(clearTimeout); taps.forEach(clearTimeout); };
   }, []);
 
   const handleSubmit = async () => {
@@ -96,7 +126,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
         </div>
 
         <div ref={bodyRef} className="overflow-y-auto flex-1 px-5 space-y-3">
-          <div>
+          <div ref={fieldRefs.name}>
             <label className="text-sm font-semibold text-foreground">Exercise name *</label>
             <Input
               value={form.name}
@@ -106,7 +136,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
             />
           </div>
 
-          <div>
+          <div ref={fieldRefs.description}>
             <label className="text-sm font-semibold text-foreground">Description</label>
             <Textarea
               value={form.description}
@@ -127,7 +157,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <div>
+            <div ref={fieldRefs.category}>
               <label className="text-sm font-semibold text-foreground">Category *</label>
               <Select value={form.category} onValueChange={v => setForm({...form, category: v})}>
                 <SelectTrigger className="mt-1">
@@ -138,7 +168,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div ref={fieldRefs.position}>
               <label className="text-sm font-semibold text-foreground">Position *</label>
               <Select value={form.position} onValueChange={v => setForm({...form, position: v})}>
                 <SelectTrigger className="mt-1">
@@ -164,7 +194,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            <div>
+            <div ref={fieldRefs.sets}>
               <label className="text-xs font-semibold text-foreground">Sets</label>
               <Input
                 type="number"
@@ -174,7 +204,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
                 className="mt-1 text-sm"
               />
             </div>
-            <div>
+            <div ref={fieldRefs.reps}>
               <label className="text-xs font-semibold text-foreground">Reps</label>
               <Input
                 type="number"
@@ -207,7 +237,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
           </div>
         </div>
 
-        <div className="px-5 pb-5 pt-3 border-t border-border flex-shrink-0 flex gap-2">
+        <div ref={fieldRefs.create} className="px-5 pb-5 pt-3 border-t border-border flex-shrink-0 flex gap-2">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>
@@ -228,6 +258,19 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
           </Button>
         </div>
       </div>
+
+      {/* Tap indicators — rendered above everything during demo */}
+      {tourFilling && (
+        <>
+          <TapIndicator targetRef={fieldRefs.name} active={tapTarget === "name"} />
+          <TapIndicator targetRef={fieldRefs.sets} active={tapTarget === "sets"} />
+          <TapIndicator targetRef={fieldRefs.reps} active={tapTarget === "reps"} />
+          <TapIndicator targetRef={fieldRefs.description} active={tapTarget === "description"} />
+          <TapIndicator targetRef={fieldRefs.category} active={tapTarget === "category"} />
+          <TapIndicator targetRef={fieldRefs.position} active={tapTarget === "position"} />
+          <TapIndicator targetRef={fieldRefs.create} active={tapTarget === "create"} />
+        </>
+      )}
     </div>
   );
 }
