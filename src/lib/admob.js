@@ -34,10 +34,20 @@ function isWorkoutActive() {
   return window.location.pathname === '/workout';
 }
 
+function isOnboardingOrTourActive() {
+  // Onboarding flow page
+  if (window.location.pathname === '/onboarding') return true;
+  // Post-onboarding guided tour — window.fitabilityTourStep is set while the tour runs
+  const step = window.fitabilityTourStep;
+  if (step && step !== 'done') return true;
+  return false;
+}
+
 export async function showInterstitialAd() {
   if (!isNative() || !getAdMob()) return false;
   if (isUserActive()) return false;
   if (isWorkoutActive()) return false;
+  if (isOnboardingOrTourActive()) return false;
   try {
     await getAdMob().prepareInterstitial({ adId: AD_UNIT_ID, isTesting: false });
     await getAdMob().showInterstitial();
@@ -60,6 +70,6 @@ export async function maybeShowAdOnOpen() {
   } catch (e) { return; }
   if (count % SHOW_EVERY_N_OPENS === 0) {
     await new Promise(resolve => setTimeout(resolve, AD_DELAY_MS));
-    if (!isWorkoutActive()) await showInterstitialAd();
+    if (!isWorkoutActive() && !isOnboardingOrTourActive()) await showInterstitialAd();
   }
 }
