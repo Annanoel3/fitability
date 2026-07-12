@@ -400,7 +400,7 @@ export default function CoachChat() {
           )}
           <div className="relative flex-shrink-0">
             {isTourCoachMessage && (
-              <div className="tour-send-arrow absolute z-[100] pointer-events-none" style={{ right: "3rem", bottom: "2rem" }}>
+              <div className="tour-send-arrow absolute z-[100] pointer-events-none" style={{ right: "3rem", bottom: "2.4375rem" }}>
                 <ArrowDownRight className="w-12 h-12 text-[#c4b5fd] drop-shadow-[0_0_12px_rgba(196,181,253,0.7)]" />
               </div>
             )}
