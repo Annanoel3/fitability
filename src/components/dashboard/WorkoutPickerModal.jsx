@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Dumbbell, Heart, Wind, Zap, Layers, Check } from "lucide-react";
+import { X, Dumbbell, Heart, Wind, Layers, Zap, Check } from "lucide-react";
+import TapIndicator from "@/components/onboarding/TapIndicator";
 
 const WORKOUT_TYPES = [
   { id: "strength", label: "Strength", icon: Dumbbell, desc: "Build muscle & power" },
@@ -22,21 +23,40 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
   const [intensity, setIntensity] = useState(null);
   const [demoCaption, setDemoCaption] = useState("");
   const [demoPressing, setDemoPressing] = useState(false);
+  const [tapTarget, setTapTarget] = useState(null); // "strength" | "cardio" | "easy" | "generate"
   const timersRef = useRef([]);
+
+  // Refs for each button that gets tapped during the demo
+  const btnRefs = {
+    strength: useRef(null),
+    cardio: useRef(null),
+    easy: useRef(null),
+    generate: useRef(null),
+  };
 
   const isTourPicking = typeof window !== "undefined" &&
     (window.fitabilityTourStep === "workout_picking" || window.fitabilityTourStep === "workout");
 
   useEffect(() => {
     if (!isTourPicking) return;
+    // Helper: flash tap indicator on a button for 600ms
+    const flashTap = (key, at) => setTimeout(() => {
+      setTapTarget(key);
+      setTimeout(() => setTapTarget(null), 600);
+    }, at);
+
     const t1 = setTimeout(() => setDemoCaption("Pick the kinds of movement you want — you can choose more than one."), 150);
     const t2 = setTimeout(() => setTypes(["strength"]), 600);
+    const tap1 = flashTap("strength", 500);
     const t3 = setTimeout(() => setTypes(["strength", "cardio"]), 1700);
+    const tap2 = flashTap("cardio", 1600);
     const t4 = setTimeout(() => setDemoCaption("Then choose how hard to push today."), 2700);
     const t5 = setTimeout(() => setIntensity("easy"), 3700);
+    const tap3 = flashTap("easy", 3600);
     const t6 = setTimeout(() => { setDemoCaption("Now tapping Start to build it…"); setDemoPressing(true); }, 4900);
+    const tap4 = flashTap("generate", 4800);
     const t7 = setTimeout(() => { onConfirm({ workoutTypes: ["strength", "cardio"], intensity: "easy" }); onClose(); }, 5800);
-    timersRef.current = [t1, t2, t3, t4, t5, t6, t7];
+    timersRef.current = [t1, t2, t3, t4, t5, t6, t7, tap1, tap2, tap3, tap4];
     return () => timersRef.current.forEach(clearTimeout);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -83,6 +103,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
                 return (
                   <button
                     key={t.id}
+                    ref={btnRefs[t.id]}
                     onClick={() => toggleType(t.id)}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
                       selected
@@ -110,6 +131,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
                 return (
                   <button
                     key={i.id}
+                    ref={btnRefs[i.id]}
                     onClick={() => setIntensity(i.id)}
                     className={`p-3 rounded-xl border-2 text-left transition-all ${
                       selected
@@ -132,6 +154,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
         {/* Sticky footer button */}
          <div className="px-5 pb-5 pt-3 flex-shrink-0 border-t border-border">
            <Button
+             ref={btnRefs.generate}
              onClick={handleConfirm}
              disabled={!canConfirm}
              className={demoPressing ? "w-full h-12 text-base bg-green-600 text-white hover:bg-green-600" : "w-full h-12 text-base"}
@@ -147,6 +170,16 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
            </Button>
          </div>
       </div>
+
+      {/* Tap indicators — rendered above everything during demo */}
+      {isTourPicking && (
+        <>
+          <TapIndicator targetRef={btnRefs.strength} active={tapTarget === "strength"} />
+          <TapIndicator targetRef={btnRefs.cardio} active={tapTarget === "cardio"} />
+          <TapIndicator targetRef={btnRefs.easy} active={tapTarget === "easy"} />
+          <TapIndicator targetRef={btnRefs.generate} active={tapTarget === "generate"} />
+        </>
+      )}
     </div>
   );
 }
