@@ -97,7 +97,7 @@ if (typeof document !== "undefined" && !document.getElementById("fitability-tour
 // isDragging stays false for touches that start elsewhere.
 // Clamps position so at least 48px of the card stays visible on every edge.
 // Resets drag offset when the tour step changes (each popup starts centered).
-function DraggableTourCard({ children, tourStep, autoDemoDrag = false, onUserDrag, onDemoComplete }) {
+function DraggableTourCard({ children, tourStep, autoDemoDrag = false, onUserDrag, onDemoComplete, dragHandleClass = "" }) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [demoAnimating, setDemoAnimating] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
@@ -220,7 +220,7 @@ function DraggableTourCard({ children, tourStep, autoDemoDrag = false, onUserDra
         <div
           onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; startDrag(t.clientX, t.clientY); }}
           onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startDrag(e.clientX, e.clientY); }}
-          className={`absolute top-2 right-2 z-20 p-2 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground hover:bg-muted/70 transition-colors pointer-events-auto ${autoDemoDrag && demoAnimating ? "text-[#c4b5fd] bg-[rgba(196,181,253,0.12)]" : ""}`}
+          className={`absolute top-2 right-2 z-20 p-2 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground hover:bg-muted/70 transition-colors pointer-events-auto ${autoDemoDrag && demoAnimating ? "text-[#c4b5fd] bg-[rgba(196,181,253,0.12)]" : ""} ${dragHandleClass}`}
           style={{ touchAction: 'none' }}
           aria-label="Drag to move"
         >
@@ -419,6 +419,7 @@ export default function OnboardingTour({ profile, onComplete }) {
       <DraggableTourCard
         tourStep={tourStep}
         autoDemoDrag={true}
+        dragHandleClass={dragDemoPhase === "try_it" ? "tour-drag-handle-pulse text-[#c4b5fd] bg-[rgba(196,181,253,0.12)]" : ""}
         onDemoComplete={() => setDragDemoPhase("try_it")}
         onUserDrag={() => {
           setDragDemoPhase("dragged");
@@ -440,6 +441,15 @@ export default function OnboardingTour({ profile, onComplete }) {
         )}
         {dragDemoPhase === "try_it" && (
           <div className="text-center space-y-3">
+            <style>{`
+              @keyframes drag-handle-pulse {
+                0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(196, 181, 253, 0.5); opacity: 0.6; }
+                50%      { transform: scale(1.15); box-shadow: 0 0 16px 4px rgba(196, 181, 253, 0.7); opacity: 1; }
+              }
+              .tour-drag-handle-pulse {
+                animation: drag-handle-pulse 1.1s ease-in-out infinite !important;
+              }
+            `}</style>
             <div className="tour-icon rounded-full bg-primary/10 flex items-center justify-center mx-auto">
               <span>👆</span>
             </div>
@@ -449,9 +459,6 @@ export default function OnboardingTour({ profile, onComplete }) {
                 Try grabbing the ✥ handle in the top-right corner and dragging this card around.
               </p>
             </div>
-            <Button className="w-full h-10 gap-2" onClick={() => advance("intro_2")}>
-              Continue <ArrowRight className="w-4 h-4" />
-            </Button>
           </div>
         )}
         {dragDemoPhase === "dragged" && (
