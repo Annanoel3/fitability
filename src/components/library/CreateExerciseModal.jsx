@@ -21,11 +21,15 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
   // Refs for each field the demo "taps" during the tour
   const fieldRefs = {
     name: useRef(null),
-    sets: useRef(null),
-    reps: useRef(null),
     description: useRef(null),
+    instructions: useRef(null),
     category: useRef(null),
     position: useRef(null),
+    difficulty: useRef(null),
+    sets: useRef(null),
+    reps: useRef(null),
+    seconds: useRef(null),
+    muscles: useRef(null),
     create: useRef(null),
   };
   const [form, setForm] = useState({
@@ -53,18 +57,22 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
 
     const steps = [
       [500,  () => setForm(f => ({ ...f, name: "Seated Marches" }))],
-      [1800, () => setForm(f => ({ ...f, default_sets: 3 }))],
-      [3100, () => setForm(f => ({ ...f, default_reps: 12 }))],
-      [4400, () => setForm(f => ({ ...f, description: "Gentle warm-up — march in place at your own pace." }))],
-      [5800, () => setForm(f => ({ ...f, category: "Cardio" }))],
-      [7100, () => setForm(f => ({ ...f, position: "Seated" }))],
-      [8300, () => {
+      [1800, () => setForm(f => ({ ...f, description: "Gentle warm-up — march in place at your own pace." }))],
+      [3100, () => setForm(f => ({ ...f, instructions: "1. Sit tall in your chair.\n2. Lift one knee, then the other, as if marching.\n3. Keep a steady rhythm for 30 seconds." }))],
+      [4400, () => setForm(f => ({ ...f, category: "Cardio" }))],
+      [5700, () => setForm(f => ({ ...f, position: "Seated" }))],
+      [7000, () => setForm(f => ({ ...f, difficulty: "Easy" }))],
+      [8300, () => setForm(f => ({ ...f, default_sets: 3 }))],
+      [9600, () => setForm(f => ({ ...f, default_reps: 12 }))],
+      [10900, () => setForm(f => ({ ...f, default_duration_seconds: 30 }))],
+      [12200, () => setForm(f => ({ ...f, muscles_used: "quads, hip flexors, core" }))],
+      [13500, () => {
         if (bodyRef.current) {
           bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
         }
         setDemoPressing(true);
       }],
-      [10000, () => {
+      [15200, () => {
         setTourFilling(false);
         setDemoPressing(false);
         onClose();
@@ -74,12 +82,16 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
     // Tap indicators fire slightly before each field is filled
     const taps = [
       flashTap("name", 400),
-      flashTap("sets", 1700),
-      flashTap("reps", 3000),
-      flashTap("description", 4300),
-      flashTap("category", 5700),
-      flashTap("position", 7000),
-      flashTap("create", 8200),
+      flashTap("description", 1700),
+      flashTap("instructions", 3000),
+      flashTap("category", 4300),
+      flashTap("position", 5600),
+      flashTap("difficulty", 6900),
+      flashTap("sets", 8200),
+      flashTap("reps", 9500),
+      flashTap("seconds", 10800),
+      flashTap("muscles", 12100),
+      flashTap("create", 13400),
     ];
     const timers = steps.map(([delay, fn]) => setTimeout(fn, delay));
     return () => { timers.forEach(clearTimeout); taps.forEach(clearTimeout); };
@@ -146,7 +158,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
             />
           </div>
 
-          <div>
+          <div ref={fieldRefs.instructions}>
             <label className="text-sm font-semibold text-foreground">Instructions</label>
             <Textarea
               value={form.instructions}
@@ -181,7 +193,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
             </div>
           </div>
 
-          <div>
+          <div ref={fieldRefs.difficulty}>
             <label className="text-sm font-semibold text-foreground">Difficulty</label>
             <Select value={form.difficulty} onValueChange={v => setForm({...form, difficulty: v})}>
               <SelectTrigger className="mt-1">
@@ -214,7 +226,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
                 className="mt-1 text-sm"
               />
             </div>
-            <div>
+            <div ref={fieldRefs.seconds}>
               <label className="text-xs font-semibold text-foreground">Seconds</label>
               <Input
                 type="number"
@@ -226,7 +238,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
             </div>
           </div>
 
-          <div>
+          <div ref={fieldRefs.muscles}>
             <label className="text-sm font-semibold text-foreground">Muscles (comma-separated)</label>
             <Input
               value={form.muscles_used}
@@ -263,11 +275,15 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
       {tourFilling && (
         <>
           <TapIndicator targetRef={fieldRefs.name} active={tapTarget === "name"} />
-          <TapIndicator targetRef={fieldRefs.sets} active={tapTarget === "sets"} />
-          <TapIndicator targetRef={fieldRefs.reps} active={tapTarget === "reps"} />
           <TapIndicator targetRef={fieldRefs.description} active={tapTarget === "description"} />
+          <TapIndicator targetRef={fieldRefs.instructions} active={tapTarget === "instructions"} />
           <TapIndicator targetRef={fieldRefs.category} active={tapTarget === "category"} />
           <TapIndicator targetRef={fieldRefs.position} active={tapTarget === "position"} />
+          <TapIndicator targetRef={fieldRefs.difficulty} active={tapTarget === "difficulty"} />
+          <TapIndicator targetRef={fieldRefs.sets} active={tapTarget === "sets"} />
+          <TapIndicator targetRef={fieldRefs.reps} active={tapTarget === "reps"} />
+          <TapIndicator targetRef={fieldRefs.seconds} active={tapTarget === "seconds"} />
+          <TapIndicator targetRef={fieldRefs.muscles} active={tapTarget === "muscles"} />
           <TapIndicator targetRef={fieldRefs.create} active={tapTarget === "create"} />
         </>
       )}
