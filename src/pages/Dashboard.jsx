@@ -10,6 +10,7 @@ import EmergencyBanner from "@/components/dashboard/EmergencyBanner";
 import { Dumbbell, Clock, Target, Sparkles, ChevronRight, Loader2, TrendingUp } from "lucide-react";
 import WorkoutPickerModal from "@/components/dashboard/WorkoutPickerModal";
 import StaleWorkoutCard from "@/components/dashboard/StaleWorkoutCard.jsx";
+import TodayWorkoutCard from "@/components/dashboard/TodayWorkoutCard";
 import ArchivedWorkouts from "@/components/dashboard/ArchivedWorkouts";
 // TAG VOCABULARY — shared between buildUserTags() and the tagExistingExercises backend function.
 // Exercise restriction_tags use these exact strings. User tags are generated here and matched against them.
@@ -445,9 +446,10 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
   }
 
   const today = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD
-  const todayWorkout = workouts.find(w => w.date === today);
-  // Only show a stale workout if there's no today's workout — never show both
-  const staleWorkout = !todayWorkout ? workouts.find(w => w.date < today) : null;
+  const todayWorkouts = workouts.filter(w => w.date === today);
+  const hasTodaysWorkout = todayWorkouts.length > 0;
+  // Show stale workouts from previous days so the user can archive/delete them
+  const staleWorkouts = workouts.filter(w => w.date < today);
 
   return (
     <div className="space-y-6 pb-32 md:pb-6">
@@ -463,7 +465,7 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
           Welcome back, {profile?.display_name}
         </h1>
         <p className="text-muted-foreground mt-1">
-          {todayWorkout ? "Your workout is ready." : "Let's check in and get moving."}
+          {hasTodaysWorkout ? "Your workout is ready." : "Let's check in and get moving."}
         </p>
       </div>
 
@@ -487,17 +489,18 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
       )}
 
       {/* Stale workout from a previous day — ask to rate + archive/delete */}
-      {!generating && staleWorkout && (
+      {!generating && staleWorkouts.map(sw => (
         <StaleWorkoutCard
-          workout={staleWorkout}
-          onDone={() => setWorkouts(prev => prev.filter(w => w.id !== staleWorkout.id))}
+          key={sw.id}
+          workout={sw}
+          onDone={() => setWorkouts(prev => prev.filter(pw => pw.id !== sw.id))}
         />
-      )}
+      ))}
 
       {/* Check-in or Today's Workout */}
       {!generating && !emergency && (
         <>
-          {!todayCheckin && !todayWorkout && (
+          {!todayCheckin && !hasTodaysWorkout && (
             <CheckInCard
               onCheckInComplete={handleCheckIn}
               tourActive={tourStep === "workout"}
@@ -510,41 +513,17 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
             />
           )}
 
-          {todayWorkout && (
-            <Link to="/workout" state={{ workout: todayWorkout }} className="block">
-              <div className="bg-card rounded-2xl border border-border p-6 hover:border-primary/30 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                      <Dumbbell className="w-7 h-7 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-heading font-bold text-foreground">{todayWorkout.title}</h3>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {todayWorkout.total_duration_minutes} min
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Target className="w-3.5 h-3.5" />
-                          {todayWorkout.difficulty_level}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                </div>
-                {todayWorkout.completed && (
-                  <div className="mt-3 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-medium text-center">
-                    ✓ Completed — tap to restart
-                  </div>
-                )}
-              </div>
-            </Link>
-          )}
+          {todayWorkouts.map(w => (
+            <TodayWorkoutCard
+              key={w.id}
+              workout={w}
+              onArchived={() => setWorkouts(prev => prev.filter(pw => pw.id !== w.id))}
+              onDeleted={() => setWorkouts(prev => prev.filter(pw => pw.id !== w.id))}
+            />
+          ))}
 
           {/* Start Workout button — only shows after check-in or when a workout exists */}
-          {(todayWorkout || todayCheckin) && !generating && (
+          {(hasTodaysWorkout || todayCheckin) && !generating && (
             <Button
               data-tour-start-workout={tourStep === "workout" ? "true" : undefined}
               onClick={() => {
@@ -558,10 +537,10 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
               variant={tourStep === "workout" ? "default" : "outline"}
               className="w-full h-12"
             >
-              <Sparkles className="w-4 h-4 mr-2" /> {todayWorkout ? "Start a New Workout" : "Choose Today's Workout"}
+              <Sparkles className="w-4 h-4 mr-2" /> {hasTodaysWorkout ? "Start a New Workout" : "Choose Today's Workout"}
             </Button>
           )}
-          {!todayWorkout && !todayCheckin && tourStep !== "workout" && !generating && (
+          {!hasTodaysWorkout && !todayCheckin && tourStep !== "workout" && !generating && (
             <p className="text-center text-xs text-muted-foreground">Complete your check-in above to unlock today's workout.</p>
           )}
         </>
