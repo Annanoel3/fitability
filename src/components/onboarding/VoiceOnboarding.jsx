@@ -99,23 +99,50 @@ const VOICE_STEPS = {
     schema: { type: "object", properties: { risk_factors: { type: "array", items: { type: "string" } }, no_risk_factors: { type: "boolean" }, risk_factor_details: { type: "string" } }, required: ["risk_factors"] },
     apply: (p, onChange) => onChange({ risk_factors: Array.isArray(p.risk_factors) ? p.risk_factors : [], no_risk_factors: !!p.no_risk_factors, risk_factor_details: p.risk_factor_details || "" }),
   }] },
-  7: { parts: [{
-    question: (data) => {
+  7: { parts: (data) => {
       const seated = ["Bedridden", "Mostly seated", "Wheelchair user"].includes(data.activity_level);
-      if (seated) {
-        return "Now, tell me about your current fitness and what your body is able to do, in your own words. Please address each of these: how many times you can raise both arms to shoulder height while seated, whether you can push your palms together firmly and hold for five seconds, how your grip strength is, how long you can sit upright without leaning on a backrest, how much you can lift and hold while seated, and how long you can do light seated exercise like arm circles without stopping. Also, how would you describe your overall fitness right now?";
+      const checklist = seated ? ABILITIES_CHECKLIST_GRADED_SEATED : ABILITIES_CHECKLIST_GRADED;
+      const hasConditions =
+        (data.disabilities || []).length > 0 ||
+        (data.body_limitations || []).length > 0 ||
+        Object.keys(data.pain_areas || {}).length > 0 ||
+        (data.marked_zones || []).length > 0;
+
+      const parts = [];
+
+      // Part 1: overall fitness (+ condition severity if applicable)
+      if (hasConditions) {
+        parts.push({
+          question: "Let's go through your current abilities. First, how would you describe your overall fitness right now — just starting out, light, medium, strong, or athletic? And how much do your conditions or pain affect your daily activities — not at all, a little, moderately, or severely?",
+          clipMs: 4000,
+          instruction: "Return JSON with self_reported_fitness (one of exactly: Just starting out, Light, Medium, Strong, Athletic) and condition_severity (one of exactly: Not at all, A little, Moderately, Severely). The user said: ",
+          schema: { type: "object", properties: { self_reported_fitness: { type: "string" }, condition_severity: { type: "string" } }, required: ["self_reported_fitness", "condition_severity"] },
+          apply: (p, onChange) => { const u = {}; if (p.self_reported_fitness) u.self_reported_fitness = p.self_reported_fitness; if (p.condition_severity) u.condition_severity = p.condition_severity; onChange(u); },
+        });
+      } else {
+        parts.push({
+          question: "Let's go through your current abilities. First, how would you describe your overall fitness right now — just starting out, light, medium, strong, or athletic?",
+          clipMs: 3000,
+          instruction: "Return JSON with self_reported_fitness (one of exactly: Just starting out, Light, Medium, Strong, Athletic). The user said: ",
+          schema: { type: "object", properties: { self_reported_fitness: { type: "string" } }, required: ["self_reported_fitness"] },
+          apply: (p, onChange) => { if (p.self_reported_fitness) onChange({ self_reported_fitness: p.self_reported_fitness }); },
+        });
       }
-      return "Now, tell me about your current fitness and what your body is able to do, in your own words. Please address each of these: how many push-ups you can do in a row, how long you can hold a plank, how long you can jog or run without stopping, how much you can comfortably lift, how many flights of stairs you can climb without stopping, how long you can balance on one foot, and how many times you can stand up from a chair in a row without using your hands. Also, how would you describe your overall fitness right now?";
+
+      // One part per graded ability question — asked individually
+      checklist.forEach(({ id, question, options }) => {
+        parts.push({
+          question: question + " Just say one of: " + options.join(", ") + ".",
+          clipMs: 3000,
+          instruction: 'The user is answering this question: "' + question + '" The only valid answers are: ' + options.join(", ") + '. Return JSON with a single key "' + id + '" set to the EXACT option string that best matches what the user said. The user said: ',
+          schema: { type: "object", properties: { [id]: { type: "string", enum: options } }, required: [id] },
+          apply: (p, onChange) => { if (p[id]) onChange({ current_abilities: { [id]: p[id] } }); },
+        });
+      });
+
+      return parts;
     },
-    clipMs: 6000,
-    buildPrompt: (t, data) => {
-      const seated = ["Bedridden", "Mostly seated", "Wheelchair user"].includes(data.activity_level);
-      const list = fmtAbilities(seated ? ABILITIES_CHECKLIST_GRADED_SEATED : ABILITIES_CHECKLIST_GRADED);
-      return "From the user's spoken description of their fitness and physical abilities, return JSON with: self_reported_fitness (one of exactly: Just starting out, Light, Medium, Strong, Athletic), condition_severity (how much any conditions or injuries limit them, one of exactly: Not at all, A little, Moderately, Severely), and current_abilities, an object mapping ability ids to the single closest listed option based on what they said. Only include ability ids the user gave enough information to judge; omit all others. Do not guess wildly. Ability ids with their allowed options are: " + list + ". The user said: " + t;
-    },
-    schema: { type: "object", properties: { self_reported_fitness: { type: "string" }, condition_severity: { type: "string" }, current_abilities: { type: "object" } }, required: [] },
-    apply: (p, onChange) => { const u = {}; if (p.self_reported_fitness) u.self_reported_fitness = p.self_reported_fitness; if (p.condition_severity) u.condition_severity = p.condition_severity; if (p.current_abilities && typeof p.current_abilities === "object") u.current_abilities = p.current_abilities; if (Object.keys(u).length) onChange(u); },
-  }] },
+  },
   8: {
     finalMessage: "All set. You can change any of your answers anytime in Settings.",
     parts: [{
