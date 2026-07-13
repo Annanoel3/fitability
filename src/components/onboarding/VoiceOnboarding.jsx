@@ -100,7 +100,13 @@ const VOICE_STEPS = {
     apply: (p, onChange) => onChange({ risk_factors: Array.isArray(p.risk_factors) ? p.risk_factors : [], no_risk_factors: !!p.no_risk_factors, risk_factor_details: p.risk_factor_details || "" }),
   }] },
   7: { parts: [{
-    question: "Now, tell me about your current fitness and what your body is able to do, in your own words. For example, how active or strong you feel day to day, and things like getting up from a chair, walking, climbing stairs, lifting, or keeping your balance.",
+    question: (data) => {
+      const seated = ["Bedridden", "Mostly seated", "Wheelchair user"].includes(data.activity_level);
+      if (seated) {
+        return "Now, tell me about your current fitness and what your body is able to do, in your own words. Please address each of these: how many times you can raise both arms to shoulder height while seated, whether you can push your palms together firmly and hold for five seconds, how your grip strength is, how long you can sit upright without leaning on a backrest, how much you can lift and hold while seated, and how long you can do light seated exercise like arm circles without stopping. Also, how would you describe your overall fitness right now?";
+      }
+      return "Now, tell me about your current fitness and what your body is able to do, in your own words. Please address each of these: how many push-ups you can do in a row, how long you can hold a plank, how long you can jog or run without stopping, how much you can comfortably lift, how many flights of stairs you can climb without stopping, how long you can balance on one foot, and how many times you can stand up from a chair in a row without using your hands. Also, how would you describe your overall fitness right now?";
+    },
     clipMs: 6000,
     buildPrompt: (t, data) => {
       const seated = ["Bedridden", "Mostly seated", "Wheelchair user"].includes(data.activity_level);
@@ -300,7 +306,8 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
         let transcript = "";
         for (let attempt = 0; attempt < 2 && !transcript; attempt++) {
           setStatus("Speaking...");
-          await speak(attempt === 0 ? part.question : "Sorry, I did not catch that. " + part.question);
+          const q = typeof part.question === "function" ? part.question(data) : part.question;
+          await speak(attempt === 0 ? q : "Sorry, I did not catch that. " + q);
           if (cancelledRef.current) { setBusy(false); setStatus(""); return; }
           setStatus("Listening...");
           listenChime();
