@@ -57,10 +57,10 @@ export default function ProgressPage() {
     demoTimersRef.current.forEach(clearTimeout);
     setDemoCaption("Here's how you'll log each day...");
 
-    // Helper: flash tap indicator on a field for 600ms
+    // Helper: flash tap indicator on a field for 900ms (matches TapIndicator fade animation)
     const flashTap = (key, at) => setTimeout(() => {
       setTapTarget(key);
-      setTimeout(() => setTapTarget(null), 600);
+      setTimeout(() => setTapTarget(null), 900);
     }, at);
 
     const t1 = setTimeout(() => setLogData(p => ({ ...p, activity_pct: 100 })), 350);
