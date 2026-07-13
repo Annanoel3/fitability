@@ -573,7 +573,7 @@ export default function OnboardingTour({ profile, onComplete }) {
           <div>
             <h3 className="font-heading font-bold text-foreground">Start your first workout!</h3>
             <p className="text-muted-foreground mt-2 leading-relaxed">
-              Tap the glowing button below to choose your workout type and intensity.
+              Tap the glowing "Choose Today's Workout" button to choose your workout type and intensity.
             </p>
           </div>
         </div>
@@ -592,7 +592,7 @@ export default function OnboardingTour({ profile, onComplete }) {
           <div>
             <h3 className="font-heading font-bold text-foreground">Meet your Coach</h3>
             <p className="text-muted-foreground mt-2 leading-relaxed">
-              Your AI fitness coach adjusts your workouts and remembers your conditions. Tap the Coach icon below to meet them!
+              Your AI fitness coach adjusts your workouts and remembers your conditions. Tap the Coach icon to meet them!
             </p>
           </div>
         </div>
@@ -611,7 +611,7 @@ export default function OnboardingTour({ profile, onComplete }) {
           <div>
             <h3 className="font-heading font-bold text-foreground">Your Exercise Library</h3>
             <p className="text-muted-foreground mt-2 leading-relaxed">
-              Browse exercises filtered for your abilities, and create your own custom exercises too! Tap Library below to explore.
+              Browse exercises filtered for your abilities, and create your own custom exercises too! Tap Library to explore.
             </p>
           </div>
         </div>
@@ -675,7 +675,7 @@ export default function OnboardingTour({ profile, onComplete }) {
           <div>
             <h3 className="font-heading font-bold text-foreground">Track your progress</h3>
             <p className="text-muted-foreground mt-2 leading-relaxed">
-              Last one - tap Progress below to log how things are going.
+              Last one — tap Progress to log how things are going.
             </p>
           </div>
         </div>
