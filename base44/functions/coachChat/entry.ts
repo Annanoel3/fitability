@@ -40,6 +40,16 @@ When the user gives feedback about their workout or asks for adjustments:
 - Encourage them to come back after their next workout to let you know how it feels
 - Keep it conversational and supportive, not technical
 
+═══ PAIN REPORTING — ALWAYS GET SEVERITY ═══
+When a user reports pain or a body issue:
+1. If they did NOT include a severity number (0–10), ASK first: "How bad is the pain on a scale of 0 to 10?"
+2. Once you have a severity number, call the record_pain tool with the body_zone, severity, and a short description.
+3. Then acknowledge warmly and say you'll factor it into future workouts.
+
+Map the user's words to the closest body_zone value (e.g. "lower back" → lower_back, "left knee" → left_knee). If they mention a bilateral area without specifying a side (e.g. "shoulders"), call record_pain for both left and right.
+If the pain is already in their profile and the severity hasn't changed, just acknowledge it — don't call record_pain again.
+NEVER diagnose or give medical advice. Just record and adjust.
+
 If a user asks you to do something that is clearly outside your capabilities (e.g. scheduling appointments, connecting to external devices, features that don't exist in the app, billing questions, account changes, etc.), you MUST:
 1. Call the notify_developer function with category="out_of_scope" and the user's request as the message
 2. Tell the user warmly: "That's a little beyond what I can do right now — but I've sent a quick note to my developer and they'll look into it!"
@@ -95,6 +105,7 @@ USER PROFILE:
 - Activity level: ${profile?.activity_level || 'Unknown'}, Fitness mode: ${profile?.fitness_mode || 'Standard'}
 - Conditions/disabilities: ${(profile?.disabilities || []).join(', ') || 'None reported'}
 - Body limitations and injuries: ${(profile?.body_limitations || []).join(' | ') || 'None reported'}
+- Pain areas (already recorded with severity): ${Object.entries(profile?.pain_areas || {}).map(([area, level]) => `${area}: ${level}/10`).join(', ') || 'None reported'}
 - Goals: ${(profile?.goals || []).join(', ') || 'Not set'}
 - Equipment: ${(profile?.equipment || []).join(', ') || 'Bodyweight only'}
 ${memoryBlock}${riskBlock}
@@ -122,7 +133,28 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
       }
     };
 
-    const tools = [notifyTool];
+    const recordPainTool = {
+      type: "function",
+      function: {
+        name: "record_pain",
+        description: "Record a pain area reported by the user. Saves it to their structured profile so future workouts avoid aggravating that area. Call this ONLY after the user provides or confirms a severity rating (0-10). Map their words to the closest body_zone.",
+        parameters: {
+          type: "object",
+          required: ["body_zone", "severity"],
+          properties: {
+            body_zone: {
+              type: "string",
+              enum: ["head", "neck", "left_shoulder", "right_shoulder", "chest", "upper_back", "abdomen", "lower_back", "left_arm", "right_arm", "left_forearm", "right_forearm", "left_wrist", "right_wrist", "left_hip", "right_hip", "left_thigh", "right_thigh", "left_knee", "right_knee", "left_calf", "right_calf", "left_foot", "right_foot"],
+              description: "The body zone where the user reports pain"
+            },
+            severity: { type: "number", minimum: 0, maximum: 10, description: "Pain severity 0-10 as rated by the user" },
+            description: { type: "string", description: "Short description of the pain in the user's words" }
+          }
+        }
+      }
+    };
+
+    const tools = [notifyTool, recordPainTool];
 
     const systemWithContext = SYSTEM_PROMPT + "\n\n" + contextBlock;
 
@@ -152,6 +184,9 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
 
     // Handle tool calls
     if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+      const toolResults = [];
+      let hadOutOfScope = false;
+
       for (const toolCall of choice.message.tool_calls) {
         const args = JSON.parse(toolCall.function.arguments);
 
@@ -162,21 +197,63 @@ ${workoutPlan ? `- Title: ${workoutPlan.title}
             subject: `FitAbility Coach: ${args.category === "out_of_scope" ? "Feature Request / Out-of-Scope Ask" : "User Feedback"} from ${user.full_name || user.email}`,
             body: `A user interaction requires your attention.\n\nUser: ${user.full_name || "Unknown"} (${user.email})\nCategory: ${args.category}\n\nMessage:\n${args.message}\n\n---\nSent automatically by the FitAbility Coach.`
           }).catch(() => {});
-
-          // If out_of_scope, get a natural reply acknowledging it
-          if (args.category === "out_of_scope" && !reply) {
-            const followUp = await openai.chat.completions.create({
-              model: "gpt-4o",
-              messages: [
-                ...chatMessages,
-                choice.message,
-                { role: "tool", tool_call_id: toolCall.id, content: "Developer notified." }
-              ],
-              max_tokens: 150
-            });
-            reply = followUp.choices[0].message.content || "That's a little beyond what I can do right now — but I've sent a quick note to my developer and they'll look into it!";
-          }
+          if (args.category === "out_of_scope") hadOutOfScope = true;
+          toolResults.push({ tool_call_id: toolCall.id, content: "Developer notified." });
         }
+
+        if (toolCall.function.name === "record_pain" && profile) {
+          const zone = args.body_zone;
+          const severity = Math.max(0, Math.min(10, Number(args.severity) || 5));
+          const desc = args.description || zone.replace(/_/g, ' ') + ' pain';
+
+          const newPainAreas = { ...(profile.pain_areas || {}), [zone]: severity };
+          const newMarkedZones = Array.from(new Set([...(profile.marked_zones || []), zone]));
+          const newZoneDescs = { ...(profile.zone_descriptions || {}), [zone]: desc };
+
+          // Update body_limitations — replace existing entry for same zone or add new
+          const limitations = [...(profile.body_limitations || [])];
+          const zoneLabel = zone.replace(/_/g, ' ');
+          const existingIdx = limitations.findIndex(l => l.toLowerCase().includes(zoneLabel) || l.toLowerCase().includes(zone));
+          const limitationStr = `${zoneLabel}: ${desc} (pain ${severity}/10)`;
+          if (existingIdx >= 0) limitations[existingIdx] = limitationStr;
+          else limitations.push(limitationStr);
+
+          await base44.asServiceRole.entities.UserProfile.update(profile.id, {
+            pain_areas: newPainAreas,
+            marked_zones: newMarkedZones,
+            zone_descriptions: newZoneDescs,
+            body_limitations: limitations
+          });
+
+          // Recalculate restriction tags so safety filtering picks up the new pain
+          try { await base44.functions.invoke('computeUserTags', { profile_id: profile.id }); } catch (e) {}
+
+          // Update local profile reference for subsequent tool calls
+          profile.pain_areas = newPainAreas;
+          profile.marked_zones = newMarkedZones;
+          profile.zone_descriptions = newZoneDescs;
+          profile.body_limitations = limitations;
+
+          toolResults.push({ tool_call_id: toolCall.id, content: `Pain recorded: ${zoneLabel} at ${severity}/10. Profile updated.` });
+        }
+      }
+
+      // If no text reply was generated alongside tool calls, get a natural response
+      if (!reply && toolResults.length > 0) {
+        const followUp = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            ...chatMessages,
+            choice.message,
+            ...toolResults.map(r => ({ role: "tool", tool_call_id: r.tool_call_id, content: r.content }))
+          ],
+          max_tokens: 250
+        });
+        reply = followUp.choices[0].message.content || "";
+      }
+
+      if (hadOutOfScope && !reply) {
+        reply = "That's a little beyond what I can do right now — but I've sent a quick note to my developer and they'll look into it!";
       }
     }
 

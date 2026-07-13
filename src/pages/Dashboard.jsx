@@ -393,6 +393,14 @@ ${recentExercisesStr}${libraryContext}${deletedExercisesStr}`,
       finalResult.exercises, safetyLib, userRestrictionTags, userEquipment, userCapabilityTags
     );
     finalResult.exercises = safeExercises;
+    // Deduplicate exercises by name (case-insensitive) — LLM sometimes produces "Step Ups" and "Step UPS"
+    const _seenNames = new Set();
+    finalResult.exercises = finalResult.exercises.filter(ex => {
+      const key = (ex.name || '').toLowerCase().trim();
+      if (_seenNames.has(key)) return false;
+      _seenNames.add(key);
+      return true;
+    });
     const safetyPassed = true;
     if (safetyNotes) { finalResult.safety_review = (finalResult.safety_review || '') + ' ' + safetyNotes; }
 
