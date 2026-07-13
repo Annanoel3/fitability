@@ -195,8 +195,8 @@ export default function AppLayout() {
       {/* Tour pulsing styles for library, progress and home */}
       <style key={tourStep}>{`
         @keyframes icon-pulse {
-          0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(196, 181, 253, 0.5); }
-          50%      { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(196, 181, 253, 0.5); }
+          0%, 100% { transform: scale(1); }
+          50%      { transform: scale(1.04); }
         }
         nav a[data-tour-coach-nav],
         nav a[data-tour-library-nav],

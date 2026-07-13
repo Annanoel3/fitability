@@ -443,7 +443,7 @@ export default function OnboardingTour({ profile, onComplete }) {
           <div className="text-center space-y-3">
             <style>{`
               @keyframes drag-handle-pulse {
-                0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(196, 181, 253, 0.5); opacity: 0.6; }
+                0%, 100% { transform: scale(1); opacity: 0.6; }
                 50%      { transform: scale(1.15); box-shadow: 0 0 16px 4px rgba(196, 181, 253, 0.7); opacity: 1; }
               }
               .tour-drag-handle-pulse {
@@ -553,8 +553,8 @@ export default function OnboardingTour({ profile, onComplete }) {
       <DraggableTourCard tourStep={tourStep}>
         <style>{`
           @keyframes workout-btn-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(196, 181, 253, 0.5); }
-            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(196, 181, 253, 0.5); }
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.04); }
           }
           [data-tour-start-workout="true"] {
             animation: workout-btn-pulse 1.2s ease-in-out infinite !important;
@@ -626,8 +626,8 @@ export default function OnboardingTour({ profile, onComplete }) {
         <style>{`
           
           @keyframes exercise-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(196, 181, 253, 0.5); }
-            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(196, 181, 253, 0.5); }
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.04); }
           }
           [data-tour-first-exercise="true"] {
             animation: exercise-pulse 1.5s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
@@ -648,8 +648,8 @@ export default function OnboardingTour({ profile, onComplete }) {
       <div className="fixed inset-0 z-[100] pointer-events-none">
         <style>{`
           @keyframes create-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(196, 181, 253, 0.5); }
-            50%      { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(196, 181, 253, 0.5); }
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.04); }
           }
           [data-tour-create-exercise="true"] {
             animation: create-pulse 1.3s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
@@ -690,8 +690,8 @@ export default function OnboardingTour({ profile, onComplete }) {
         <style>{`
           
           @keyframes button-pulse {
-            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(196, 181, 253, 0.5); }
-            50%       { transform: scale(1.04); box-shadow: 0 0 16px 4px rgba(196, 181, 253, 0.5); }
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.04); }
           }
           [data-tour-log-button="true"] {
             animation: button-pulse 1.5s ease-in-out infinite !important; position: relative !important; z-index: 101 !important;
