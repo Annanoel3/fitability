@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Dumbbell, Heart, Wind, Layers, Zap, Check } from "lucide-react";
 import TapIndicator from "@/components/onboarding/TapIndicator";
+import { scrollIntoScrollableParent } from "@/lib/tourScroll";
 
 const WORKOUT_TYPES = [
   { id: "strength", label: "Strength", icon: Dumbbell, desc: "Build muscle & power" },
@@ -42,6 +43,7 @@ export default function WorkoutPickerModal({ onConfirm, onClose }) {
     // Helper: flash tap indicator on a button for 600ms
     const flashTap = (key, at) => setTimeout(() => {
       setTapTarget(key);
+      scrollIntoScrollableParent(btnRefs[key]?.current);
       setTimeout(() => setTapTarget(null), 600);
     }, at);
 

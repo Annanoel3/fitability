@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, Loader2, Check } from "lucide-react";
 import TapIndicator from "@/components/onboarding/TapIndicator";
+import { scrollIntoScrollableParent } from "@/lib/tourScroll";
 
 const CATEGORIES = ["Warmup", "Strength", "Cardio", "Balance", "Flexibility", "Cooldown", "Breathing", "Recovery"];
 const POSITIONS = ["Seated", "Standing", "Wheelchair", "Lying down"];
@@ -52,6 +53,7 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
     // Helper: flash tap indicator on a field for 900ms
     const flashTap = (key, at) => setTimeout(() => {
       setTapTarget(key);
+      scrollIntoScrollableParent(fieldRefs[key]?.current);
       setTimeout(() => setTapTarget(null), 900);
     }, at);
 
@@ -67,9 +69,6 @@ export default function CreateExerciseModal({ onClose, onSuccess }) {
       [10900, () => setForm(f => ({ ...f, default_duration_seconds: 30 }))],
       [12200, () => setForm(f => ({ ...f, muscles_used: "quads, hip flexors, core" }))],
       [13500, () => {
-        if (bodyRef.current) {
-          bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
-        }
         setDemoPressing(true);
       }],
       [15200, () => {

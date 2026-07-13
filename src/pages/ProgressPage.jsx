@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import TapIndicator from "@/components/onboarding/TapIndicator";
+import { scrollIntoScrollableParent } from "@/lib/tourScroll";
 
 const MOOD_EMOJIS = ["😞", "😕", "😐", "🙂", "😄"];
 
@@ -60,6 +61,7 @@ export default function ProgressPage() {
     // Helper: flash tap indicator on a field for 900ms (matches TapIndicator fade animation)
     const flashTap = (key, at) => setTimeout(() => {
       setTapTarget(key);
+      scrollIntoScrollableParent(demoRefs[key]?.current);
       setTimeout(() => setTapTarget(null), 900);
     }, at);
 
