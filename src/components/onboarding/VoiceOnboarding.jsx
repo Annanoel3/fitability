@@ -17,21 +17,31 @@ function setIfPresent(p, keys, onChange) {
 const fmtAbilities = (arr) => arr.map((i) => i.id + " (" + i.options.join("/") + ")").join("; ");
 
 const VOICE_STEPS = {
-  0: { parts: [{
-    question: "Are you a veteran? You can just say yes, or no.",
-    clipMs: 1500,
-    mapLocal: (t) => {
-      const s = (t || "").toLowerCase();
-      const no = s.includes("no") || s.includes("nope") || s.includes("nah");
-      const yes = s.includes("yes") || s.includes("yeah") || s.includes("yep") || s.includes("yup") || s.includes("served");
-      if (yes && !no) return { is_veteran: true };
-      if (no && !yes) return { is_veteran: false };
-      return null;
+  0: { parts: () => [
+    {
+      question: "Are you a veteran? You can just say yes, or no.",
+      clipMs: 1500,
+      mapLocal: (t) => {
+        const s = (t || "").toLowerCase();
+        const no = s.includes("no") || s.includes("nope") || s.includes("nah");
+        const yes = s.includes("yes") || s.includes("yeah") || s.includes("yep") || s.includes("yup") || s.includes("served");
+        if (yes && !no) return { is_veteran: true };
+        if (no && !yes) return { is_veteran: false };
+        return null;
+      },
+      instruction: "The user is asked if they are a military veteran. Return JSON with is_veteran true or false.",
+      schema: { type: "object", properties: { is_veteran: { type: "boolean" } }, required: ["is_veteran"] },
+      apply: (p, onChange) => onChange({ is_veteran: !!p.is_veteran }),
     },
-    instruction: "The user is asked if they are a military veteran. Return JSON with is_veteran true or false.",
-    schema: { type: "object", properties: { is_veteran: { type: "boolean" } }, required: ["is_veteran"] },
-    apply: (p, onChange) => onChange({ is_veteran: !!p.is_veteran }),
-  }] },
+    {
+      condition: (d) => d.is_veteran === true,
+      question: "Are you part of any veteran organization?",
+      clipMs: 2000,
+      instruction: "The user is asked if they are part of a veteran organization. Return JSON with organizations, an array of organization names the user mentions. If they say no or none, return an empty array. The user said: ",
+      schema: { type: "object", properties: { organizations: { type: "array", items: { type: "string" } } }, required: ["organizations"] },
+      apply: (p, onChange) => onChange({ veteran_details: { organizations: Array.isArray(p.organizations) ? p.organizations : [] } }),
+    },
+  ] },
   1: { parts: [
     {
       question: "First, what is your name, and how old are you?",
@@ -332,12 +342,16 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
         if (updates.current_abilities) {
           updates = { ...updates, current_abilities: { ...(localData.current_abilities || {}), ...updates.current_abilities } };
         }
+        if (updates.veteran_details) {
+          updates = { ...updates, veteran_details: { ...(localData.veteran_details || {}), ...updates.veteran_details } };
+        }
         localData = { ...localData, ...updates };
         onChange(updates);
       };
       const parts = typeof cfg.parts === "function" ? cfg.parts(localData) : (cfg.parts || []);
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
+        if (part.condition && !part.condition(localData)) continue;
         let transcript = "";
         for (let attempt = 0; attempt < 2 && !transcript; attempt++) {
           setStatus("Speaking...");
