@@ -209,8 +209,8 @@ export default function ExerciseLibrary() {
         />
       )}
 
-      <div className="mb-6 flex items-center justify-between">
-        <div>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-heading font-bold text-foreground">Exercise Library</h1>
           <p className="text-muted-foreground mt-1">
             {sorted.length} exercises available.
@@ -218,7 +218,7 @@ export default function ExerciseLibrary() {
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
-          className="gap-2"
+          className="gap-2 flex-shrink-0"
           data-tour-create-exercise={tourStep === "create_exercise" && !showCreateModal ? "true" : undefined}
         >
           <Plus className="w-4 h-4" /> Create Exercise

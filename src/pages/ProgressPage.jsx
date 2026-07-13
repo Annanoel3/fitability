@@ -154,16 +154,16 @@ export default function ProgressPage() {
   return (
     <div className="pb-20 md:pb-6 space-y-6">
 
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-heading font-bold text-foreground">Progress</h1>
-          <p className="text-muted-foreground mt-1">Track your journey over time.</p>
+          <p className="text-muted-foreground mt-1 truncate">Track your journey over time.</p>
         </div>
         {isTourProgressLog && (
           <style>{`
             @keyframes log-btn-pulse {
               0%   { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.7), 0 0 20px hsl(var(--primary) / 0.4); }
-              50%  { transform: scale(1.18); box-shadow: 0 0 0 16px hsl(var(--primary) / 0),  0 0 40px hsl(var(--primary) / 0.2); }
+              50%  { transform: scale(1.04); box-shadow: 0 0 0 16px hsl(var(--primary) / 0),  0 0 40px hsl(var(--primary) / 0.2); }
               100% { transform: scale(1);    box-shadow: 0 0 0 0   hsl(var(--primary) / 0.7), 0 0 20px hsl(var(--primary) / 0.4); }
             }
             [data-tour-log-button="true"] {
@@ -174,9 +174,10 @@ export default function ProgressPage() {
         <Button
           onClick={() => setShowLogForm(!showLogForm)}
           variant={isTourProgressLog ? "default" : "outline"}
-          size={isTourProgressLog ? "lg" : "sm"}
+          size={isTourProgressLog ? "default" : "sm"}
           data-tour-log-button={isTourProgressLog ? "true" : undefined}
           style={isTourProgressLog ? { fontSize: "1rem", fontWeight: 700, letterSpacing: "0.01em" } : undefined}
+          className="flex-shrink-0"
         >
           Log Progress
         </Button>
