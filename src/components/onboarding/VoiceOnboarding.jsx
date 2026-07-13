@@ -327,13 +327,21 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
         return;
       }
 
-      const parts = cfg.parts || [];
+      let localData = { ...data };
+      const wrappedOnChange = (updates) => {
+        if (updates.current_abilities) {
+          updates = { ...updates, current_abilities: { ...(localData.current_abilities || {}), ...updates.current_abilities } };
+        }
+        localData = { ...localData, ...updates };
+        onChange(updates);
+      };
+      const parts = typeof cfg.parts === "function" ? cfg.parts(localData) : (cfg.parts || []);
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
         let transcript = "";
         for (let attempt = 0; attempt < 2 && !transcript; attempt++) {
           setStatus("Speaking...");
-          const q = typeof part.question === "function" ? part.question(data) : part.question;
+          const q = typeof part.question === "function" ? part.question(localData) : part.question;
           await speak(attempt === 0 ? q : "Sorry, I did not catch that. " + q);
           if (cancelledRef.current) { setBusy(false); setStatus(""); return; }
           setStatus("Listening...");
@@ -349,13 +357,13 @@ export default function VoiceOnboarding({ step, data, onChange, onAdvance, autoV
         let parsed = part.mapLocal ? part.mapLocal(transcript) : null;
         if (!parsed) {
           try {
-            const prompt = part.buildPrompt ? part.buildPrompt(transcript, data) : (part.instruction + " The user said: " + transcript);
+            const prompt = part.buildPrompt ? part.buildPrompt(transcript, localData) : (part.instruction + " The user said: " + transcript);
             const res = await base44.functions.invoke("openaiChat", { prompt, response_json_schema: part.schema });
             parsed = res && res.data ? res.data : null;
           } catch (e) {}
         }
         if (cancelledRef.current) { setBusy(false); setStatus(""); return; }
-        if (parsed) part.apply(parsed, onChange);
+        if (parsed) part.apply(parsed, wrappedOnChange);
       }
 
       if (cfg.finalMessage) { await speak(cfg.finalMessage); }
