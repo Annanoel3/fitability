@@ -10,15 +10,25 @@ export default function StaleWorkoutCard({ workout, onDone }) {
   const handleArchive = async () => {
     setSaving(true);
     setAction("archive");
-    await base44.entities.WorkoutPlan.update(workout.id, { archived: true });
-    onDone();
+    try {
+      await base44.entities.WorkoutPlan.update(workout.id, { archived: true });
+      onDone();
+    } catch (e) {
+      setSaving(false);
+      setAction(null);
+    }
   };
 
   const handleDelete = async () => {
     setSaving(true);
     setAction("delete");
-    await base44.entities.WorkoutPlan.delete(workout.id);
-    onDone();
+    try {
+      await base44.entities.WorkoutPlan.delete(workout.id);
+      onDone();
+    } catch (e) {
+      setSaving(false);
+      setAction(null);
+    }
   };
 
   const dateLabel = new Date(workout.date + "T12:00:00").toLocaleDateString("en-US", {
