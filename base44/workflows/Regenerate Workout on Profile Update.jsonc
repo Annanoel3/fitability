@@ -1,0 +1,37 @@
+{
+  "name": "Regenerate Workout on Profile Update",
+  "description": "Auto-regenerates today's workout when user profile changes (weight, age, limitations, pain, goals, equipment)",
+  "trigger": {
+    "condition": "${ ((.trigger.changed_fields | index(\"weight_lbs\") != null) or (.trigger.changed_fields | index(\"age\") != null) or (.trigger.changed_fields | index(\"activity_level\") != null) or (.trigger.changed_fields | index(\"body_limitations\") != null) or (.trigger.changed_fields | index(\"pain_areas\") != null) or (.trigger.changed_fields | index(\"disabilities\") != null) or (.trigger.changed_fields | index(\"goals\") != null) or (.trigger.changed_fields | index(\"equipment\") != null)) }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "update"
+      ],
+      "entity_name": "UserProfile"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "regenerate_workout_on_profile_update",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "regenerateWorkoutOnProfileChange",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "regenerateWorkoutOnProfileChange"
+  }
+}
